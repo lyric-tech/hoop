@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -149,6 +150,9 @@ type (
 		kubernetesClusterURL         string
 		kubernetesToken              string
 		kubernetesInsecureSkipVerify bool
+		kubernetesServiceAccount     string
+		kubernetesSANamespace        string
+		kubernetesSATokenTTLSeconds  int64
 
 		experimentalRedactRows string
 
@@ -868,6 +872,8 @@ func parseConnectionEnvVars(envVars map[string]any, connType pb.ConnectionType) 
 		kubernetesClusterURL:         envVarS.Getenv("KUBERNETES_CLUSTER_URL"),
 		kubernetesToken:              envVarS.Getenv("KUBERNETES_BEARER_TOKEN"),
 		kubernetesInsecureSkipVerify: envVarS.Getenv("KUBERNETES_INSECURE_SKIP_VERIFY") == "true",
+		kubernetesServiceAccount:     envVarS.Getenv("KUBERNETES_SERVICE_ACCOUNT"),
+		kubernetesSANamespace:        envVarS.Getenv("KUBERNETES_SERVICE_ACCOUNT_NAMESPACE"),
 
 		experimentalRedactRows: envVarS.Getenv("EXPERIMENTAL_REDACT_ROWS"),
 
@@ -974,16 +980,39 @@ func parseConnectionEnvVars(envVars map[string]any, connType pb.ConnectionType) 
 			return nil, errors.New("missing required environment for connection [HOST, PORT]")
 		}
 	case pb.ConnectionTypeKubernetes:
-		if env.kubernetesToken == "" {
-			return nil, errors.New("missing required environment for connection [KUBERNETES_BEARER_TOKEN]")
+		// Two ways to authenticate. KUBERNETES_SERVICE_ACCOUNT selects the
+		// service-account mode, where the agent mints a short-lived token for
+		// that account per session (see httpproxy.go). Otherwise a static
+		// KUBERNETES_BEARER_TOKEN is required, as before.
+		if env.kubernetesServiceAccount == "" && env.kubernetesToken == "" {
+			return nil, errors.New("missing required environment for connection [KUBERNETES_SERVICE_ACCOUNT or KUBERNETES_BEARER_TOKEN]")
+		}
+		if env.kubernetesServiceAccount != "" && env.kubernetesToken != "" {
+			return nil, errors.New("conflicting environment for connection: set KUBERNETES_SERVICE_ACCOUNT or KUBERNETES_BEARER_TOKEN, not both")
 		}
 		if env.kubernetesClusterURL == "" {
 			// default url when running in-cluster
 			env.kubernetesClusterURL = "https://kubernetes.default.svc.cluster.local"
 		}
-		env.httpProxyHeaders["HEADER_AUTHORIZATION"] = env.kubernetesToken
-		if strings.HasPrefix("Bearer ", env.kubernetesToken) {
-			env.httpProxyHeaders["HEADER_AUTHORIZATION"] = fmt.Sprintf("Bearer %s", env.kubernetesToken)
+		if env.kubernetesServiceAccount != "" && envVarS.Getenv("KUBERNETES_INSECURE_SKIP_VERIFY") == "" {
+			// The in-cluster API server's cert is signed by the cluster CA and
+			// the httpproxy has no CA option, so service-account mode defaults
+			// to skipping verification. An explicit KUBERNETES_INSECURE_SKIP_VERIFY
+			// is still honoured, for a cluster fronted by a publicly trusted cert.
+			env.kubernetesInsecureSkipVerify = true
+		}
+		if ttl := envVarS.Getenv("KUBERNETES_SERVICE_ACCOUNT_TOKEN_TTL"); ttl != "" {
+			parsed, err := strconv.ParseInt(ttl, 10, 64)
+			if err != nil || parsed <= 0 {
+				return nil, fmt.Errorf("invalid KUBERNETES_SERVICE_ACCOUNT_TOKEN_TTL (%q), expected a positive number of seconds", ttl)
+			}
+			env.kubernetesSATokenTTLSeconds = parsed
+		}
+		if env.kubernetesToken != "" {
+			env.httpProxyHeaders["HEADER_AUTHORIZATION"] = env.kubernetesToken
+			if strings.HasPrefix("Bearer ", env.kubernetesToken) {
+				env.httpProxyHeaders["HEADER_AUTHORIZATION"] = fmt.Sprintf("Bearer %s", env.kubernetesToken)
+			}
 		}
 	case pb.ConnectionTypeHttpProxy:
 		if env.httpProxyRemoteURL == "" {

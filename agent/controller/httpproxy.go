@@ -156,6 +156,29 @@ func (a *Agent) handleHttpProxyWrite(pkt *pb.Packet) {
 	// add default values for kubernetes type
 	if connParams.ConnectionType == pb.ConnectionTypeKubernetes.String() {
 		connenv.httpProxyHeaders["remote_url"] = connenv.kubernetesClusterURL
+		// Service-account mode: mint a short-lived token for the connection's
+		// ServiceAccount on every session. Minting per session is what keeps
+		// this correct — both the agent's own projected token and the minted
+		// one expire, so nothing here may be cached across sessions.
+		if connenv.kubernetesServiceAccount != "" {
+			namespace := connenv.kubernetesSANamespace
+			if namespace == "" {
+				var err error
+				if namespace, err = agentServiceAccountNamespace(); err != nil {
+					log.Infof("failed resolving service account namespace, err=%v", err)
+					a.sendClientSessionClose(sessionID, fmt.Sprintf("failed resolving service account namespace: %v", err))
+					return
+				}
+			}
+			token, err := mintServiceAccountToken(context.Background(), connenv.kubernetesClusterURL,
+				namespace, connenv.kubernetesServiceAccount, connenv.kubernetesSATokenTTLSeconds)
+			if err != nil {
+				log.Infof("failed minting service account token, err=%v", err)
+				a.sendClientSessionClose(sessionID, fmt.Sprintf("failed obtaining kubernetes service account token: %v", err))
+				return
+			}
+			connenv.kubernetesToken = token
+		}
 		if !strings.HasPrefix(connenv.kubernetesToken, "Bearer ") {
 			connenv.kubernetesToken = fmt.Sprintf("Bearer %s", connenv.kubernetesToken)
 		}

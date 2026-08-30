@@ -209,3 +209,15 @@ serviceAccount:
   create: false
   # Annotations to add to the service account
   annotations: {}
+
+# -- Grant the agent permission to mint tokens for the ServiceAccounts used by
+# kubernetes connections (set KUBERNETES_SERVICE_ACCOUNT on the connection).
+# Leave disabled unless you use that connection mode.
+kubernetesServiceAccountAccess:
+  enabled: false
+  # Namespace holding the target ServiceAccounts. Defaults to the release namespace.
+  namespace: ""
+  # Names the agent may mint tokens for. An empty list grants every
+  # ServiceAccount in the namespace — list them explicitly.
+  serviceAccounts: []
+  #   - readonly-viewer
