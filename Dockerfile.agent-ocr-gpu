@@ -14,11 +14,11 @@
 #
 # Build (CI):
 #   docker build -f Dockerfile.agent-ocr-gpu \
-#     --build-arg HOOP_IMAGE=hoophq/hoop:<tag> -t hoophq/hoop-agent-ocr:<tag>-gpu .
+#     --build-arg LYRIC_IAM_IMAGE=hoophq/hoop:<tag> -t hoophq/hoop-agent-ocr:<tag>-gpu .
 # Required: the released hoop base image to build on. No default —
 # an unpinned 'latest' base would make derived builds non-reproducible.
-ARG HOOP_IMAGE
-FROM ${HOOP_IMAGE}
+ARG LYRIC_IAM_IMAGE
+FROM ${LYRIC_IAM_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 

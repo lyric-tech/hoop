@@ -6,22 +6,22 @@
 #   1. `make run-dev-spiffe-prep` has been run at least once to mint
 #      the JWT and update .env.
 #   2. `make run-dev` is running in another terminal and healthy.
-#   3. `make build-dev-client` has produced $HOME/.hoop/dev/hoop.
+#   3. `make build-dev-client` has produced $HOME/.lyric-iam/dev/lyric-iam.
 #
 # On each invocation this script idempotently seeds the dev DB with a
 # `spiffe-agent` row and a matching `agent_spiffe_mappings` row, then
-# runs the agent in the foreground with HOOP_SPIFFE_KEY_FILE pointed at
+# runs the agent in the foreground with LYRIC_IAM_SPIFFE_KEY_FILE pointed at
 # the minted JWT. Ctrl-C stops only the agent; the gateway keeps running.
 set -eo pipefail
 
 SPIFFE_DIR="${SPIFFE_DIR:-dist/dev/spiffe}"
-TRUST_DOMAIN="${HOOP_SPIFFE_TRUST_DOMAIN:-local.test}"
-SPIFFE_ID="${HOOP_SPIFFE_ID:-spiffe://local.test/agent/local-dev}"
-AGENT_NAME="${HOOP_SPIFFE_AGENT_NAME:-spiffe-agent}"
-AGENT_ID="${HOOP_SPIFFE_AGENT_ID:-11111111-2222-3333-4444-555555555555}"
+TRUST_DOMAIN="${LYRIC_IAM_SPIFFE_TRUST_DOMAIN:-local.test}"
+SPIFFE_ID="${LYRIC_IAM_SPIFFE_ID:-spiffe://local.test/agent/local-dev}"
+AGENT_NAME="${LYRIC_IAM_SPIFFE_AGENT_NAME:-spiffe-agent}"
+AGENT_ID="${LYRIC_IAM_SPIFFE_AGENT_ID:-11111111-2222-3333-4444-555555555555}"
 APP_CONTAINER="${HOOPDEV_APP_CONTAINER:-hoopdev}"
 DB_CONTAINER="${HOOPDEV_DB_CONTAINER:-hoopdevpg}"
-HOOP_BIN="${HOOP_BIN:-$HOME/.hoop/dev/hoop}"
+LYRIC_IAM_BIN="${LYRIC_IAM_BIN:-$HOME/.lyric-iam/dev/lyric-iam}"
 
 if [[ ! -f "$SPIFFE_DIR/agent.jwt" || ! -f "$SPIFFE_DIR/bundle.jwks" ]]; then
   echo "missing SPIFFE artifacts in $SPIFFE_DIR — run 'make run-dev-spiffe-prep' first"
@@ -36,17 +36,17 @@ for c in "$APP_CONTAINER" "$DB_CONTAINER"; do
 done
 
 # Rebuild the client binary if it's missing or older than agent/config
-# (which is where the HOOP_SPIFFE_KEY_FILE loader lives). A stale binary
-# silently falls through to "missing HOOP_KEY" because it doesn't know
+# (which is where the LYRIC_IAM_SPIFFE_KEY_FILE loader lives). A stale binary
+# silently falls through to "missing LYRIC_IAM_KEY" because it doesn't know
 # about the file-based loader yet.
 needs_rebuild=0
-if [[ ! -x "$HOOP_BIN" ]]; then
+if [[ ! -x "$LYRIC_IAM_BIN" ]]; then
   needs_rebuild=1
 else
   # find newest source file under agent/ and compare mtime to the binary
-  newest=$(find agent common/clientconfig -type f -name '*.go' -newer "$HOOP_BIN" -print -quit 2>/dev/null || true)
+  newest=$(find agent common/clientconfig -type f -name '*.go' -newer "$LYRIC_IAM_BIN" -print -quit 2>/dev/null || true)
   if [[ -n "$newest" ]]; then
-    echo "==> $HOOP_BIN is stale (newer sources since last build, e.g. $newest)"
+    echo "==> $LYRIC_IAM_BIN is stale (newer sources since last build, e.g. $newest)"
     needs_rebuild=1
   fi
 fi
@@ -85,20 +85,20 @@ INSERT INTO private.agent_spiffe_mappings
   ON CONFLICT DO NOTHING;
 EOT
 
-# The bundle is injected into the gateway as HOOP_SPIFFE_BUNDLE_JWKS in
+# The bundle is injected into the gateway as LYRIC_IAM_SPIFFE_BUNDLE_JWKS in
 # .env by spiffe-prep.sh, so there is nothing to copy into the container.
 # If prep was re-run while the gateway was up, restart 'make run-dev' so
 # the new .env is re-read; spiffe-mint reuses its signing key across
 # invocations, so in practice the bundle value is stable and no restart
 # is needed unless TRUST_DOMAIN or SPIFFE_ID changed.
 
-echo "==> starting host agent with HOOP_SPIFFE_KEY_FILE=$SPIFFE_DIR/agent.jwt"
+echo "==> starting host agent with LYRIC_IAM_SPIFFE_KEY_FILE=$SPIFFE_DIR/agent.jwt"
 echo "    (Ctrl-C stops the agent; run-dev keeps going)"
 echo
 
-export HOOP_SPIFFE_KEY_FILE="$PWD/$SPIFFE_DIR/agent.jwt"
-export HOOP_GRPCURL="127.0.0.1:8010"
-export HOOP_SPIFFE_NAME="$AGENT_NAME"
-export HOOP_TLS_SKIP_VERIFY="true"
+export LYRIC_IAM_SPIFFE_KEY_FILE="$PWD/$SPIFFE_DIR/agent.jwt"
+export LYRIC_IAM_GRPCURL="127.0.0.1:8010"
+export LYRIC_IAM_SPIFFE_NAME="$AGENT_NAME"
+export LYRIC_IAM_TLS_SKIP_VERIFY="true"
 
-exec "$HOOP_BIN" start agent
+exec "$LYRIC_IAM_BIN" start agent

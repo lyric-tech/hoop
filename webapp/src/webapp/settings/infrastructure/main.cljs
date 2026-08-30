@@ -64,7 +64,7 @@
                [:> Heading {:as "h3" :size "4" :weight "bold" :class "text-[--gray-12]"}
                 "Product analytics"]
                [:> Text {:size "3" :class "text-[--gray-11]"}
-                "Help us improve Hoop by sharing usage data. Access and resources information are not collected."]]
+                "Help us improve Lyric IAM by sharing usage data. Access and resources information are not collected."]]
 
               [:> Box {:grid-column "span 5 / span 5"}
                [:> Box {:class "space-y-3"}
@@ -83,7 +83,7 @@
                [:> Heading {:as "h3" :size "4" :weight "bold" :class "text-[--gray-12]"}
                 "gRPC configuration"]
                [:> Text {:size "3" :class "text-[--gray-11]"}
-                "Specify the gRPC endpoint URL for establishing secure connections between Hoop agents and your gateway infrastructure."]
+                "Specify the gRPC endpoint URL for establishing secure connections between Lyric IAM agents and your gateway infrastructure."]
 
                [callout-link/main {:href (get-in config/docs-url [:clients :command-line :managing-configuration])
                                    :text "Learn more about gRPC"}]]

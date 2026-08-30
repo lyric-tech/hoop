@@ -4,7 +4,7 @@
    [webapp.config :as config]))
 
 (defn request
-  "request abstraction for calling Hoop API
+  "request abstraction for calling Lyric IAM API
 
   This functions receives one argument with the following keys:
   :method -> string of a http verb (GET, POST, PUT, DELETE, etc). If nil, defaults to GET

@@ -152,7 +152,7 @@ function SettingsInfrastructure() {
       <Stack gap="xxlAlt">
         <SectionRow
           title="Product analytics"
-          description="Help us improve Hoop by sharing usage data. Access and resources information are not collected."
+          description="Help us improve Lyric IAM by sharing usage data. Access and resources information are not collected."
         >
           <Stack gap="sm">
             {ANALYTICS_OPTIONS.map((option) => (
@@ -181,7 +181,7 @@ function SettingsInfrastructure() {
 
         <SectionRow
           title="gRPC configuration"
-          description="Specify the gRPC endpoint URL for establishing secure connections between Hoop agents and your gateway infrastructure."
+          description="Specify the gRPC endpoint URL for establishing secure connections between Lyric IAM agents and your gateway infrastructure."
           callout={
             <DocsBtnCallOut
               text="Learn more about gRPC"

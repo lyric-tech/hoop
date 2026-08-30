@@ -8,13 +8,13 @@
 #
 # For GPU hosts use Dockerfile.agent-ocr-gpu (same engine, CUDA EP).
 #
-# Build (CI passes the released image tag as HOOP_IMAGE):
+# Build (CI passes the released image tag as LYRIC_IAM_IMAGE):
 #   docker build -f Dockerfile.agent-ocr \
-#     --build-arg HOOP_IMAGE=hoophq/hoop:<tag> -t hoophq/hoop-agent-ocr:<tag> .
+#     --build-arg LYRIC_IAM_IMAGE=hoophq/hoop:<tag> -t hoophq/hoop-agent-ocr:<tag> .
 # Required: the released hoop base image to build on. No default —
 # an unpinned 'latest' base would make derived builds non-reproducible.
-ARG HOOP_IMAGE
-FROM ${HOOP_IMAGE}
+ARG LYRIC_IAM_IMAGE
+FROM ${LYRIC_IAM_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// AgentSPIFFEMapping ties a SPIFFE identity (exact URI or URI prefix) to a Hoop
+// AgentSPIFFEMapping ties a SPIFFE identity (exact URI or URI prefix) to a Lyric IAM
 // agent, plus a set of groups that feed into RBAC on authentication.
 //
 // Exactly one of (SPIFFEID, SPIFFEPrefix) must be set, enforced by a CHECK

@@ -885,7 +885,7 @@ func buildConnectionCredentialsResponse(
 	secretKey string,
 	hasReview bool,
 	reviewID string) *openapi.ConnectionCredentialsResponse {
-	const dummyString = "hoop"
+	const dummyString = "lyric-iam"
 
 	var expireAt *time.Time
 	if !isPersistentExpireAt(cred.ExpireAt) {
@@ -1012,7 +1012,7 @@ func buildConnectionCredentialsResponse(
 			Command:    jsonCommandsString,
 		}
 		// For a claude-code connection federated to Google Vertex AI, surface
-		// the GCP project/region so `hoop claude configure` can emit the
+		// the GCP project/region so `lyric-iam claude configure` can emit the
 		// Vertex-mode client env. Gated by the experimental flag so a deploy
 		// with the feature off never advertises Vertex settings.
 		if conn.SubType.String == proto.ConnectionTypeClaudeCode.String() &&

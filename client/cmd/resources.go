@@ -70,16 +70,16 @@ var resourcesListCmd = &cobra.Command{
 	Short: "List resources",
 	Long:  "List resources you have access to, with optional filters.",
 	Example: `  # List all resources
-  hoop resources list
+  lyric-iam resources list
 
   # Filter by name
-  hoop resources list --name my-db
+  lyric-iam resources list --name my-db
 
   # Search across name, type, and subtype
-  hoop resources list --search postgres
+  lyric-iam resources list --search postgres
 
   # Output as JSON
-  hoop resources list --json`,
+  lyric-iam resources list --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runResourcesList()
 	},
@@ -91,10 +91,10 @@ var resourcesCreateCmd = &cobra.Command{
 	Long:  "Create a new resource. The name is passed as a positional argument.",
 	Args:  cobra.ExactArgs(1),
 	Example: `  # Create a database resource
-  hoop resources create my-db --type database --subtype postgres --agent-id <uuid>
+  lyric-iam resources create my-db --type database --subtype postgres --agent-id <uuid>
 
   # With environment variables
-  hoop resources create my-db --type database --agent-id <uuid> --env-var HOST=mydb.internal --env-var PORT=5432`,
+  lyric-iam resources create my-db --type database --agent-id <uuid> --env-var HOST=mydb.internal --env-var PORT=5432`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runResourcesCreate(args[0])
 	},
@@ -111,8 +111,8 @@ var resourcesRolesListCmd = &cobra.Command{
 	Short: "List roles for a resource",
 	Long:  "List all roles (connections) associated with a given resource.",
 	Args:  cobra.ExactArgs(1),
-	Example: `  hoop resources roles list my-db
-  hoop resources roles list my-db --json`,
+	Example: `  lyric-iam resources roles list my-db
+  lyric-iam resources roles list my-db --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runResourcesRolesList(args[0])
 	},
@@ -124,10 +124,10 @@ var resourcesRolesCreateCmd = &cobra.Command{
 	Long:  "Create a new role (connection) and associate it with a resource. The role name is passed as a positional argument.",
 	Args:  cobra.ExactArgs(1),
 	Example: `  # Create a postgres role for a resource
-  hoop resources roles create pgdemo --resource my-db --type database --subtype postgres --agent-id <uuid>
+  lyric-iam resources roles create pgdemo --resource my-db --type database --subtype postgres --agent-id <uuid>
 
   # With secrets
-  hoop resources roles create pgdemo --resource my-db --type database --subtype postgres --agent-id <uuid> \
+  lyric-iam resources roles create pgdemo --resource my-db --type database --subtype postgres --agent-id <uuid> \
     --secret "envvar:DB_HOST=bXlkYi5pbnRlcm5hbA=="`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runResourcesRolesCreate(args[0])
@@ -139,8 +139,8 @@ var resourcesHealthCmd = &cobra.Command{
 	Short: "Check the health of a resource",
 	Long:  "Run a connectivity test against a resource and report the status.",
 	Args:  cobra.ExactArgs(1),
-	Example: `  hoop resources health my-db
-  hoop resources health my-db --json`,
+	Example: `  lyric-iam resources health my-db
+  lyric-iam resources health my-db --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runResourcesHealth(args[0])
 	},

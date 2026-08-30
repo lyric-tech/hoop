@@ -30,7 +30,7 @@
         protocol (-> js/window .-location .-protocol)
         base-url (str protocol "//" hostname ":" port)
         custom-headers (str "Authorization: " proxy-token)
-        ;; Vertex mode forwards the full Vertex path through hoop, so the base
+        ;; Vertex mode forwards the full Vertex path through lyric-iam, so the base
         ;; URL must keep the `/v1` segment the Anthropic Vertex SDK appends
         ;; `/projects/...` to. The gateway proxy preserves the request path
         ;; verbatim, so `/v1` has to come from the client base URL.
@@ -82,7 +82,7 @@
         [logs/new-container
          {:status :success
           :id "claude-code-cli-configure"
-          :logs (str "hoop claude configure " connection_name)}]]]]
+          :logs (str "lyric-iam claude configure " connection_name)}]]]]
 
      [:> Box {:class "space-y-2"}
       [:> Box
@@ -143,13 +143,13 @@
         ;; connection names allow characters these files do not. Runs of
         ;; substituted characters collapse to one dash so "test role 8813!"
         ;; reads as "test-role-8813" rather than "test-role-8813-".
-        server-name (-> (or connection_name "hoop-mcp")
+        server-name (-> (or connection_name "lyric-iam-mcp")
                         (cs/replace #"[^A-Za-z0-9_-]+" "-")
                         (cs/replace #"^-+|-+$" ""))]
     [:<>
      [block-with-heading-and-text
       {:heading "MCP endpoint"
-       :text "Every client below points at this URL. Traffic is inspected by hoop before it reaches the MCP server."
+       :text "Every client below points at this URL. Traffic is inspected by lyric-iam before it reaches the MCP server."
        :log-id "mcp-endpoint-url"
        :log-content url}]
 

@@ -17,7 +17,7 @@ import (
 
 func (p *reviewPlugin) onReceiveOSS(pctx plugintypes.Context, pkt *pb.Packet) (*plugintypes.ConnectResponse, error) {
 	if pctx.ClientVerb != pb.ClientVerbConnect {
-		return nil, fmt.Errorf(`Accessing a connection with review from the web requires an Enterprise plan. Contact us for instant access to a 15-day trial license - no strings attached. If you want to continue using the OSS version, you can access your connection from the CLI or the Hoop desktop app. Check our docs for more information: https://hoop.dev/docs/clients/cli`)
+		return nil, fmt.Errorf(`Accessing a connection with review from the web requires an Enterprise plan. Contact us for instant access to a 15-day trial license - no strings attached. If you want to continue using the OSS version, you can access your connection from the CLI or the Lyric IAM desktop app. Check our docs for more information: https://docs.lyric.tech/access/clients/cli`)
 	}
 	jitr, err := models.GetApprovedReviewJit(pctx.OrgID, pctx.UserID, pctx.ConnectionID)
 	if err != nil && err != models.ErrNotFound {

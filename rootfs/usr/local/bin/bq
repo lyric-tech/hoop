@@ -3,7 +3,7 @@
 # bq wrapper used by the Hoop agent for BigQuery sessions. Supports two auth
 # modes — picked deterministically by which env vars are populated:
 #
-#   1. IAM Federation (preferred when HOOP_GCP_ACCESS_TOKEN is set).
+#   1. IAM Federation (preferred when LYRIC_IAM_GCP_ACCESS_TOKEN is set).
 #      The Hoop gateway resolved a per-user short-lived OAuth token via
 #      service-account impersonation and injected it as an env var. We write
 #      the token to a 0600-mode temp file inside a self-cleaning trap and
@@ -33,36 +33,36 @@ touch "$HOME/.bigqueryrc"
 
 # Temp dir tracking for federation mode. Cleanup runs unconditionally via
 # trap so a partial failure does not leave the OAuth token on disk.
-HOOP_BQ_TMPDIR=""
+LYRIC_IAM_BQ_TMPDIR=""
 cleanup() {
-  if [[ -n "$HOOP_BQ_TMPDIR" && -d "$HOOP_BQ_TMPDIR" ]]; then
-    rm -rf "$HOOP_BQ_TMPDIR"
+  if [[ -n "$LYRIC_IAM_BQ_TMPDIR" && -d "$LYRIC_IAM_BQ_TMPDIR" ]]; then
+    rm -rf "$LYRIC_IAM_BQ_TMPDIR"
   fi
 }
 trap cleanup EXIT INT TERM
 
-if [[ -n "${HOOP_GCP_ACCESS_TOKEN:-}" ]]; then
+if [[ -n "${LYRIC_IAM_GCP_ACCESS_TOKEN:-}" ]]; then
   # IAM Federation path. The token has a finite TTL (minted by the gateway
   # with a default of 1h); long-running BigQuery jobs that exceed that TTL
   # will need to be re-submitted in a fresh Hoop session.
 
   if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
-    echo "warning: both HOOP_GCP_ACCESS_TOKEN and GOOGLE_APPLICATION_CREDENTIALS are set; preferring federation" >&2
+    echo "warning: both LYRIC_IAM_GCP_ACCESS_TOKEN and GOOGLE_APPLICATION_CREDENTIALS are set; preferring federation" >&2
   fi
 
-  HOOP_BQ_TMPDIR=$(mktemp -d)
-  chmod 0700 "$HOOP_BQ_TMPDIR"
-  TOKEN_FILE="$HOOP_BQ_TMPDIR/access_token"
+  LYRIC_IAM_BQ_TMPDIR=$(mktemp -d)
+  chmod 0700 "$LYRIC_IAM_BQ_TMPDIR"
+  TOKEN_FILE="$LYRIC_IAM_BQ_TMPDIR/access_token"
 
   # umask before writing so the file is 0600 even on systems where
   # mktemp's default differs.
-  ( umask 0177 && printf '%s' "$HOOP_GCP_ACCESS_TOKEN" > "$TOKEN_FILE" )
+  ( umask 0177 && printf '%s' "$LYRIC_IAM_GCP_ACCESS_TOKEN" > "$TOKEN_FILE" )
   chmod 0600 "$TOKEN_FILE"
 
   export CLOUDSDK_AUTH_ACCESS_TOKEN_FILE="$TOKEN_FILE"
   # Defensive: never let the OAuth token bleed into child processes that
   # only inspect env vars. The token file is the canonical handoff.
-  unset HOOP_GCP_ACCESS_TOKEN
+  unset LYRIC_IAM_GCP_ACCESS_TOKEN
 
   if [[ -n "${CLOUDSDK_CORE_PROJECT:-}" ]]; then
     export CLOUDSDK_CORE_PROJECT
@@ -74,7 +74,7 @@ elif [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
   gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" 2>/dev/null
 
 else
-  echo "error: no GCP credentials available (set HOOP_GCP_ACCESS_TOKEN via federation or GOOGLE_APPLICATION_CREDENTIALS for legacy path)" >&2
+  echo "error: no GCP credentials available (set LYRIC_IAM_GCP_ACCESS_TOKEN via federation or GOOGLE_APPLICATION_CREDENTIALS for legacy path)" >&2
   exit 1
 fi
 

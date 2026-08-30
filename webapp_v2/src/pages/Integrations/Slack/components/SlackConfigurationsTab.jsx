@@ -4,7 +4,7 @@ import { showSnackbar } from '@/utils/snackbar'
 import PasswordInput from '@/components/PasswordInput'
 import Button from '@/components/Button'
 
-const SLACK_DOCS_URL = 'https://hoop.dev/docs/integrations/slack'
+const SLACK_DOCS_URL = 'https://docs.lyric.tech/access/integrations/slack'
 
 // GET /plugins/slack returns envvars base64-encoded; on decode failure the
 // raw value is shown (mirrors the legacy base64-decode-safe behavior).

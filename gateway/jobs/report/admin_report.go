@@ -74,7 +74,7 @@ package report
 
 // 	log.Info("Sending admins weekly report")
 // 	s.Notification.Send(notification.Notification{
-// 		Title:      "Your weekly report at Hoop",
+// 		Title:      "Your weekly report at Lyric IAM",
 // 		Message:    template,
 // 		Recipients: listEmails(admins),
 // 	})

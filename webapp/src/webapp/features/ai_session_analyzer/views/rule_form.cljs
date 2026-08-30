@@ -158,7 +158,7 @@
           [:> Flex {:align "center" :gap "2"}
            [:> Sparkles {:size 14 :class "text-[--indigo-9]"}]
            [:> Text {:size "2" :weight "medium" :class "text-[--gray-12]"}
-            "Hoop's appended system prompt"]
+            "Lyric IAM's appended system prompt"]
            [:> Badge {:variant "soft" :color "gray" :radius "full" :size "1"}
             "Read-only"]]
           (if @expanded?
@@ -333,7 +333,7 @@
             [:> Box {:grid-column "span 2 / span 2"}
              [:> Heading {:as "h3" :size "4"} "Custom analysis prompt"]
              [:> Text {:size "3" :class "text-[--gray-11]"}
-              "Tell the model what to look for. Hoop appends a system prompt so the model always returns a low/medium/high grade."]]
+              "Tell the model what to look for. Lyric IAM appends a system prompt so the model always returns a low/medium/high grade."]]
             [:> Box {:grid-column "span 5 / span 5" :class "space-y-radix-3"}
              [forms/textarea
               {:label "Your prompt (Optional)"
@@ -346,7 +346,7 @@
               [:> Callout.Icon
                [:> Info {:size 16}]]
               [:> Callout.Text
-               "Hoop prepends a fixed system prompt before your instructions so the analyzer always returns a structured low/medium/high grade. This is what keeps the actions above reliable."]]
+               "Lyric IAM prepends a fixed system prompt before your instructions so the analyzer always returns a structured low/medium/high grade. This is what keeps the actions above reliable."]]
              [system-prompt-preview]]]
 
            [:> Grid {:columns "7" :gap "7"}

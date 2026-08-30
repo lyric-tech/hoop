@@ -38,7 +38,7 @@ type RecvDemux struct {
 	// sessionCloseReasons records the payload of the first observed
 	// SessionClose per sessionID, so tests can surface WHY the agent
 	// ended a session (e.g. the OSS libhoop stub's "missing protocol
-	// hoop library") instead of hanging or failing opaquely. Entries are
+	// lyric-iam library") instead of hanging or failing opaquely. Entries are
 	// never evicted — a demux lives for one test and holds one short
 	// string per closed session.
 	sessionCloseReasons map[string]string

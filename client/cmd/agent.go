@@ -41,7 +41,7 @@ func Start(cmd *cobra.Command) error {
 		if err != nil {
 			return fmt.Errorf("failed to start agent: %w", err)
 		}
-		cmd.Printf("✓ Installed and started hoop-agent service\n")
+		cmd.Printf("✓ Installed and started lyric-iam-agent service\n")
 		return nil
 	}
 	return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
@@ -53,7 +53,7 @@ func Stop(cmd *cobra.Command) error {
 		if err != nil {
 			return fmt.Errorf("failed to stop agent: %w", err)
 		}
-		cmd.Printf("✓ Stopped hoop-agent service\n")
+		cmd.Printf("✓ Stopped lyric-iam-agent service\n")
 		return nil
 	}
 	return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
@@ -65,7 +65,7 @@ func Remove(cmd *cobra.Command) error {
 		if err != nil {
 			return fmt.Errorf("failed to remove agent: %w", err)
 		}
-		cmd.Printf("✓ Removed and stopped hoop-agent\n")
+		cmd.Printf("✓ Removed and stopped lyric-iam-agent\n")
 		return nil
 	}
 	return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
@@ -77,7 +77,7 @@ func Logs(cmd *cobra.Command) error {
 		if err != nil {
 			return fmt.Errorf("failed to get agent logs: %w", err)
 		}
-		cmd.Printf("✓ Showing hoop-agent logs\n")
+		cmd.Printf("✓ Showing lyric-iam-agent logs\n")
 		return nil
 	}
 	return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
@@ -89,7 +89,7 @@ func EnvFiles(cmd *cobra.Command) error {
 		if err != nil {
 			return fmt.Errorf("failed to get agent env file: %w", err)
 		}
-		cmd.Printf("✓ Showing hoop-agent env file path\n")
+		cmd.Printf("✓ Showing lyric-iam-agent env file path\n")
 		return nil
 	}
 	return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
@@ -98,14 +98,14 @@ func EnvFiles(cmd *cobra.Command) error {
 var (
 	agentCmd = &cobra.Command{
 		Use:     "agent [COMMAND ..]",
-		Example: "hoop agent",
-		Short:   "Install Hoop as a service/agent",
+		Example: "lyric-iam agent",
+		Short:   "Install Lyric IAM as a service/agent",
 	}
 
 	startLinuxAgentCmd = &cobra.Command{
 		Use:     "start",
-		Example: "hoop agent start",
-		Short:   "Hoop agent start as a service daemon",
+		Example: "lyric-iam agent start",
+		Short:   "Lyric IAM agent start as a service daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Start(cmd)
 		},
@@ -113,8 +113,8 @@ var (
 
 	stopLinuxAgentCmd = &cobra.Command{
 		Use:     "stop",
-		Example: "hoop agent stop",
-		Short:   "Stop Hoop agent service daemon",
+		Example: "lyric-iam agent stop",
+		Short:   "Stop Lyric IAM agent service daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Stop(cmd)
 		},
@@ -122,8 +122,8 @@ var (
 
 	logsLinuxAgentCmd = &cobra.Command{
 		Use:     "logs",
-		Example: "hoop agent logs",
-		Short:   "Show Hoop agent logs",
+		Example: "lyric-iam agent logs",
+		Short:   "Show Lyric IAM agent logs",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Logs(cmd)
 		},
@@ -131,8 +131,8 @@ var (
 
 	removeLinuxAgentCmd = &cobra.Command{
 		Use:     "remove",
-		Example: "hoop agent remove",
-		Short:   "Remove Hoop agent from service daemon",
+		Example: "lyric-iam agent remove",
+		Short:   "Remove Lyric IAM agent from service daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Remove(cmd)
 		},
@@ -140,8 +140,8 @@ var (
 
 	envFilesCmd = &cobra.Command{
 		Use:     "env",
-		Example: "hoop agent env",
-		Short:   "Show Hoop agent environment file keys",
+		Example: "lyric-iam agent env",
+		Short:   "Show Lyric IAM agent environment file keys",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return EnvFiles(cmd)
 		},

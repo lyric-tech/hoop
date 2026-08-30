@@ -120,7 +120,7 @@ export default function AiAgentsIdentitiesForm() {
       <Stack gap="xxlAlt">
         <SectionRow
           title="Set basic information"
-          description="Used to identify this AI Agent and its actions across Hoop."
+          description="Used to identify this AI Agent and its actions across Lyric IAM."
         >
           <TextInput
             label="Name"

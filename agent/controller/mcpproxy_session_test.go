@@ -21,7 +21,7 @@ import (
 )
 
 // mcpPost drives one JSON-RPC message through a gateway's HTTP handler the
-// way hoop's proxy listener does: a POST to /mcp carrying the session header
+// way lyric-iam's proxy listener does: a POST to /mcp carrying the session header
 // once the handshake assigned one, plus the negotiated protocol version once
 // there is one to echo.
 //
@@ -48,13 +48,13 @@ func mcpPost(t *testing.T, h http.Handler, sid, body string) (int, string, strin
 }
 
 const (
-	// mcpNegotiatedVersion is the revision hoop's MCP clients negotiate and
+	// mcpNegotiatedVersion is the revision lyric-iam's MCP clients negotiate and
 	// must echo on every later request.
 	mcpNegotiatedVersion = "2025-11-25"
 
 	mcpInitialize = `{"jsonrpc":"2.0","id":1,"method":"initialize","params":` +
 		`{"protocolVersion":"` + mcpNegotiatedVersion + `","capabilities":{},` +
-		`"clientInfo":{"name":"hoop-test","version":"1"}}}`
+		`"clientInfo":{"name":"lyric-iam-test","version":"1"}}}`
 	mcpToolsList = `{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`
 )
 
@@ -83,7 +83,7 @@ func newTunnelGateway(t *testing.T, sessionID string, policy mcpconfig.Policy) *
 
 // An MCP client's second request must succeed.
 //
-// This is the regression the per-connection-id gateway had: the hoop proxy
+// This is the regression the per-connection-id gateway had: the lyric-iam proxy
 // listener mints a fresh connection id for every inbound HTTP request, so
 // keying the mcpproxy gateway on it produced a brand-new gateway for message
 // two — one that had never issued the session id the client was presenting.
@@ -198,7 +198,7 @@ func TestSessionCleanupClosesMCPGateway(t *testing.T) {
 	}
 }
 
-// Two hoop sessions must not share one MCP server process: they are different
+// Two lyric-iam sessions must not share one MCP server process: they are different
 // users, or the same user twice, and a shared child would leak state between
 // them.
 func TestClientStdioBackendsAreScopedPerSession(t *testing.T) {
@@ -222,7 +222,7 @@ func TestClientStdioBackendsAreScopedPerSession(t *testing.T) {
 }
 
 // mcpGatewayFor must return the SAME gateway for every connection id in a
-// session. This is the hoop-layer half of the affinity fix: the proxy
+// session. This is the lyric-iam-layer half of the affinity fix: the proxy
 // listener hands the agent a new connection id per HTTP request, and building
 // a gateway per id is what broke every message after initialize.
 func TestMCPGatewayIsMemoisedPerSession(t *testing.T) {

@@ -75,8 +75,8 @@ function ConnectedCommandPalette() {
         useBridgeStore.getState().syncPrimaryConnectionFromUrl();
         break;
 
-      case ACTION_TYPES.HOOP_CLI: {
-        const cmd = `hoop connect ${connection?.name}`;
+      case ACTION_TYPES.LYRIC_IAM_CLI: {
+        const cmd = `lyric-iam connect ${connection?.name}`;
         navigator.clipboard.writeText(cmd).then(() => {
           showSnackbar({ level: 'success', text: `Copied: ${cmd}` });
         });

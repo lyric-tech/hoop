@@ -35,8 +35,8 @@ func TestAAAAForKnownName(t *testing.T) {
 	alloc := addressing.New("seed")
 	addr, _ := alloc.AddName("pg-prod")
 
-	r := New(alloc, "hoop")
-	resp := query(t, r, "pg-prod.hoop", dns.TypeAAAA)
+	r := New(alloc, "lyric-iam")
+	resp := query(t, r, "pg-prod.lyric-iam", dns.TypeAAAA)
 	if resp.Rcode != dns.RcodeSuccess {
 		t.Fatalf("rcode = %s, want NOERROR", dns.RcodeToString[resp.Rcode])
 	}
@@ -56,8 +56,8 @@ func TestAAAAForKnownName(t *testing.T) {
 func TestAForKnownNameReturnsV4(t *testing.T) {
 	alloc := addressing.New("seed")
 	_, _ = alloc.AddName("pg-prod")
-	r := New(alloc, "hoop")
-	resp := query(t, r, "pg-prod.hoop", dns.TypeA)
+	r := New(alloc, "lyric-iam")
+	resp := query(t, r, "pg-prod.lyric-iam", dns.TypeA)
 	if resp.Rcode != dns.RcodeSuccess {
 		t.Fatalf("rcode = %s, want NOERROR", dns.RcodeToString[resp.Rcode])
 	}
@@ -86,13 +86,13 @@ func TestAForKnownNameReturnsV4(t *testing.T) {
 
 func TestUnknownNameNXDOMAIN(t *testing.T) {
 	alloc := addressing.New("seed")
-	r := New(alloc, "hoop")
-	resp := query(t, r, "ghost.hoop", dns.TypeAAAA)
+	r := New(alloc, "lyric-iam")
+	resp := query(t, r, "ghost.lyric-iam", dns.TypeAAAA)
 	if resp.Rcode != dns.RcodeNameError {
 		t.Fatalf("rcode = %s, want NXDOMAIN", dns.RcodeToString[resp.Rcode])
 	}
 	// NXDOMAIN must also carry the SOA for negative caching (RFC 2308).
-	assertSOA(t, resp, "hoop.")
+	assertSOA(t, resp, "lyric-iam.")
 }
 
 // TestAAAAHasNoAuthoritySOA pins that a positive AAAA answer does NOT
@@ -102,8 +102,8 @@ func TestUnknownNameNXDOMAIN(t *testing.T) {
 func TestAAAAHasNoAuthoritySOA(t *testing.T) {
 	alloc := addressing.New("seed")
 	_, _ = alloc.AddName("pg-prod")
-	r := New(alloc, "hoop")
-	resp := query(t, r, "pg-prod.hoop", dns.TypeAAAA)
+	r := New(alloc, "lyric-iam")
+	resp := query(t, r, "pg-prod.lyric-iam", dns.TypeAAAA)
 	if len(resp.Ns) != 0 {
 		t.Fatalf("positive AAAA answer should have empty authority section, got %d records", len(resp.Ns))
 	}
@@ -131,7 +131,7 @@ func assertSOA(t *testing.T, resp *dns.Msg, zone string) {
 
 func TestQueryOutsideTLDRefused(t *testing.T) {
 	alloc := addressing.New("seed")
-	r := New(alloc, "hoop")
+	r := New(alloc, "lyric-iam")
 	resp := query(t, r, "example.com", dns.TypeAAAA)
 	if resp.Rcode != dns.RcodeRefused {
 		t.Fatalf("rcode = %s, want REFUSED", dns.RcodeToString[resp.Rcode])
@@ -142,8 +142,8 @@ func TestMultiLabelName(t *testing.T) {
 	alloc := addressing.New("seed")
 	// Connection name carries an internal dot.
 	wantAddr, _ := alloc.AddName("pg.prod")
-	r := New(alloc, "hoop")
-	resp := query(t, r, "pg.prod.hoop", dns.TypeAAAA)
+	r := New(alloc, "lyric-iam")
+	resp := query(t, r, "pg.prod.lyric-iam", dns.TypeAAAA)
 	if resp.Rcode != dns.RcodeSuccess {
 		t.Fatalf("rcode = %s", dns.RcodeToString[resp.Rcode])
 	}
@@ -160,8 +160,8 @@ func TestMultiLabelName(t *testing.T) {
 func TestCaseInsensitive(t *testing.T) {
 	alloc := addressing.New("seed")
 	_, _ = alloc.AddName("pg-prod")
-	r := New(alloc, "hoop")
-	resp := query(t, r, "PG-PROD.Hoop", dns.TypeAAAA)
+	r := New(alloc, "lyric-iam")
+	resp := query(t, r, "PG-PROD.Lyric-IAM", dns.TypeAAAA)
 	if resp.Rcode != dns.RcodeSuccess {
 		t.Fatalf("rcode = %s", dns.RcodeToString[resp.Rcode])
 	}
@@ -170,8 +170,8 @@ func TestCaseInsensitive(t *testing.T) {
 func TestCustomTLD(t *testing.T) {
 	alloc := addressing.New("seed")
 	_, _ = alloc.AddName("svc")
-	r := New(alloc, "hoop.internal")
-	resp := query(t, r, "svc.hoop.internal", dns.TypeAAAA)
+	r := New(alloc, "lyric-iam.internal")
+	resp := query(t, r, "svc.lyric-iam.internal", dns.TypeAAAA)
 	if resp.Rcode != dns.RcodeSuccess {
 		t.Fatalf("rcode = %s, want NOERROR", dns.RcodeToString[resp.Rcode])
 	}

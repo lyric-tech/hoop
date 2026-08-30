@@ -8,17 +8,17 @@ import (
 )
 
 func TestDerivePaths_Defaults(t *testing.T) {
-	up, _ := userPaths(Options{ServiceName: "hoopd"})
-	if !strings.HasSuffix(up, "/.config/systemd/user/hoopd.service") {
-		t.Fatalf("unit path=%q, want ~/.config/systemd/user/hoopd.service", up)
+	up, _ := userPaths(Options{ServiceName: "lyric-iamd"})
+	if !strings.HasSuffix(up, "/.config/systemd/user/lyric-iamd.service") {
+		t.Fatalf("unit path=%q, want ~/.config/systemd/user/lyric-iamd.service", up)
 	}
 }
 
 func TestUserPaths(t *testing.T) {
 	restore, home := withTempHome(t)
 	defer restore()
-	got, _ := userPaths(Options{ServiceName: "hoopd"})
-	want := filepath.Join(home, ".config", "systemd", "user", "hoopd.service")
+	got, _ := userPaths(Options{ServiceName: "lyric-iamd"})
+	want := filepath.Join(home, ".config", "systemd", "user", "lyric-iamd.service")
 	if got != want {
 		t.Fatalf("userPaths mismatch\n got = %q, want = %q", got, want)
 	}
@@ -26,20 +26,20 @@ func TestUserPaths(t *testing.T) {
 
 func TestRenderServiceFile(t *testing.T) {
 	txt := renderServiceFile(unitData{
-		Description: "hoop-agent Service",
+		Description: "lyric-iam-agent Service",
 		ExecPath:    "/usr/bin/hoop",
 		ExecArgs:    " start agent",
 		Env: map[string]string{
-			"HOOP_KEY": "abc123",
+			"LYRIC_IAM_KEY": "abc123",
 			"FOO":      "bar",
 		},
 		WantedBy: "default.target",
 	})
 
 	requireContains(t, txt, "[Unit]")
-	requireContains(t, txt, "Description=hoop-agent Service")
+	requireContains(t, txt, "Description=lyric-iam-agent Service")
 	requireContains(t, txt, "[Service]")
-	requireContains(t, txt, `Environment="HOOP_KEY=abc123"`)
+	requireContains(t, txt, `Environment="LYRIC_IAM_KEY=abc123"`)
 	requireContains(t, txt, `Environment="FOO=bar"`)
 	requireContains(t, txt, "ExecStart=/usr/bin/hoop start agent")
 	requireContains(t, txt, "[Install]")
@@ -48,7 +48,7 @@ func TestRenderServiceFile(t *testing.T) {
 
 func TestRenderUnit_IncludesEnvAndExec(t *testing.T) {
 	unit := renderServiceFile(unitData{
-		Description: "Hoop Service",
+		Description: "Lyric IAM Service",
 		ExecPath:    "/usr/bin/hoop",
 		ExecArgs:    " agent start",
 		Env: map[string]string{
@@ -59,7 +59,7 @@ func TestRenderUnit_IncludesEnvAndExec(t *testing.T) {
 	})
 
 	wantContains := []string{
-		"Description=Hoop Service",
+		"Description=Lyric IAM Service",
 		"[Service]",
 		`ExecStart=/usr/bin/hoop agent start`,
 		`Environment="FOO=bar"`,
@@ -81,7 +81,7 @@ func TestLogsAgent_CallsJournalctl(t *testing.T) {
 	execRunner = mr
 	defer func() { execRunner = old }()
 
-	err := logsAgent("hoop-agent")
+	err := logsAgent("lyric-iam-agent")
 	if err != nil {
 		t.Fatalf("logsAgent returned error: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestLogsAgent_CallsJournalctl(t *testing.T) {
 	}
 	call := mr.callsLog[0]
 	requireContains(t, call, "journalctl")
-	requireContains(t, call, "--user -u hoop-agent.service -f -o cat --no-pager")
+	requireContains(t, call, "--user -u lyric-iam-agent.service -f -o cat --no-pager")
 }
 
 func TestLogsAgent_ErrorBubblesUp(t *testing.T) {
@@ -100,7 +100,7 @@ func TestLogsAgent_ErrorBubblesUp(t *testing.T) {
 	execRunner = mr
 	defer func() { execRunner = old }()
 
-	if err := logsAgent("hoop-agent"); err == nil {
+	if err := logsAgent("lyric-iam-agent"); err == nil {
 		t.Fatalf("expected error from logsAgent, got nil")
 	}
 }
@@ -115,9 +115,9 @@ func TestInstall_WritesUnitAndEnablesService(t *testing.T) {
 	defer func() { execRunner = old }()
 
 	opts := Options{
-		ServiceName: "hoop-agent",
+		ServiceName: "lyric-iam-agent",
 		ExecArgs:    " start agent",
-		Env:         map[string]string{"HOOP_KEY": "abc123"},
+		Env:         map[string]string{"LYRIC_IAM_KEY": "abc123"},
 		WantedBy:    "default.target",
 	}
 
@@ -125,14 +125,14 @@ func TestInstall_WritesUnitAndEnablesService(t *testing.T) {
 		t.Fatalf("install failed: %v", err)
 	}
 
-	unit := filepath.Join(home, ".config", "systemd", "user", "hoop-agent.service")
+	unit := filepath.Join(home, ".config", "systemd", "user", "lyric-iam-agent.service")
 	if _, err := os.Stat(unit); err != nil {
 		t.Fatalf("expected unit file to exist: %v", err)
 	}
 
 	joined := strings.Join(mr.callsRun, "\n")
 	requireContains(t, joined, "systemctl --user daemon-reload")
-	requireContains(t, joined, "systemctl --user enable --now hoop-agent")
+	requireContains(t, joined, "systemctl --user enable --now lyric-iam-agent")
 }
 
 func TestInstall_DaemonReloadFailure(t *testing.T) {

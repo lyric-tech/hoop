@@ -315,7 +315,7 @@ function JiraTemplateFormFields({ template, id, isEdit }) {
 
         <FormSection
           title="Set a configuration management database (CMDB)"
-          description="Create an additional layer of relation between CMDBs and hoop services."
+          description="Create an additional layer of relation between CMDBs and lyric-iam services."
         >
           <CmdbTable
             rows={cmdbRows}

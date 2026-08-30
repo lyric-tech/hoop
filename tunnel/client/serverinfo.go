@@ -1,6 +1,6 @@
 // serverinfo.go fetches gateway metadata from the /api/serverinfo endpoint.
 // The tunnel uses this to discover the gRPC URL so callers only need to
-// supply HOOP_APIURL and HOOP_TOKEN — the same minimal set the hoop CLI
+// supply LYRIC_IAM_APIURL and LYRIC_IAM_TOKEN — the same minimal set the lyric-iam CLI
 // requires after a successful login.
 package client
 
@@ -29,7 +29,7 @@ type ServerInfo struct {
 
 // FetchServerInfoOptions parametrizes the API call.
 type FetchServerInfoOptions struct {
-	// APIBaseURL is the gateway's HTTP API base, e.g. "https://hoop.dev"
+	// APIBaseURL is the gateway's HTTP API base, e.g. "https://lyric.tech"
 	// or "http://127.0.0.1:8009". Must NOT include /api.
 	APIBaseURL string
 

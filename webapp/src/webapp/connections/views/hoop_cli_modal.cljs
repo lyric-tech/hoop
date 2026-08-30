@@ -8,16 +8,16 @@
 
 (defn cli-commands [api-url]
   {:macos {:install ["brew tap hoophq/brew https://github.com/hoophq/brew"
-                     "brew install hoop"]
-           :configure (str "hoop config create --api-url " api-url)
-           :login "hoop login"
-           :connect "hoop connect <connection-name>"
+                     "brew install lyric-iam"]
+           :configure (str "lyric-iam config create --api-url " api-url)
+           :login "lyric-iam login"
+           :connect "lyric-iam connect <connection-name>"
            :docs-link (get-in config/docs-url
                               [:clients :command-line :macos])}
    :linux {:install "curl -s -L https://releases.hoop.dev/release/install-cli.sh | sh"
-           :configure (str "hoop config create --api-url " api-url)
-           :login "hoop login"
-           :connect "hoop connect <connection-name>"
+           :configure (str "lyric-iam config create --api-url " api-url)
+           :login "lyric-iam login"
+           :connect "lyric-iam connect <connection-name>"
            :docs-link (get-in config/docs-url
                               [:clients :command-line :linux])}
    :windows {:docs-link (get-in config/docs-url
@@ -35,22 +35,22 @@
 
        (cs/includes? cmd "brew install")
        [:> Text {:size "2"}
-        "brew install hoop"]
+        "brew install lyric-iam"]
 
        ;; Config command
-       (cs/includes? cmd "hoop config create")
+       (cs/includes? cmd "lyric-iam config create")
        [:> Text {:size "2"}
-        "hoop config create --api-url "
+        "lyric-iam config create --api-url "
         [:> Text {:size "2" :class "text-[--orange-7]"} api-url]]
 
        ;; Login command
-       (cs/includes? cmd "hoop login")
-       [:> Text {:size "2"} "hoop login"]
+       (cs/includes? cmd "lyric-iam login")
+       [:> Text {:size "2"} "lyric-iam login"]
 
        ;; Connect command
-       (cs/includes? cmd "hoop connect")
+       (cs/includes? cmd "lyric-iam connect")
        [:> Text {:size "2"}
-        "hoop connect "
+        "lyric-iam connect "
         [:> Text {:size "2" :class "text-[--orange-7]"} connection-name]]
 
        ;; Curl command
@@ -79,14 +79,14 @@
 
 (defn macos-content [connection-name api-url]
   [:div {:class "space-y-radix-6"}
-   [cli-section "Install Hoop CLI" (get-in (cli-commands api-url) [:macos :install]) connection-name api-url]
+   [cli-section "Install Lyric IAM CLI" (get-in (cli-commands api-url) [:macos :install]) connection-name api-url]
    [cli-section "Configure authentication" (get-in (cli-commands api-url) [:macos :configure]) connection-name api-url]
    [cli-section "Get an access token" (get-in (cli-commands api-url) [:macos :login]) connection-name api-url]
    [cli-section "Connect to resource" (get-in (cli-commands api-url) [:macos :connect]) connection-name api-url]])
 
 (defn linux-content [connection-name api-url]
   [:div {:class "space-y-radix-6"}
-   [cli-section "Install Hoop CLI" (get-in (cli-commands api-url) [:linux :install]) connection-name api-url]
+   [cli-section "Install Lyric IAM CLI" (get-in (cli-commands api-url) [:linux :install]) connection-name api-url]
    [cli-section "Configure authentication" (get-in (cli-commands api-url) [:linux :configure]) connection-name api-url]
    [cli-section "Get an access token" (get-in (cli-commands api-url) [:linux :login]) connection-name api-url]
    [cli-section "Connect to resource" (get-in (cli-commands api-url) [:linux :connect]) connection-name api-url]])
@@ -94,7 +94,7 @@
 (defn windows-content [api-url]
   [:div {:class "space-y-6"}
    [:> Text {:as "h3" :size "4" :weight "medium"}
-    "Install Hoop CLI"]
+    "Install Lyric IAM CLI"]
    [:> Text {:as "p" :size "2" :class "text-gray-11"}
     "For details about Windows installation check "
     [:a {:href (get-in (cli-commands api-url) [:windows :docs-link])
@@ -112,7 +112,7 @@
        [:div {:class "w-[55%] flex-1 space-y-radix-8 my-10 px-10 overflow-y-auto"}
         [:div {:class "space-y-2"}
          [:> Text {:as "h2" :size "6" :weight "bold"}
-          "Get more with Hoop CLI"]
+          "Get more with Lyric IAM CLI"]
          [:> Text {:as "p" :size "2" :class "text-gray-11"}
           "Follow the steps below to connect to your resource via native access."]]
 
@@ -147,10 +147,10 @@
                                    (get-in (cli-commands (:api_url (:data @gateway-info)))
                                            [(keyword @selected-tab) :docs-link])
                                    "_blank")}
-            "Hoop CLI Docs"])]]
+            "Lyric IAM CLI Docs"])]]
 
        ;; Right side - Decorative image
        [:> Box {:class "w-[45%] bg-blue-50"}
         [:img {:src "/images/illustrations/cli-promotion.png"
-               :alt "Hoop CLI Modal"
+               :alt "Lyric IAM CLI Modal"
                :class "w-full h-full object-cover"}]]])))

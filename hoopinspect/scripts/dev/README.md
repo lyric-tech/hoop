@@ -40,24 +40,24 @@ answers.
 Every script reads the same three environment variables:
 
 ```bash
-export HOOP_PROJECT=my-gcp-project        # required
-export HOOP_REGION=global                 # default: global
-export HOOP_MODEL=claude-sonnet-4-5@20250929
+export LYRIC_IAM_PROJECT=my-gcp-project        # required
+export LYRIC_IAM_REGION=global                 # default: global
+export LYRIC_IAM_MODEL=claude-sonnet-4-5@20250929
 ```
 
 Credentials come from Application Default Credentials by default:
 
 ```bash
 gcloud auth application-default login
-gcloud auth application-default set-quota-project "$HOOP_PROJECT"
+gcloud auth application-default set-quota-project "$LYRIC_IAM_PROJECT"
 ```
 
 To test a service-account key file instead, point at it and the config picks
 it up:
 
 ```bash
-export HOOP_CREDENTIALS_FILE=$HOME/vertex-sa.json
-chmod 600 "$HOOP_CREDENTIALS_FILE"        # 0644 is refused at startup
+export LYRIC_IAM_CREDENTIALS_FILE=$HOME/vertex-sa.json
+chmod 600 "$LYRIC_IAM_CREDENTIALS_FILE"        # 0644 is refused at startup
 ```
 
 ## Prerequisites
@@ -65,7 +65,7 @@ chmod 600 "$HOOP_CREDENTIALS_FILE"        # 0644 is refused at startup
 `gcloud`, `docker`, `go`, `curl`, `psql`, `python3`, and one IAM binding:
 
 ```bash
-gcloud projects add-iam-policy-binding "$HOOP_PROJECT" \
+gcloud projects add-iam-policy-binding "$LYRIC_IAM_PROJECT" \
   --member="user:$(gcloud config get-value account)" \
   --role="roles/aiplatform.user"
 ```
@@ -141,7 +141,7 @@ and then watch for refusals in the audit trail during an observe-only rollout.
 |---|---|
 | `00` fails with 403 | Missing `roles/aiplatform.user` |
 | `00` fails with 404 on the model path | Model not enabled in Model Garden, or absent from this region |
-| `00` fails with a DNS error | `HOOP_REGION=global` uses the unprefixed host. A typo'd region resolves nowhere |
+| `00` fails with a DNS error | `LYRIC_IAM_REGION=global` uses the unprefixed host. A typo'd region resolves nowhere |
 | `01` fails minting a token | Stale ADC. Re-run `gcloud auth application-default login` |
 | `01` passes but traffic is never classified | The project or model is wrong. Validation does not call the API; run `00` |
 | Statements pass with `provider returned 403` in the audit trail | `fail_open: true` doing its job. Fix the IAM binding, or set `fail_open: false` |

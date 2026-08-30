@@ -1,4 +1,4 @@
-// connections.go fetches the list of hoop connections from the gateway
+// connections.go fetches the list of lyric-iam connections from the gateway
 // over its existing REST API. The tunnel does not introduce any new
 // gateway endpoints: it asks the same `GET /api/connections` the webapp
 // uses, then filters for connection types it can actually carry.
@@ -22,13 +22,13 @@ import (
 // struct that the tunnel cares about. We never deserialize secrets,
 // schedules, reviews, etc.
 type Connection struct {
-	Name    string // the lookup key for `hoop connect`
+	Name    string // the lookup key for `lyric-iam connect`
 	SubType string // postgres, mysql, mssql, mongodb, tcp, ...
 }
 
 // FetchConnectionsOptions parametrizes the API call.
 type FetchConnectionsOptions struct {
-	// APIBaseURL is the gateway's HTTP API base, e.g. "https://hoop.dev"
+	// APIBaseURL is the gateway's HTTP API base, e.g. "https://lyric.tech"
 	// or "http://127.0.0.1:8009". Must NOT include /api.
 	APIBaseURL string
 

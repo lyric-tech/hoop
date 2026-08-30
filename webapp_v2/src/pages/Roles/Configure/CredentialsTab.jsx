@@ -150,7 +150,7 @@ function SecretsManagerProviderSection({ provider, onProviderChange }) {
       />
       <Anchor
         size="sm"
-        href="https://hoop.dev/docs/setup/configuration/secrets-manager"
+        href="https://docs.lyric.tech/access/setup/configuration/secrets-manager"
         target="_blank"
         rel="noopener noreferrer"
         display="inline-flex"

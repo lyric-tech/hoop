@@ -25,13 +25,13 @@ var rolesCmd = &cobra.Command{
 	Short: "List roles",
 	Long:  "List all roles (connections associated with resources), optionally filtered by resource.",
 	Example: `  # List all roles
-  hoop roles
+  lyric-iam roles
 
   # Filter by resource
-  hoop roles --resource my-db
+  lyric-iam roles --resource my-db
 
   # Output as JSON
-  hoop roles --json`,
+  lyric-iam roles --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runRoles()
 	},

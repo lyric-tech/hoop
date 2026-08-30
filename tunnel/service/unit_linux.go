@@ -95,8 +95,8 @@ const unitTemplate = `# hsh-tunneld systemd unit.
 # 'sudo hsh-tunneld install' again to refresh, or 'sudo hsh-tunneld
 # uninstall' to remove.
 [Unit]
-Description=Hoop Tunnel daemon (hsh-tunneld)
-Documentation=https://hoop.dev/docs/tunnel
+Description=Lyric IAM Tunnel daemon (hsh-tunneld)
+Documentation=https://docs.lyric.tech/access/tunnel
 After=network-online.target
 Wants=network-online.target
 

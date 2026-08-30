@@ -105,7 +105,7 @@ func installVersion(t *testing.T, layout Layout, version string) {
 	if err := os.MkdirAll(layout.VersionDir(version), 0700); err != nil {
 		t.Fatalf("mkdir version: %v", err)
 	}
-	if err := os.WriteFile(layout.VersionBinary(version), []byte("hoop-"+version), 0755); err != nil {
+	if err := os.WriteFile(layout.VersionBinary(version), []byte("lyric-iam-"+version), 0755); err != nil {
 		t.Fatalf("write binary: %v", err)
 	}
 }

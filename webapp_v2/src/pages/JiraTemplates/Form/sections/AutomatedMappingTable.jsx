@@ -5,7 +5,7 @@ import Table from '@/components/Table'
 import RuleTableControls from '@/components/RuleTableControls'
 import { makeRowOps } from '@/utils/rowOps'
 import {
-  HOOP_VALUE_OPTIONS,
+  LYRIC_IAM_VALUE_OPTIONS,
   MAPPING_TYPE_OPTIONS,
   createEmptyMappingRow,
   isNotConnectionTagRule,
@@ -17,7 +17,7 @@ function ValueCell({ row, onPatch }) {
     return (
       <Select
         placeholder="Select value"
-        data={HOOP_VALUE_OPTIONS}
+        data={LYRIC_IAM_VALUE_OPTIONS}
         value={row.value || null}
         onChange={(v) => onPatch({ value: v || '' })}
         comboboxProps={{ withinPortal: true }}
@@ -128,7 +128,7 @@ export default function AutomatedMappingTable({
           <Text component="span" size="sm" fw={700}>
             {'Preset: '}
           </Text>
-          {'Relates hoop.dev fields with Jira fields. '}
+          {'Relates Lyric IAM fields with Jira fields. '}
           <Text component="span" size="sm" fw={700}>
             {'Custom: '}
           </Text>

@@ -18,16 +18,16 @@
 //     flow and Resolve returns an actionable error.
 //   - ResolvedPrincipal is overridden by the federation service with the
 //     consented Google email (the honest identity), so the audit metadata and
-//     HOOP_FEDERATED_PRINCIPAL reflect the real human, not an identity-template
+//     LYRIC_IAM_FEDERATED_PRINCIPAL reflect the real human, not an identity-template
 //     render.
 //
 // Env-var contract emitted to the agent is identical to gcp_iam so the agent's
 // bq wrapper is credential-source agnostic:
 //
-//	HOOP_GCP_ACCESS_TOKEN         The short-lived OAuth bearer token.
-//	HOOP_GCP_TOKEN_EXPIRES_AT     RFC3339 expiry of the bearer.
+//	LYRIC_IAM_GCP_ACCESS_TOKEN         The short-lived OAuth bearer token.
+//	LYRIC_IAM_GCP_TOKEN_EXPIRES_AT     RFC3339 expiry of the bearer.
 //	CLOUDSDK_CORE_PROJECT         The GCP project id from extra_config.project_id.
-//	HOOP_FEDERATED_PRINCIPAL      The consented Google email.
+//	LYRIC_IAM_FEDERATED_PRINCIPAL      The consented Google email.
 package gcpoauth
 
 import (
@@ -144,10 +144,10 @@ func (r *Resolver) Resolve(ctx context.Context, req federation.ResolveRequest) (
 
 	return &federation.Result{
 		EnvVars: map[string]string{
-			"HOOP_GCP_ACCESS_TOKEN":     token,
-			"HOOP_GCP_TOKEN_EXPIRES_AT": expiresAt.UTC().Format(time.RFC3339),
+			"LYRIC_IAM_GCP_ACCESS_TOKEN":     token,
+			"LYRIC_IAM_GCP_TOKEN_EXPIRES_AT": expiresAt.UTC().Format(time.RFC3339),
 			"CLOUDSDK_CORE_PROJECT":     extra.ProjectID,
-			"HOOP_FEDERATED_PRINCIPAL":  req.ResolvedPrincipal,
+			"LYRIC_IAM_FEDERATED_PRINCIPAL":  req.ResolvedPrincipal,
 		},
 		// Same supersede contract as gcp_iam: the federated token replaces the
 		// legacy GOOGLE_APPLICATION_CREDENTIALS key-file auth path end-to-end.

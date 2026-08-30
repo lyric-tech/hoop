@@ -34,10 +34,10 @@ var silentMode bool
 var execSessionID string
 var execCorrelationID string
 
-var execExampleDesc = `hoop exec bash -i 'env'
-hoop exec bash -e MYENV=val --input 'env' -- --verbose
-hoop exec bash <<< 'env'
-hoop exec --session <session_id> --output json
+var execExampleDesc = `lyric-iam exec bash -i 'env'
+lyric-iam exec bash -e MYENV=val --input 'env' -- --verbose
+lyric-iam exec bash <<< 'env'
+lyric-iam exec --session <session_id> --output json
 `
 
 // execCmd represents the exec command
@@ -211,7 +211,7 @@ func runExec(args []string, clientEnvVars map[string]string) {
 			if jsonMode {
 				sessionID := string(pkt.Spec[pb.SpecGatewaySessionID])
 				emitWaitingApprovalAndExit(sessionID, string(pkt.Payload),
-					"poll status with: hoop admin get sessions "+sessionID+" -o json | check review.status field, then run: hoop exec --session "+sessionID+" --output json")
+					"poll status with: lyric-iam admin get sessions "+sessionID+" -o json | check review.status field, then run: lyric-iam exec --session "+sessionID+" --output json")
 			} else {
 				loader.Color("yellow")
 				if !loader.Active() {

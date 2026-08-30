@@ -209,7 +209,7 @@ func TestClientStdioBackendRoundTrip(t *testing.T) {
 // They are how a client-hosted server receives its API tokens, so dropping
 // them silently produces an unauthenticated server rather than an error.
 func TestClientStdioBackendPassesEnvToChild(t *testing.T) {
-	backend, _ := newTunnelPair(t, "sid-env", map[string]string{"MCPENV_WHOAMI": "hoop-user"})
+	backend, _ := newTunnelPair(t, "sid-env", map[string]string{"MCPENV_WHOAMI": "lyric-iam-user"})
 
 	roundTrip(t, backend, `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}`)
 	call := roundTrip(t, backend, `{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"whoami"}}`)
@@ -217,7 +217,7 @@ func TestClientStdioBackendPassesEnvToChild(t *testing.T) {
 	result, _ := call["result"].(map[string]any)
 	content, _ := result["content"].([]any)
 	first, _ := content[0].(map[string]any)
-	if text, _ := first["text"].(string); !strings.Contains(text, "as hoop-user") {
+	if text, _ := first["text"].(string); !strings.Contains(text, "as lyric-iam-user") {
 		t.Fatalf("tool result = %q, want the MCPENV_ value in the child env", text)
 	}
 }
@@ -342,7 +342,7 @@ func TestClientStdioBackendReportsSpawnFailure(t *testing.T) {
 	agent.connStore.Set("sid-badcmd", &pb.AgentConnectionParams{
 		ConnectionName: "laptop-mcp",
 		ConnectionType: string(pb.ConnectionTypeMcpProxy),
-		CmdList:        []string{filepath.Join(os.TempDir(), "hoop-no-such-mcp-server")},
+		CmdList:        []string{filepath.Join(os.TempDir(), "lyric-iam-no-such-mcp-server")},
 		EnvVars:        mcpProxyEnvVars(map[string]string{"MCP_TRANSPORT": mcpTransportClientStdio}),
 	})
 

@@ -32,7 +32,7 @@ import (
 )
 
 // nameMCPAnalyzer is the audit rule name for this stage. It is not one of
-// mcpproxy's checks.Name* constants because the check is hoop's, not the
+// mcpproxy's checks.Name* constants because the check is lyric-iam's, not the
 // library's.
 const nameMCPAnalyzer = "ai_analyzer"
 

@@ -66,7 +66,7 @@ func generateSelfSignedCert() (cert tls.Certificate, err error) {
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			CommonName:   "localhost",
-			Organization: []string{"Hoop Gateway"},
+			Organization: []string{"Lyric IAM Gateway"},
 			Country:      []string{"US"},
 		},
 		NotBefore:             time.Now().UTC(),

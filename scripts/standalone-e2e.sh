@@ -20,7 +20,7 @@
 # artifact.
 #
 # Usage: scripts/standalone-e2e.sh   (from the repo root)
-#   HOOP_BIN=/path/to/hoop  skips the build and tests that binary instead.
+#   LYRIC_IAM_BIN=/path/to/hoop  skips the build and tests that binary instead.
 set -euo pipefail
 
 # The script needs bash + these tools; fail fast with a clear message
@@ -31,9 +31,9 @@ done
 
 API_URL=${API_URL:-http://127.0.0.1:8009}
 WORK=$(mktemp -d)
-HOOP_HOME="$WORK/home"
+LYRIC_IAM_HOME="$WORK/home"
 LOG_DIR="$WORK/logs"
-mkdir -p "$HOOP_HOME" "$LOG_DIR"
+mkdir -p "$LYRIC_IAM_HOME" "$LOG_DIR"
 GATEWAY_PID=""
 
 cleanup() {
@@ -61,15 +61,15 @@ fail() { # $1=message $2=logfile
   exit 1
 }
 
-HOOP_BIN=${HOOP_BIN:-}
-if [[ -z "$HOOP_BIN" ]]; then
+LYRIC_IAM_BIN=${LYRIC_IAM_BIN:-}
+if [[ -z "$LYRIC_IAM_BIN" ]]; then
   echo "==> building the hoop binary"
-  HOOP_BIN="$WORK/hoop"
-  go build -o "$HOOP_BIN" client/hoop.go
+  LYRIC_IAM_BIN="$WORK/hoop"
+  go build -o "$LYRIC_IAM_BIN" client/hoop.go
 fi
 
 start_gateway() { # $1=phase
-  HOME="$HOOP_HOME" DO_NOT_TRACK=1 "$HOOP_BIN" start standalone \
+  HOME="$LYRIC_IAM_HOME" DO_NOT_TRACK=1 "$LYRIC_IAM_BIN" start standalone \
     >"$LOG_DIR/$1.log" 2>&1 &
   GATEWAY_PID=$!
 }

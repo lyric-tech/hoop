@@ -285,11 +285,11 @@ func credentialInfoToResponse(info *services.CredentialInfo) openapi.MachineIden
 		resp.DatabaseName = info.Postgres.DatabaseName
 		resp.ConnectionString = info.Postgres.ConnectionString
 		resp.Username = info.SecretKey
-		resp.Password = "hoop"
+		resp.Password = "lyric-iam"
 	}
 	if info.SSH != nil {
 		resp.Command = info.SSH.Command
-		resp.Username = "hoop"
+		resp.Username = "lyric-iam"
 		resp.Password = info.SecretKey
 	}
 	if info.RDP != nil {

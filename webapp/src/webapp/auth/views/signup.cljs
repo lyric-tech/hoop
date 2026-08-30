@@ -11,7 +11,7 @@
 
 (defmulti ^:private login-error-message identity)
 (defmethod ^:private login-error-message "slack_not_configured" [_]
-  "You must configure your Slack with Hoop")
+  "You must configure your Slack with Lyric IAM")
 (defmethod ^:private login-error-message "code_exchange_failure" [_]
   "Something went wrong. Try again and if the error persist, talk to the account administrator")
 (defmethod ^:private login-error-message "pending_review" [_]
@@ -55,7 +55,7 @@
                        :class "w-16 mx-auto py-4"}]]
                [:> Box
                 [:> Heading {:as "h1" :align "center" :size "6" :mb "2" :weight "bold" :class "text-[--gray-12]"}
-                 "Welcome to hoop.dev"]
+                 "Welcome to Lyric IAM"]
                 [:> Text {:as "p" :size "3" :align "center" :class "text-[--gray-12]"}
                  "Before getting started, set a name for your organization."]]]
 

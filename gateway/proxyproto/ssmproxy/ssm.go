@@ -257,8 +257,8 @@ func (r *SSMProxy) handleWebsocket(c *gin.Context) {
 		TLSSkipVerify: true,
 	}, grpcOpts...)
 	if err != nil {
-		log.With("sid", sessionID, "conn", cID).Errorf("failed connecting to hoop server, reason=%v", err)
-		c.String(http.StatusInternalServerError, "Failed to connect to hoop server")
+		log.With("sid", sessionID, "conn", cID).Errorf("failed connecting to lyric-iam server, reason=%v", err)
+		c.String(http.StatusInternalServerError, "Failed to connect to lyric-iam server")
 		return
 	}
 	defer client.Close()
@@ -273,7 +273,7 @@ func (r *SSMProxy) handleWebsocket(c *gin.Context) {
 	})
 	if err != nil {
 		log.With("sid", sessionID, "conn", cID).
-			Errorf("failed sending open session packet to hoop server, reason=%v", err)
+			Errorf("failed sending open session packet to lyric-iam server, reason=%v", err)
 		return
 	}
 
@@ -281,7 +281,7 @@ func (r *SSMProxy) handleWebsocket(c *gin.Context) {
 	pkt, err := client.Recv()
 	if err != nil {
 		log.With("sid", sessionID, "conn", cID).
-			Errorf("failed receiving session open confirmation from hoop server, reason=%v", err)
+			Errorf("failed receiving session open confirmation from lyric-iam server, reason=%v", err)
 		return
 	}
 
@@ -334,7 +334,7 @@ func (r *SSMProxy) handleTXPipe(ctx context.Context, ws *websocket.Conn, client 
 		for running.Load() {
 			msg, err := client.Recv()
 			if err != nil {
-				log.With("sid", sessionID, "conn", cID).Errorf("failed to receive packet from hoop server, reason=%v", err)
+				log.With("sid", sessionID, "conn", cID).Errorf("failed to receive packet from lyric-iam server, reason=%v", err)
 				running.Store(false)
 				break
 			}
@@ -408,7 +408,7 @@ func (r *SSMProxy) handleRXPipe(ctx context.Context, ws *websocket.Conn, client 
 		err = sendWebsocketMessageHelper(client, msgType, msgData, target, sessionID, cID)
 		if err != nil {
 			log.With("sid", sessionID, "conn", cID).
-				Errorf("failed to send packet to hoop server, reason=%v", err)
+				Errorf("failed to send packet to lyric-iam server, reason=%v", err)
 			return
 		}
 	}

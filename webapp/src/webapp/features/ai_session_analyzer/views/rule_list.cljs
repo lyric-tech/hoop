@@ -35,7 +35,7 @@
                   [:> Text {:size "4" :weight "bold"} (or (:name rule) "Unnamed Rule")]
                   [:> Text {:as "p" :size "3" :class "text-[--gray-11]"}
                    (or (:description rule) "")]]
-                 ;; Hoop-managed rules (protection profiles) are immutable —
+                 ;; Lyric IAM-managed rules (protection profiles) are immutable —
                  ;; the API rejects updates, so there is nothing to configure.
                  (when-not (:managed_by rule)
                    [:> Button {:variant "soft"

@@ -28,8 +28,8 @@
           (rf/dispatch-sync [:initialize-intercom user]))
         (if (.-Intercom js/window)
           (js/window.Intercom "showNewMessage" "I want to upgrade my current plan")
-          (.open js/window "https://hoop.dev/meet" "_blank")))
-      (.open js/window "https://hoop.dev/meet" "_blank"))))
+          (.open js/window "https://lyric.tech/meet" "_blank")))
+      (.open js/window "https://lyric.tech/meet" "_blank"))))
 
 (defn feature-item
   "Component to display a feature item with an icon"

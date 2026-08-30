@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	defaultSecurityGroupDescription = "Database ingress rule for connectivity with Hoop Agent"
+	defaultSecurityGroupDescription = "Database ingress rule for connectivity with Lyric IAM Agent"
 	defaultRunbookName              = "hoop-hooks/aws-connect-post-exec.runbook.py"
 	defaultConnectionTagDbArn       = "hoop.dev/aws-connect.dbarn"
 )
@@ -329,7 +329,7 @@ func (p *provisioner) handleConnectionProvision(req pbsystem.DBProvisionerReques
 
 	// Resolve which connections are new (vs. updates) inside the same
 	// transaction as the upsert so a concurrent writer cannot make us
-	// double-fire (or miss) the hoop-create-connection event.
+	// double-fire (or miss) the lyric-iam-create-connection event.
 	var newConnections []*models.Connection
 	sess := &gorm.Session{FullSaveAssociations: true}
 	if err := models.DB.Session(sess).Transaction(func(tx *gorm.DB) error {

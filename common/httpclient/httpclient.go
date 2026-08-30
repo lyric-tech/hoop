@@ -57,7 +57,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 func NewHttpClient(tlsCA string) HttpClient {
 	client := httpClient{http.DefaultClient, nil}
 
-	skipVerify := os.Getenv("HOOP_TLS_SKIP_VERIFY") == "true"
+	skipVerify := os.Getenv("LYRIC_IAM_TLS_SKIP_VERIFY") == "true"
 	if skipVerify {
 		client.client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},

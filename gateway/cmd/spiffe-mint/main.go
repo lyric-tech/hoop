@@ -31,7 +31,7 @@ func main() {
 	outDir := flag.String("out", "./dist/dev/spiffe", "output directory")
 	trustDomain := flag.String("trust-domain", "local.test", "SPIFFE trust domain")
 	spiffeID := flag.String("spiffe-id", "spiffe://local.test/agent/local-dev", "SPIFFE ID emitted as the sub claim")
-	audience := flag.String("audience", "http://127.0.0.1:8009", "audience emitted as the aud claim; must match HOOP_SPIFFE_AUDIENCE")
+	audience := flag.String("audience", "http://127.0.0.1:8009", "audience emitted as the aud claim; must match LYRIC_IAM_SPIFFE_AUDIENCE")
 	ttl := flag.Duration("ttl", 24*time.Hour, "JWT lifetime from now")
 	flag.Parse()
 
@@ -53,8 +53,8 @@ func main() {
 	// The JWKS is deterministic in the public key, so writing it every
 	// invocation is safe (no churn once the key is stable). The dev flow
 	// in scripts/dev/spiffe-prep.sh base64-encodes this file into
-	// HOOP_SPIFFE_BUNDLE_JWKS in .env; the gateway is also happy to
-	// consume the file directly via HOOP_SPIFFE_BUNDLE_FILE if you wire
+	// LYRIC_IAM_SPIFFE_BUNDLE_JWKS in .env; the gateway is also happy to
+	// consume the file directly via LYRIC_IAM_SPIFFE_BUNDLE_FILE if you wire
 	// it that way.
 	if err := writeJWKS(bundlePath, &priv.PublicKey, kid); err != nil {
 		log.Fatalf("write bundle: %v", err)

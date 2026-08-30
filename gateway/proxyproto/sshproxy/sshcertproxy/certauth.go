@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// UserMapping configures how a certificate attribute is resolved to a Hoop user.
+// UserMapping configures how a certificate attribute is resolved to a Lyric IAM user.
 // CertAttr is the certificate field inspected ("principal" or "key_id").
 // UserAttr is the user table column matched against it ("email", "subject", or "user_id").
 type UserMapping struct {
@@ -30,7 +30,7 @@ type UserMapping struct {
 type certSession struct {
 	cert         *ssh.Certificate
 	matchedValue string // the cert attribute value (principal or key_id) that resolved the user
-	userSubject  string // Hoop user subject resolved from the mapping at auth time
+	userSubject  string // Lyric IAM user subject resolved from the mapping at auth time
 	orgID        string // org the user belongs to; used for connection existence checks
 }
 
@@ -48,7 +48,7 @@ func (s *certSession) allowPTY() bool {
 	return ok
 }
 
-// lookupUserByCert finds the Hoop user that matches the certificate using the
+// lookupUserByCert finds the Lyric IAM user that matches the certificate using the
 // provided UserMapping. For CertAttr "principal", all ValidPrincipals are
 // tried in order and the first match wins. For "key_id", the certificate's
 // KeyId field is used directly. Returns the matched user, the cert attribute

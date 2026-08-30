@@ -9,7 +9,7 @@ import { authService } from '@/services/auth'
 import { useUserStore } from '@/stores/useUserStore'
 import { showSnackbar } from '@/utils/snackbar'
 
-const SALES_URL = 'https://hoop.dev/meet'
+const SALES_URL = 'https://lyric.tech/meet'
 const INTERCOM_MESSAGE = 'I want to upgrade my current plan'
 
 /**
@@ -79,7 +79,7 @@ function AddLicenseModal({ opened, onClose }) {
     <Modal opened={opened} onClose={handleClose} title="Add your license" size="lg">
       <Stack gap="md">
         <Stack gap={4}>
-          <Text size="md">Get the most out of Hoop with our Enterprise Plan.</Text>
+          <Text size="md">Get the most out of Lyric IAM with our Enterprise Plan.</Text>
           <Text size="sm" c="dimmed">
             If you don't have one, reach out to us.
           </Text>

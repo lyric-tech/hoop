@@ -123,7 +123,7 @@
           [:> Flex {:gap "6" :align "center"}
            [:> Button {:size "3"
                        :variant "ghost"
-                       :on-click #(js/window.open "https://help.hoop.dev/" "_blank")}
+                       :on-click #(js/window.open "https://docs.lyric.tech/access/" "_blank")}
             "Contact us"]
            [:> Button {:size "3"
                        :disabled (or disable-license-input?
@@ -147,7 +147,7 @@
                      :target "_blank"}
             "License Management documentation"]
            " or "
-           [:> Link {:href "https://help.hoop.dev/"
+           [:> Link {:href "https://docs.lyric.tech/access/"
                      :target "_blank"}
             "contact us"]
            ". "]]]))))

@@ -43,7 +43,7 @@ const LoginHTML = `
 
         <footer class="text-xs text-gray-500 py-4 text-center">
           @ hoop.dev 2023 - all rights reserved -
-          <a href="https://hoop.dev" class="text-blue-500 underline"> hoop.dev</a>
+          <a href="https://lyric.tech" class="text-blue-500 underline"> hoop.dev</a>
         </footer>
       </div>
     </div>

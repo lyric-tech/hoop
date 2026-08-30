@@ -20,6 +20,9 @@ function InlineCopy({ value }) {
 }
 
 export function DockerDeployment({ hoopKey }) {
+  // The agent still ships as the upstream hoophq/hoopdev image, which reads
+  // HOOP_KEY. Do not rename it to LYRIC_IAM_KEY here — that env var only
+  // exists in binaries built from this repository.
   const dockerImage = 'hoophq/hoopdev:latest';
   const runCommand = `docker container run \\\n-e HOOP_KEY='${hoopKey}' \\\n--rm -d hoophq/hoopdev`;
 
@@ -140,7 +143,7 @@ export function KubernetesDeployment({ hoopKey }) {
         <Text size="xs" c="dimmed">
           For more kubernetes configuration.{' '}
           <Anchor href={`${docsUrl.setup.deployment.kubernetes}#sidecar-container`} target="_blank" size="xs">
-            Check the Hoop docs
+            Check the Lyric IAM docs
           </Anchor>
         </Text>
         <CodeSnippet code={deploymentYml} />
@@ -151,13 +154,13 @@ export function KubernetesDeployment({ hoopKey }) {
 
 export function LocalDeployment({ hoopKey }) {
   const exportCmd = `export HOOP_KEY=${hoopKey}`;
-  const startCmd = `hoop agent start`;
+  const startCmd = `lyric-iam agent start`;
 
   return (
     <Stack gap="xl">
       <Stack gap="sm">
         <Text size="sm" fw={700}>
-          Install Hoop CLI
+          Install Lyric IAM CLI
         </Text>
         <DocsBtnCallOut text="See our installation docs for your OS" href={docsUrl.clients.commandLine.overview} />
       </Stack>
@@ -175,7 +178,7 @@ export function LocalDeployment({ hoopKey }) {
 
       <Stack gap="sm">
         <Text size="sm" fw={700}>
-          The hoop agent CLI
+          The lyric-iam agent CLI
         </Text>
         <Text size="xs" c="dimmed">
           Learn how to operate this agent using its CLI

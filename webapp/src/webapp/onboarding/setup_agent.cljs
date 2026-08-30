@@ -50,7 +50,7 @@
                               {:icon-dark-path "/images/command-line-dark.svg"
                                :icon-light-path "/images/command-line-light.svg"
                                :title "Local or VM"
-                               :description "Setup a new agent in any machine with hoop CLI"}]
+                               :description "Setup a new agent in any machine with lyric-iam CLI"}]
         agent-key (rf/subscribe [:agents->agent-key])
         ;; initial value for the selected installation method
         ;; see webapp/agents/deployment.cljs for more details
@@ -139,7 +139,7 @@
                                                            @selected-installation-method)})]]))]]]
                             [deployment/main
                              {:installation-method @selected-installation-method
-                              :hoop-key (-> @agent-key :data :token)}]
+                              :lyric-iam-key (-> @agent-key :data :token)}]
                             [:> Box {:align :right}
                              [:> Button {:size "3"
                                          :on-click #(rf/dispatch [:navigate :onboarding-setup])}

@@ -65,9 +65,9 @@ func TestTranslateUpstreamError(t *testing.T) {
 		},
 		{
 			name: "oss libhoop stub message",
-			in:   "connection closed by server, payload=missing protocol hoop library for ssh, " +
+			in:   "connection closed by server, payload=missing protocol lyric-iam library for ssh, " +
 				"contact your administrator",
-			want: "ssh is not enabled on this hoop agent build, contact your administrator",
+			want: "ssh is not enabled on this lyric-iam agent build, contact your administrator",
 		},
 		{
 			name: "credential revoked",
@@ -93,7 +93,7 @@ func TestTranslateUpstreamError(t *testing.T) {
 
 func TestFormatRaw(t *testing.T) {
 	got := formatRaw("hello world")
-	want := "hoop: hello world\r\n"
+	want := "lyric-iam: hello world\r\n"
 	if got != want {
 		t.Errorf("formatRaw mismatch:\n  got:  %q\n  want: %q", got, want)
 	}

@@ -12,12 +12,12 @@ func (f *AgentStartFormatter) FormatHuman(fields map[string]interface{}, msg str
 
 	if version != "" && platform != "" {
 		if mode != "" {
-			return fmt.Sprintf("%s Starting Hoop Agent v%s (%s) • mode: %s", EmojiRocket, version, platform, mode)
+			return fmt.Sprintf("%s Starting Lyric IAM Agent v%s (%s) • mode: %s", EmojiRocket, version, platform, mode)
 		}
-		return fmt.Sprintf("%s Starting Hoop Agent v%s (%s)", EmojiRocket, version, platform)
+		return fmt.Sprintf("%s Starting Lyric IAM Agent v%s (%s)", EmojiRocket, version, platform)
 	}
 	if version != "" {
-		return fmt.Sprintf("%s Starting Hoop Agent v%s", EmojiRocket, version)
+		return fmt.Sprintf("%s Starting Lyric IAM Agent v%s", EmojiRocket, version)
 	}
 
 	return EmojiRocket + " " + msg
@@ -30,7 +30,7 @@ func (f *AgentStartFormatter) FormatVerbose(fields map[string]interface{}, msg s
 	server := getStringField(fields, "server", "host")
 	tls := getBoolField(fields, "tls")
 
-	result := "Starting Hoop Agent"
+	result := "Starting Lyric IAM Agent"
 
 	if version != "" {
 		result += fmt.Sprintf("\n           Version: %s", version)
@@ -64,15 +64,15 @@ func (f *SessionStartFormatter) FormatHuman(fields map[string]interface{}, msg s
 	// For starting session, show complete ID at the end
 	if version != "" && platform != "" {
 		if sid != "" {
-			return fmt.Sprintf("%s Starting session • Hoop v%s (%s) • session: %s", EmojiSession, version, platform, sid)
+			return fmt.Sprintf("%s Starting session • Lyric IAM v%s (%s) • session: %s", EmojiSession, version, platform, sid)
 		}
-		return fmt.Sprintf("%s Starting session • Hoop v%s (%s)", EmojiSession, version, platform)
+		return fmt.Sprintf("%s Starting session • Lyric IAM v%s (%s)", EmojiSession, version, platform)
 	}
 	if version != "" {
 		if sid != "" {
-			return fmt.Sprintf("%s Starting session • Hoop v%s • session: %s", EmojiSession, version, sid)
+			return fmt.Sprintf("%s Starting session • Lyric IAM v%s • session: %s", EmojiSession, version, sid)
 		}
-		return fmt.Sprintf("%s Starting session • Hoop v%s", EmojiSession, version)
+		return fmt.Sprintf("%s Starting session • Lyric IAM v%s", EmojiSession, version)
 	}
 	if sid != "" {
 		return fmt.Sprintf("%s New session: %s", EmojiSession, sid)

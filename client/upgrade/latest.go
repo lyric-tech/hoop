@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// LatestVersionURL is the canonical pointer to the most recent hoop
+// LatestVersionURL is the canonical pointer to the most recent lyric-iam
 // release. The file is a single plain-text line, e.g. "1.73.0\n".
 // It is updated by the release pipeline together with the tarball and
 // checksum artifacts under https://releases.hoop.dev/release/.
@@ -24,7 +24,7 @@ const latestFetchTimeout = 10 * time.Second
 // a misconfigured CDN or a hostile origin and is rejected.
 const latestResponseLimit = 64
 
-// FetchLatestVersion returns the latest hoop release version as
+// FetchLatestVersion returns the latest lyric-iam release version as
 // published on releases.hoop.dev. The returned value is normalized
 // (no leading "v") and validated against ValidateInstallableVersion so
 // callers can hand it straight to the installer.

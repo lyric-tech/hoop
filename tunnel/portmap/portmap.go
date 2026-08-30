@@ -27,7 +27,7 @@ import (
 	pb "github.com/hoophq/hoop/common/proto"
 )
 
-// CanonicalPort returns the well-known TCP port for the given hoop
+// CanonicalPort returns the well-known TCP port for the given lyric-iam
 // connection subtype. Returns (0, false) for subtypes that have no
 // canonical port (e.g. "tcp") or are not tunnelable at all.
 //

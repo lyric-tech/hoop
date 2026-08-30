@@ -42,7 +42,7 @@ import (
 // args (or `hsh-tunneld help`). The verb list mirrors the switch in
 // main.go.
 func usage(w *os.File) {
-	fmt.Fprint(w, `hsh-tunneld — Hoop Tunnel daemon
+	fmt.Fprint(w, `hsh-tunneld — Lyric IAM Tunnel daemon
 
 Usage:
   hsh-tunneld [daemon flags]           run the daemon (default)
@@ -63,7 +63,7 @@ Run any verb with --help for verb-specific flags.
 The daemon (no verb) is what the system-service unit starts. For dev
 runs it can also be invoked directly:
 
-  sudo HOOP_APIURL=... HOOP_TOKEN=... hsh-tunneld --tld hoop
+  sudo LYRIC_IAM_APIURL=... LYRIC_IAM_TOKEN=... hsh-tunneld --tld lyric-iam
 
 `)
 }

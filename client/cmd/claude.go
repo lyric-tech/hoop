@@ -28,9 +28,9 @@ var claudeConfigureCmd = &cobra.Command{
 	Short: "Apply active native connection credentials to ~/.claude/settings.json",
 	Long: `Reads the current active credentials for a claude-code connection and writes
 them to ~/.claude/settings.json. The connection must already be open via the
-webapp or 'hoop connect' — this command does not create a new session.`,
-	Example: `hoop claude configure my-claude-conn
-hoop claude configure my-claude-conn --file /custom/path/settings.json`,
+webapp or 'lyric-iam connect' — this command does not create a new session.`,
+	Example: `lyric-iam claude configure my-claude-conn
+lyric-iam claude configure my-claude-conn --file /custom/path/settings.json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		runClaudeConfigure(args[0])
@@ -91,7 +91,7 @@ func printClaudeConfigureSuccess(settingsPath, connectionName string, settings c
 	fmt.Printf("  %s%s\n", labelStyle.Render("Base URL"), valueStyle.Render(settings.baseURL))
 	fmt.Printf("  %s%s\n", labelStyle.Render("Token"), valueStyle.Render(displayToken))
 	fmt.Println()
-	fmt.Println(styles.Fainted("  Claude Code requests are now routed through hoop."))
+	fmt.Println(styles.Fainted("  Claude Code requests are now routed through lyric-iam."))
 	fmt.Println(styles.Fainted("  Run %s%s",
 		strings.TrimSpace(styles.Keyword(" claude ")),
 		styles.Fainted(" to start.")))

@@ -13,12 +13,12 @@ func TestUserLaunchAgentPath(t *testing.T) {
 	restore, fakeHome := withTempHome(t)
 	defer restore()
 
-	got, err := userLaunchAgentPath(Options{ServiceName: "hoop-agent"})
+	got, err := userLaunchAgentPath(Options{ServiceName: "lyric-iam-agent"})
 	if err != nil {
 		t.Fatalf("userLaunchAgentPath returned error: %v", err)
 	}
 
-	want := filepath.Join(fakeHome, "Library", "LaunchAgents", "hoop-agent.plist")
+	want := filepath.Join(fakeHome, "Library", "LaunchAgents", "lyric-iam-agent.plist")
 	if got != want {
 		t.Fatalf("userLaunchAgentPath = %q; want %q", got, want)
 	}
@@ -75,13 +75,13 @@ func TestFixedDarwinLogPaths(t *testing.T) {
 	restore, fakeHome := withTempHome(t)
 	defer restore()
 
-	stdout, stderr, err := fixedDarwinLogPaths("hoop-agent")
+	stdout, stderr, err := fixedDarwinLogPaths("lyric-iam-agent")
 	if err != nil {
 		t.Fatalf("fixedDarwinLogPaths returned error: %v", err)
 	}
 
-	wantOut := filepath.Join(fakeHome, "Library", "Logs", "hoop-agent.out.log")
-	wantErr := filepath.Join(fakeHome, "Library", "Logs", "hoop-agent.err.log")
+	wantOut := filepath.Join(fakeHome, "Library", "Logs", "lyric-iam-agent.out.log")
+	wantErr := filepath.Join(fakeHome, "Library", "Logs", "lyric-iam-agent.err.log")
 
 	if stdout != wantOut {
 		t.Fatalf("stdout path = %q; want %q", stdout, wantOut)

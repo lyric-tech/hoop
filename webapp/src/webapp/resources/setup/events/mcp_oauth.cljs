@@ -141,7 +141,7 @@
 (rf/reg-fx
  :mcp-oauth/run-popup
  (fn [{:keys [url on-success on-error on-cancel]}]
-   (let [popup (js/window.open url "hoop-mcp-oauth"
+   (let [popup (js/window.open url "lyric-iam-mcp-oauth"
                                "width=600,height=800,menubar=no,toolbar=no,location=yes")]
      (if (nil? popup)
        (rf/dispatch (conj (vec on-error)

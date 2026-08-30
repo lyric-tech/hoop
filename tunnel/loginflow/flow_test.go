@@ -15,7 +15,7 @@ import (
 )
 
 // newTestFlow assembles a Flow with stubbed gateway calls (so tests
-// don't reach real hoop) and a freshly-allocated callback port (so
+// don't reach real lyric-iam) and a freshly-allocated callback port (so
 // parallel tests don't trip the singleton-port restriction).
 func newTestFlow(t *testing.T, onSuccess PersistFn) (*Flow, *uint32) {
 	t.Helper()

@@ -26,12 +26,12 @@
      {:onboarding? onboarding?
       :children
       [:> Box {:class "h-full"}
-       ;; Show Hoop logo only in onboarding mode and NOT in success step
+       ;; Show Lyric IAM logo only in onboarding mode and NOT in success step
        (when (and onboarding? (not= current-step :success))
          [:> Flex {:justify "start" :class "px-8"}
           [:figure
            [:img {:src "/images/hoop-branding/PNG/hoop-symbol_black@4x.png"
-                  :alt "Hoop Logo"
+                  :alt "Lyric IAM Logo"
                   :class "w-16"}]]])
 
        (case current-step

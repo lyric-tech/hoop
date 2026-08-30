@@ -351,7 +351,7 @@
         csv  (shared/build-csv
               ["resource_name" "type" "role" "scopes" "permissions" "source_role"]
               rows)]
-    (shared/download-csv! "hoop-roles-template.csv" csv)))
+    (shared/download-csv! "lyric-iam-roles-template.csv" csv)))
 
 (defn- count-unresolved-conflicts [classification cur-picks]
   (when classification

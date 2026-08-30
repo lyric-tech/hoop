@@ -1,6 +1,6 @@
 // MCP OAuth client engine.
 //
-// The OAuth 2.1 client work Hoop performs on an admin's behalf against a
+// The OAuth 2.1 client work Lyric IAM performs on an admin's behalf against a
 // remote MCP server: RFC 9728 protected-resource discovery, RFC 8414 / OIDC
 // authorization-server discovery, RFC 7591 dynamic client registration, the
 // authorization-code + PKCE request, code exchange, and refresh.
@@ -10,7 +10,7 @@
 // than a second in-tree implementation did: transport security on the metadata
 // documents it fetches, S256 capability advertisement, structured RFC 6749
 // §5.2 token errors, provider extras preserved, and the refresh grant this
-// package needs. What stays here is the part that is Hoop's rather than the
+// package needs. What stays here is the part that is Lyric IAM's rather than the
 // protocol's — which issuer to fall back to, which redirect URI to register,
 // and how a hand-configured confidential client authenticates at the token
 // endpoint.
@@ -53,7 +53,7 @@ const mcpDiscoveryTimeout = 15 * time.Second
 // It refuses to follow redirects out of a POST. Every POST this package makes
 // is credentialed — the token endpoint carries the client secret (Basic or in
 // the body) and the refresh token, and registration carries the redirect URI
-// Hoop will honor — and Go re-sends the body verbatim on a 307/308. A
+// Lyric IAM will honor — and Go re-sends the body verbatim on a 307/308. A
 // misconfigured or hostile authorization server could therefore bounce those
 // credentials to a host of its choosing, over a scheme of its choosing.
 // Refusing is the conservative choice over stripping: an authorization server
@@ -81,7 +81,7 @@ var mcpOAuthHTTPClient = &http.Client{
 	},
 }
 
-// MCPDiscovery is the resolved set of endpoints Hoop needs to drive an
+// MCPDiscovery is the resolved set of endpoints Lyric IAM needs to drive an
 // authorization-code flow against one MCP server.
 type MCPDiscovery struct {
 	Resource              string
@@ -104,14 +104,14 @@ type MCPClientRegistration struct {
 // server URL.
 //
 // The MCP endpoint (the OAuth "resource") advertises its authorization servers
-// through RFC 9728 protected-resource metadata. Two Hoop-specific behaviors sit
+// through RFC 9728 protected-resource metadata. Two Lyric IAM-specific behaviors sit
 // on top of the library's discovery:
 //
 //   - Every advertised authorization server is tried in order, not just the
 //     first, so a resource listing a stale issuer ahead of a live one still
 //     works.
 //   - When no protected-resource metadata is published at all, the server URL's
-//     origin is treated as the issuer. The library errors instead; Hoop keeps
+//     origin is treated as the issuer. The library errors instead; Lyric IAM keeps
 //     the fallback because servers that co-locate the resource and the
 //     authorization server are common and were supported before.
 //
@@ -210,7 +210,7 @@ func DiscoverMCPAuthServer(ctx context.Context, serverURL string) (*MCPDiscovery
 // identifier that legitimately produced the document; anything else is not.
 //
 // Without this a hostile MCP server can advertise a resource identifier that
-// belongs to someone else, and Hoop would send that value as the RFC 8707
+// belongs to someone else, and Lyric IAM would send that value as the RFC 8707
 // resource indicator — minting a token audienced for a resource the caller
 // never meant to reach and handing it to the server that asked. That is the
 // impersonation attack §7.3 describes, and it is a confused deputy with the
@@ -259,9 +259,9 @@ func requireSecureEndpoint(name, rawURL string) error {
 }
 
 // RegisterMCPClient performs RFC 7591 dynamic client registration, registering
-// Hoop's gateway callback as the redirect URI.
+// Lyric IAM's gateway callback as the redirect URI.
 //
-// Hoop registers a public client: the authorization code is bound by PKCE and
+// Lyric IAM registers a public client: the authorization code is bound by PKCE and
 // the redirect lands on the gateway, so a client secret would add a stored
 // secret without adding a check. A server that issues one anyway is honored —
 // the returned auth method reflects what it decided, not what was asked for.
@@ -279,7 +279,7 @@ func RegisterMCPClient(ctx context.Context, registrationEndpoint, redirectURI st
 			"(and Client Secret, only if the provider issued one)", redirectURI)
 	}
 	client, err := oauth.RegisterClient(ctx, registrationEndpoint, []string{redirectURI}, scopes, oauth.RegisterOptions{
-		ClientName: "Hoop",
+		ClientName: "Lyric IAM",
 		HTTPClient: mcpOAuthHTTPClient,
 	})
 	if err != nil {
@@ -320,7 +320,7 @@ func BuildMCPAuthorizationURL(d *MCPDiscovery, clientID, redirectURI, state, cod
 // GenerateMCPPKCE returns a code verifier and its S256 challenge (RFC 7636).
 //
 // The library generates these inside its own all-in-one flow and does not
-// export them, because that flow assumes one blocking call. Hoop drives
+// export them, because that flow assumes one blocking call. Lyric IAM drives
 // authorize and callback as separate HTTP requests minutes apart and must park
 // the verifier in the database between them, so it owns the generation.
 func GenerateMCPPKCE() (verifier, challenge string, err error) {
@@ -408,7 +408,7 @@ func postRefreshGrant(ctx context.Context, cfg oauth.ClientConfig, tokenAuthMeth
 	return postSecretInBody(ctx, cfg, form)
 }
 
-// Token-endpoint authentication methods Hoop records on a flow or grant.
+// Token-endpoint authentication methods Lyric IAM records on a flow or grant.
 const (
 	tokenAuthMethodNone             = "none"
 	tokenAuthMethodClientSecretPost = "client_secret_post"
@@ -418,17 +418,17 @@ const (
 // request body rather than as HTTP Basic.
 //
 // oauth.postToken sends Basic whenever a secret is present — the RFC 6749
-// §2.3.1 method every server must support, and the right default. Hoop also
+// §2.3.1 method every server must support, and the right default. Lyric IAM also
 // records client_secret_post for clients an admin configured by hand, and some
 // authorization servers accept only that. Silently promoting those to Basic
-// would break connections that work today, so this one case keeps a Hoop-side
+// would break connections that work today, so this one case keeps a Lyric IAM-side
 // request builder.
 func usesSecretPost(tokenAuthMethod, clientSecret string) bool {
 	return clientSecret != "" && tokenAuthMethod == tokenAuthMethodClientSecretPost
 }
 
 // tokenEndpointResponse is the RFC 6749 §5.1 success body and §5.2 error body.
-// Only the fields Hoop persists are modeled: unlike the library's decoder this
+// Only the fields Lyric IAM persists are modeled: unlike the library's decoder this
 // path drops provider extras, which no caller of it reads.
 type tokenEndpointResponse struct {
 	AccessToken      string `json:"access_token"`

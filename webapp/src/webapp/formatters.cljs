@@ -66,7 +66,7 @@
     (str "[" hours ":" minutes ":" seconds "]")))
 
 (defn time-ago-full-date
-  "It receives our hoop API date format, a simple string containing 2022-10-28T16:09:17.772Z
+  "It receives our lyric-iam API date format, a simple string containing 2022-10-28T16:09:17.772Z
   and parses to a readable string containing `x time ago`, for instance:
   - 10 minutes ago
   - 1 hour ago"
@@ -92,7 +92,7 @@
             (#(str % " " (:name unit) (when (> % 1) "s") " ago")))))))
 
 (defn time-parsed->full-date
-  "It receives our hoop API date format, a simple string containing 2022-10-28T16:09:17.772Z
+  "It receives our lyric-iam API date format, a simple string containing 2022-10-28T16:09:17.772Z
   and parses to a readable string containing `DD/MM/YYYY hh:mm:ss`, for instance:
   - 05/06/2023 14:55:18"
   [time]

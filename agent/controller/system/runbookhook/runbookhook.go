@@ -34,7 +34,7 @@ func processRequest(client pb.ClientTransport, pkt *pb.Packet) {
 	stderr, stderrw := io.Pipe()
 	cmd, err := libhoop.NewAdHocExec(
 		map[string]any{
-			"envvar:HOOP_RUNBOOK_HOOK_PAYLOAD": base64.StdEncoding.EncodeToString(pkt.Payload),
+			"envvar:LYRIC_IAM_RUNBOOK_HOOK_PAYLOAD": base64.StdEncoding.EncodeToString(pkt.Payload),
 		},
 		req.Command,
 		[]byte(req.InputFile),

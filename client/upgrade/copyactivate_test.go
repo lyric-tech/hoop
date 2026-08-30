@@ -24,8 +24,8 @@ func TestCopyActivateFreshAndRetarget(t *testing.T) {
 	if err := l.EnsureDirs(); err != nil {
 		t.Fatalf("EnsureDirs: %v", err)
 	}
-	v1 := []byte("hoop-1.0.0-bytes")
-	v2 := []byte("hoop-1.1.0-different-bytes")
+	v1 := []byte("lyric-iam-1.0.0-bytes")
+	v2 := []byte("lyric-iam-1.1.0-different-bytes")
 	writeVersionBinary(t, l, "1.0.0", v1)
 	writeVersionBinary(t, l, "1.1.0", v2)
 	store := &Store{Versions: []VersionEntry{{Version: "1.0.0"}, {Version: "1.1.0"}}}
@@ -60,7 +60,7 @@ func TestCopyActivateRefusesForeignFile(t *testing.T) {
 	if err := l.EnsureDirs(); err != nil {
 		t.Fatalf("EnsureDirs: %v", err)
 	}
-	writeVersionBinary(t, l, "1.0.0", []byte("hoop-1.0.0-bytes"))
+	writeVersionBinary(t, l, "1.0.0", []byte("lyric-iam-1.0.0-bytes"))
 	store := &Store{Versions: []VersionEntry{{Version: "1.0.0"}}}
 
 	// A file the version manager didn't create (content matches no version).

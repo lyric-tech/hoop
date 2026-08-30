@@ -28,12 +28,12 @@ func TestConfigure_WritesResolverFile(t *testing.T) {
 	err := c.Configure(Config{
 		Device:       "utun4",
 		DNSAddress:   "fd00::1",
-		SearchDomain: "hoop",
+		SearchDomain: "lyric-iam",
 	})
 	if err != nil {
 		t.Fatalf("Configure: %v", err)
 	}
-	body, err := os.ReadFile(filepath.Join(dir, "hoop"))
+	body, err := os.ReadFile(filepath.Join(dir, "lyric-iam"))
 	if err != nil {
 		t.Fatalf("read resolver file: %v", err)
 	}
@@ -51,15 +51,15 @@ func TestConfigure_WritesResolverFile(t *testing.T) {
 func TestConfigure_Idempotent(t *testing.T) {
 	dir := withResolverDir(t)
 	c := New()
-	cfg := Config{Device: "utun4", DNSAddress: "fd00::1", SearchDomain: "hoop"}
+	cfg := Config{Device: "utun4", DNSAddress: "fd00::1", SearchDomain: "lyric-iam"}
 	if err := c.Configure(cfg); err != nil {
 		t.Fatalf("Configure 1: %v", err)
 	}
-	first, _ := os.ReadFile(filepath.Join(dir, "hoop"))
+	first, _ := os.ReadFile(filepath.Join(dir, "lyric-iam"))
 	if err := c.Configure(cfg); err != nil {
 		t.Fatalf("Configure 2: %v", err)
 	}
-	second, _ := os.ReadFile(filepath.Join(dir, "hoop"))
+	second, _ := os.ReadFile(filepath.Join(dir, "lyric-iam"))
 	if string(first) != string(second) {
 		t.Errorf("Configure not idempotent:\n%q\nvs\n%q", first, second)
 	}
@@ -71,8 +71,8 @@ func TestConfigure_ValidationRejectsEmpty(t *testing.T) {
 	dir := withResolverDir(t)
 	c := New()
 	cases := []Config{
-		{Device: "", DNSAddress: "fd00::1", SearchDomain: "hoop"},
-		{Device: "utun4", DNSAddress: "", SearchDomain: "hoop"},
+		{Device: "", DNSAddress: "fd00::1", SearchDomain: "lyric-iam"},
+		{Device: "utun4", DNSAddress: "", SearchDomain: "lyric-iam"},
 		{Device: "utun4", DNSAddress: "fd00::1", SearchDomain: ""},
 	}
 	for i, cfg := range cases {
@@ -90,13 +90,13 @@ func TestConfigure_ValidationRejectsEmpty(t *testing.T) {
 func TestUnconfigure_RemovesFile(t *testing.T) {
 	dir := withResolverDir(t)
 	c := New()
-	if err := c.Configure(Config{Device: "utun4", DNSAddress: "fd00::1", SearchDomain: "hoop"}); err != nil {
+	if err := c.Configure(Config{Device: "utun4", DNSAddress: "fd00::1", SearchDomain: "lyric-iam"}); err != nil {
 		t.Fatalf("Configure: %v", err)
 	}
 	if err := c.Unconfigure("utun4"); err != nil {
 		t.Fatalf("Unconfigure: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "hoop")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dir, "lyric-iam")); !os.IsNotExist(err) {
 		t.Errorf("resolver file still present after Unconfigure (err=%v)", err)
 	}
 }
@@ -119,11 +119,11 @@ func TestCleanupStale_RemovesOrphanedFile(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	orphan := filepath.Join(dir, "hoop")
+	orphan := filepath.Join(dir, "lyric-iam")
 	if err := os.WriteFile(orphan, []byte("nameserver fd00::1\nport 53\n"), 0644); err != nil {
 		t.Fatalf("seed orphan: %v", err)
 	}
-	if err := CleanupStale("hoop"); err != nil {
+	if err := CleanupStale("lyric-iam"); err != nil {
 		t.Fatalf("CleanupStale: %v", err)
 	}
 	if _, err := os.Stat(orphan); !os.IsNotExist(err) {
@@ -135,7 +135,7 @@ func TestCleanupStale_RemovesOrphanedFile(t *testing.T) {
 // stale file means nothing to do.
 func TestCleanupStale_MissingFileIsNoOp(t *testing.T) {
 	withResolverDir(t)
-	if err := CleanupStale("hoop"); err != nil {
+	if err := CleanupStale("lyric-iam"); err != nil {
 		t.Errorf("CleanupStale with no file should be nil, got %v", err)
 	}
 }

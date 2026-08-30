@@ -34,10 +34,10 @@ var rootPreRunFn = func(_ *cobra.Command, _ []string) {
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:               "hoop",
+	Use:               "lyric-iam",
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	Long: `Connect to private infra-structure without the need of a VPN.
-https://hoop.dev/docs`,
+https://docs.lyric.tech/access`,
 	PersistentPreRun: rootPreRunFn,
 }
 
@@ -57,7 +57,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVar(&debugGrpcFlag, "debug-grpc", grpc.ShouldDebugGrpc(), "Turn on debugging of gRPC (http2) if applicable")
 	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "Turn on debugging")
-	rootCmd.PersistentFlags().BoolVar(&skipTLSVerifyFlag, "skip-tls-verify", false, "Skip TLS verification when connecting to Hoop components")
+	rootCmd.PersistentFlags().BoolVar(&skipTLSVerifyFlag, "skip-tls-verify", false, "Skip TLS verification when connecting to Lyric IAM components")
 
 	rootCmd.AddCommand(runbooks.MainCmd)
 	rootCmd.AddCommand(config.MainCmd)

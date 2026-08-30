@@ -235,7 +235,7 @@ export default function ClaudeCodeRenderer({
         {provider === 'vertex' ? (
           <>
             <Alert variant="light" color="gray" icon={<Info size={16} />}>
-              Claude Code runs in Vertex mode against hoop. hoop mints a
+              Claude Code runs in Vertex mode against lyric-iam. lyric-iam mints a
               short-lived token from the service account below and proxies
               requests to Google Vertex AI.
             </Alert>

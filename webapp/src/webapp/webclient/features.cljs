@@ -1,5 +1,5 @@
 (ns webapp.webclient.features
-  "Which hoop features are active on the resource role selected in the Terminal.
+  "Which lyric-iam features are active on the resource role selected in the Terminal.
 
    Single source of truth for the Features Indicator, so the name, description,
    icon and ordering of a feature live in exactly one place.

@@ -70,7 +70,7 @@ var catalog = map[string]Flag{
 	},
 	"beta.oracle_native": {
 		Name:        "beta.oracle_native",
-		Description: "Enable native Oracle (TNS) database access so clients like sqlplus/DBeaver connect through hoop's local proxy. When disabled, Oracle connections cannot open a native proxy session.",
+		Description: "Enable native Oracle (TNS) database access so clients like sqlplus/DBeaver connect through lyric-iam's local proxy. When disabled, Oracle connections cannot open a native proxy session.",
 		Default:     true,
 		Stability:   StabilityBeta,
 		Components:  []Component{ComponentGateway, ComponentAgent, ComponentClient},
@@ -112,7 +112,7 @@ var catalog = map[string]Flag{
 	},
 	"experimental.claude_code_vertex": {
 		Name:        "experimental.claude_code_vertex",
-		Description: "Allow claude-code connections to authenticate against Google Vertex AI: the connection stores a GCP service-account key and the agent mints a short-lived, auto-refreshing OAuth bearer that it injects as the upstream Authorization header while transparently proxying Claude Code traffic to Vertex. Claude Code runs in Vertex mode (CLAUDE_CODE_USE_VERTEX) pointed at the hoop proxy. When off, the Vertex provider is hidden in the connection form and the agent does not mint GCP tokens.",
+		Description: "Allow claude-code connections to authenticate against Google Vertex AI: the connection stores a GCP service-account key and the agent mints a short-lived, auto-refreshing OAuth bearer that it injects as the upstream Authorization header while transparently proxying Claude Code traffic to Vertex. Claude Code runs in Vertex mode (CLAUDE_CODE_USE_VERTEX) pointed at the lyric-iam proxy. When off, the Vertex provider is hidden in the connection form and the agent does not mint GCP tokens.",
 		Default:     false,
 		Stability:   StabilityExperimental,
 		Components:  []Component{ComponentGateway, ComponentAgent},

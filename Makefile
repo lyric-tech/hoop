@@ -43,9 +43,9 @@ build-dev-rust:
 	# since we are in osx machine cross needs to be used to build linux binary because some crypto libs does not have cross compilation
 	echo "Building hoop_rs for dev"
 	cd agentrs && cross build --release --target aarch64-unknown-linux-gnu
-	mkdir -p ${HOME}/.hoop/bin
-	cp agentrs/target/aarch64-unknown-linux-gnu/release/agentrs ${HOME}/.hoop/bin/hoop_rs
-	chmod +x ${HOME}/.hoop/bin/hoop_rs
+	mkdir -p ${HOME}/.lyric-iam/bin
+	cp agentrs/target/aarch64-unknown-linux-gnu/release/agentrs ${HOME}/.lyric-iam/bin/lyric-iam_rs
+	chmod +x ${HOME}/.lyric-iam/bin/lyric-iam_rs
 
 install-rust:
 	./scripts/install-rust.sh
@@ -68,7 +68,7 @@ run-dev-spiffe-agent:
 run-dev-spiffe: run-dev-spiffe-agent
 
 build-dev-client:
-	go build -ldflags "-s -w -X github.com/hoophq/hoop/client/proxy.defaultListenAddrValue=0.0.0.0" -o ${HOME}/.hoop/bin/hoop github.com/hoophq/hoop/client
+	go build -ldflags "-s -w -X github.com/hoophq/hoop/client/proxy.defaultListenAddrValue=0.0.0.0" -o ${HOME}/.lyric-iam/bin/lyric-iam github.com/hoophq/hoop/client
 
 build-dev-webapp:
 	./scripts/dev/build-webapp.sh
@@ -328,7 +328,7 @@ release-s3-cf-templates-latest:
 	aws s3 cp --region ap-southeast-2 ${DIST_FOLDER}/hoopdev-platform.template.yaml s3://hoopdev-platform-cf-ap-southeast-2/latest/hoopdev-platform.template.yaml
 
 release-s3-cf-templates:
-	sed "s|LATEST_HOOP_VERSION|${VERSION}|g" deploy/aws/hoopdev-platform.template.yaml > ${DIST_FOLDER}/hoopdev-platform.template.yaml
+	sed "s|LATEST_LYRIC_IAM_VERSION|${VERSION}|g" deploy/aws/hoopdev-platform.template.yaml > ${DIST_FOLDER}/hoopdev-platform.template.yaml
 	aws s3 cp --region us-east-1 ${DIST_FOLDER}/hoopdev-platform.template.yaml s3://hoopdev-platform-cf-us-east-1/${VERSION}/hoopdev-platform.template.yaml
 	aws s3 cp --region us-east-2 ${DIST_FOLDER}/hoopdev-platform.template.yaml s3://hoopdev-platform-cf-us-east-2/${VERSION}/hoopdev-platform.template.yaml
 	aws s3 cp --region us-west-1 ${DIST_FOLDER}/hoopdev-platform.template.yaml s3://hoopdev-platform-cf-us-west-1/${VERSION}/hoopdev-platform.template.yaml

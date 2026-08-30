@@ -9,7 +9,7 @@ export const MAPPING_TYPE_OPTIONS = [
   { value: 'custom', label: 'Custom' },
 ]
 
-export const HOOP_VALUE_OPTIONS = [
+export const LYRIC_IAM_VALUE_OPTIONS = [
   { value: 'session.id', label: 'Session ID' },
   { value: 'session.user_email', label: 'User email' },
   { value: 'session.user_id', label: 'User ID' },

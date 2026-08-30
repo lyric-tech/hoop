@@ -20,10 +20,10 @@ type GatewayInfo struct {
 // is authenticated.
 func FetchGatewayInfo(apiURL, bearerToken, tlsCA string) (*GatewayInfo, error) {
 	if apiURL == "" {
-		return nil, fmt.Errorf("missing api_url in hoop client config; run `hoop login` first")
+		return nil, fmt.Errorf("missing api_url in lyric-iam client config; run `lyric-iam login` first")
 	}
 	if bearerToken == "" {
-		return nil, fmt.Errorf("missing token in hoop client config; run `hoop login` first")
+		return nil, fmt.Errorf("missing token in lyric-iam client config; run `lyric-iam login` first")
 	}
 	url := fmt.Sprintf("%s/api/serverinfo", strings.TrimRight(apiURL, "/"))
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -47,7 +47,7 @@ func FetchGatewayInfo(apiURL, bearerToken, tlsCA string) (*GatewayInfo, error) {
 		}
 		return &gi, nil
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return nil, fmt.Errorf("gateway rejected the credentials (%s); run `hoop login` and retry", resp.Status)
+		return nil, fmt.Errorf("gateway rejected the credentials (%s); run `lyric-iam login` and retry", resp.Status)
 	default:
 		return nil, fmt.Errorf("unexpected response from %s: status=%d", url, resp.StatusCode)
 	}

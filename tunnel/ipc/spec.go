@@ -37,7 +37,7 @@ type StatusResponse struct {
 	// active. False while the daemon is initialising or shutting down.
 	Running bool `json:"running"`
 
-	// LoggedIn reports whether a usable hoop access token is present in
+	// LoggedIn reports whether a usable lyric-iam access token is present in
 	// the daemon-managed config file. It says nothing about whether the
 	// gateway has *accepted* that token on the most recent connect.
 	LoggedIn bool `json:"logged_in"`
@@ -69,10 +69,10 @@ type StatusResponse struct {
 // gateway's /api/connections by tunnelable subtypes and allocating a
 // virtual IP for each.
 type Connection struct {
-	// Name as it appears in the hoop gateway (no domain suffix).
+	// Name as it appears in the lyric-iam gateway (no domain suffix).
 	Name string `json:"name"`
 
-	// SubType is the connection's hoop subtype: "postgres", "mysql",
+	// SubType is the connection's lyric-iam subtype: "postgres", "mysql",
 	// "mssql", "mongodb", "oracledb", or "tcp". Used by the UI to render
 	// a protocol badge and pick the right "Copy command" template.
 	SubType string `json:"subtype"`
@@ -185,7 +185,7 @@ type LoginPollResponse struct {
 // ConfigResponse is the daemon-managed configuration as seen by the UI.
 // Excludes the access token: tokens are write-only via the login flow.
 type ConfigResponse struct {
-	// APIURL is the hoop gateway's HTTPS API base, e.g.
+	// APIURL is the lyric-iam gateway's HTTPS API base, e.g.
 	// "https://hoop.example.com". Empty if the daemon has not been
 	// configured yet.
 	APIURL string `json:"api_url"`

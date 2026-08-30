@@ -50,7 +50,7 @@ const (
 	SpecMCPEventKey string = "mcp.event"
 
 	// SpecMCPStdioBackendKey scopes a client-hosted MCP child to one backend
-	// within a session. A hoop session runs one MCP connection today, but the
+	// within a session. A lyric-iam session runs one MCP connection today, but the
 	// gateway supports several backends under one session, and reusing the
 	// session id alone would make two backends share a child.
 	SpecMCPStdioBackendKey string = "mcp.stdio_backend"

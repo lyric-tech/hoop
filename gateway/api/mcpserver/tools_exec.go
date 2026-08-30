@@ -26,7 +26,7 @@ import (
 const execTimeout = 50 * time.Second
 
 type execInput struct {
-	ConnectionName string            `json:"connection_name" jsonschema:"name of the Hoop connection to execute against"`
+	ConnectionName string            `json:"connection_name" jsonschema:"name of the Lyric IAM connection to execute against"`
 	Input          string            `json:"input" jsonschema:"the query or command to run (e.g. a SQL statement for a database connection)"`
 	Args           []string          `json:"args,omitempty" jsonschema:"optional client arguments forwarded to the connection (e.g. CLI flags)"`
 	EnvVars        map[string]string `json:"env_vars,omitempty" jsonschema:"optional environment variables forwarded to the connection"`
@@ -39,8 +39,8 @@ func registerExecTools(server *mcp.Server) {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "exec",
-		Description: "Run a one-shot command or query against a Hoop connection on behalf of the authenticated user. " +
-			"Mirrors `hoop exec`. Returns one of three envelopes: `status=completed` with output, " +
+		Description: "Run a one-shot command or query against a Lyric IAM connection on behalf of the authenticated user. " +
+			"Mirrors `lyric-iam exec`. Returns one of three envelopes: `status=completed` with output, " +
 			"`status=pending_approval` with a review_id (call reviews_wait to long-poll; once APPROVED call reviews_execute), " +
 			"or `status=running` with a session_id (after a 50s timeout; poll sessions_get). " +
 			"Authorization, data masking, guardrails, and review gates are enforced by the gateway — " +
@@ -90,7 +90,7 @@ func execHandler(ctx context.Context, _ *mcp.CallToolRequest, args execInput) (*
 	trackClient := analytics.New()
 	defer trackClient.Close()
 
-	// Origin=client (matches `hoop exec` CLI) triggers full audit persistence:
+	// Origin=client (matches `lyric-iam exec` CLI) triggers full audit persistence:
 	// the audit plugin inserts the session row on OnConnect, stores the query
 	// via UpdateSessionInput, and runs AI analysis on OnReceive. Origin=client-api
 	// is reserved for HTTP flows that pre-insert the session row themselves.

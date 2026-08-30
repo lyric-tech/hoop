@@ -313,7 +313,7 @@ func UpdateAccessRequestRule(c *gin.Context) {
 		return
 	}
 
-	// Hoop-managed rules (protection profiles) allow tuning WHO approves and
+	// Lyric IAM-managed rules (protection profiles) allow tuning WHO approves and
 	// HOW MANY approvals are needed, but their identity, targeting, and access
 	// window stay locked: those define the profile itself.
 	if existingRule.ManagedBy != nil {
@@ -378,7 +378,7 @@ func UpdateAccessRequestRule(c *gin.Context) {
 }
 
 // updateManagedAccessRequestRule applies the restricted update path for
-// Hoop-managed rules: only approval settings and group lists may change.
+// Lyric IAM-managed rules: only approval settings and group lists may change.
 // Any attempt to alter name, access type, duration, or targeting is rejected.
 func updateManagedAccessRequestRule(c *gin.Context, rule *models.AccessRequestRule, req *openapi.AccessRequestRuleRequest) {
 	switch {
@@ -387,7 +387,7 @@ func updateManagedAccessRequestRule(c *gin.Context, rule *models.AccessRequestRu
 		!intPtrEqual(req.AccessMaxDuration, rule.AccessMaxDuration),
 		len(req.ConnectionNames) != 0,
 		req.Attributes != nil && !sameStringSet(req.Attributes, attributeNames(rule)):
-		c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Hoop; only approval settings and group lists can be changed"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Lyric IAM; only approval settings and group lists can be changed"})
 		return
 	}
 
@@ -480,7 +480,7 @@ func DeleteAccessRequestRule(c *gin.Context) {
 		return
 	}
 	if existingRule.ManagedBy != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Hoop and cannot be deleted directly"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Lyric IAM and cannot be deleted directly"})
 		return
 	}
 

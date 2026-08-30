@@ -34,10 +34,10 @@ func init() {
 		"Trusted SSH CA public key in authorized_keys format. "+
 			"May be repeated for multiple CAs. Enables certificate authentication when set.")
 	sshServerApplyCmd.Flags().StringVar(&sshCertAttrFlag, "cert-attr", "",
-		"Certificate attribute to match against a Hoop user. One of: principal, key_id. "+
+		"Certificate attribute to match against a Lyric IAM user. One of: principal, key_id. "+
 			"Required when --trusted-ca is set.")
 	sshServerApplyCmd.Flags().StringVar(&sshUserAttrFlag, "user-attr", "",
-		"Hoop user attribute matched against the certificate attribute. One of: email, subject, user_id. "+
+		"Lyric IAM user attribute matched against the certificate attribute. One of: email, subject, user_id. "+
 			"Required when --trusted-ca is set.")
 
 	sshServerGetCmd.Flags().StringVarP(&sshOutputFlag, "output", "o", "",
@@ -101,15 +101,15 @@ Setting --listen-address to an empty string disables the SSH proxy server.
 Examples:
 
   # Enable the SSH proxy on port 2222 (auto-generates a hosts key on first run)
-  hoop admin sshserver apply --listen-address 0.0.0.0:2222
+  lyric-iam admin sshserver apply --listen-address 0.0.0.0:2222
 
   # Enable certificate authentication with two trusted CAs
-  hoop admin sshserver apply --listen-address 0.0.0.0:2222 \
+  lyric-iam admin sshserver apply --listen-address 0.0.0.0:2222 \
     --trusted-ca "$(cat ca1.pub)" \
     --trusted-ca "$(cat ca2.pub)"
 
   # Disable the SSH proxy server
-  hoop admin sshserver apply
+  lyric-iam admin sshserver apply
 `,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {

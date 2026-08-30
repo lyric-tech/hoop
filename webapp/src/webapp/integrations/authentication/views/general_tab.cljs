@@ -60,7 +60,7 @@
        [selection-card/selection-card
         {:icon (r/as-element [:> BookLock {:size 18}])
          :title "Local authentication"
-         :description "Create and manage accounts directly in Hoop"
+         :description "Create and manage accounts directly in Lyric IAM"
          :selected? (= @auth-method "local")
          :on-click #(rf/dispatch [:authentication->set-auth-method "local"])}]
 

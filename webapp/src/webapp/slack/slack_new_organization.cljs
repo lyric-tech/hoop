@@ -8,5 +8,5 @@
            :class "w-full"}]]
    [:div {:class "px-large py-large text-center"}
     [:div {:class "text-gray-700 text-sm font-bold"}
-     "You have integrated successfully the hoop.dev app in your slack workspace."]]])
+     "You have integrated successfully the Lyric IAM app in your slack workspace."]]])
 

@@ -21,7 +21,7 @@ func newTestService(t *testing.T, initialCfg daemonconfig.Config) *daemonService
 	mgr, err := tunnelmgr.New(tunnelmgr.Options{
 		Logger:      log.New(io.Discard, "", 0),
 		SessionSeed: "test-seed",
-		TLD:         "hoop",
+		TLD:         "lyric-iam",
 		UserAgent:   "hsh-tunneld-test",
 	})
 	if err != nil {

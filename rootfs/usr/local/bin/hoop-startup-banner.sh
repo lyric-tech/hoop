@@ -25,7 +25,7 @@ if [[ -z "${LC_ALL:-}" || "$LC_ALL" = "C" || "$LC_ALL" = "POSIX" ]]; then
 fi
 
 GATEWAY_INTERNAL_URL="${GATEWAY_INTERNAL_URL:-http://gateway:8009}"
-PUBLIC_URL="${HOOP_PUBLIC_URL:-http://localhost:8009}"
+PUBLIC_URL="${LYRIC_IAM_PUBLIC_URL:-http://localhost:8009}"
 
 # Poll the gateway healthz for up to ~30s. Redundant with compose's
 # depends_on: service_healthy, but keeps the script robust if the startup

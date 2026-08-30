@@ -37,7 +37,7 @@ const (
 	MCPStdioRequest = "ClientMCPStdioRequest"
 	// MCPStdioClose tells the CLI to terminate the child owned by the MCP
 	// backend named in the packet spec. Sent when the MCP session ends while
-	// the hoop session stays open, so a user who reconnects their MCP client
+	// the lyric-iam session stays open, so a user who reconnects their MCP client
 	// does not accumulate orphaned server processes.
 	MCPStdioClose = "ClientMCPStdioClose"
 )

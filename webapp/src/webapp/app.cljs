@@ -222,7 +222,7 @@
 (defonce ^:private purge-legacy-native-access
   (.removeItem js/localStorage "hoop-native-client-access"))
 
-(defn- hoop-layout [_]
+(defn- lyric-iam-layout [_]
   (let [user (rf/subscribe [:users->current-user])
         react-shell? (boolean (.getItem js/localStorage "react-shell"))]
     (if (nil? (.getItem js/localStorage "jwt-token"))
@@ -301,7 +301,7 @@
 
 (defmulti layout identity)
 (defmethod layout :application-hoop [_ panels]
-  [hoop-layout panels])
+  [lyric-iam-layout panels])
 
 (defmethod layout :auth [_ panels]
   [:<>

@@ -58,7 +58,7 @@ type ProtectionProfileApplyResult struct {
 // ApplyOrgProtectionProfile switches the organization's default protection
 // profile in a single transaction.
 //
-// newProfile == nil selects manual configuration: every managed_by='hoop'
+// newProfile == nil selects manual configuration: every managed_by='lyric-iam'
 // rule and attribute is deleted (junctions cascade) and the org column is
 // set to NULL.
 //
@@ -148,7 +148,7 @@ func lockOrgProfile(tx *gorm.DB, orgID uuid.UUID) (*models.Organization, error) 
 // untouched, so re-applying is idempotent and rule content is never rewritten.
 func materializeProfile(tx *gorm.DB, orgID uuid.UUID, spec protectionProfileSpec, adminGroup string) error {
 	managed := ProtectionProfileManagedBy
-	desc := "Managed by Hoop. Applied by the " + spec.DisplayName + " protection profile."
+	desc := "Managed by Lyric IAM. Applied by the " + spec.DisplayName + " protection profile."
 	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.Attribute{
 		OrgID:       orgID,
 		Name:        spec.AttributeName,

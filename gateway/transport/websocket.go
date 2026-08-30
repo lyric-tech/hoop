@@ -45,9 +45,9 @@ func verifyWebsocketToken(token string) (*models.Agent, error) {
 }
 
 func HandleConnection(c *gin.Context) {
-	token := c.Request.Header.Get("HOOP_KEY")
+	token := c.Request.Header.Get("LYRIC_IAM_KEY")
 	if token == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing HOOP_KEY header"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing LYRIC_IAM_KEY header"})
 		return
 	}
 

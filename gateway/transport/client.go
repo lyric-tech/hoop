@@ -933,7 +933,7 @@ func validateConnectionType(clientVerb string, pctx plugintypes.Context) error {
 		switch connType {
 		case pb.ConnectionTypeTCP, pb.ConnectionTypeSSH:
 			return status.Errorf(codes.InvalidArgument,
-				"exec is not allowed for %v type connections. Use 'hoop connect %s' instead", connType, pctx.ConnectionName)
+				"exec is not allowed for %v type connections. Use 'lyric-iam connect %s' instead", connType, pctx.ConnectionName)
 		}
 	}
 	return nil

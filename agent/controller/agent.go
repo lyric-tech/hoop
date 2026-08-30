@@ -94,7 +94,7 @@ type (
 		// mcpGateways holds one *mcpGatewayHolder per session. The mcpproxy
 		// gateway owns the MCP session state (the Mcp-Session-Id it minted on
 		// initialize), so it must outlive the single HTTP request that
-		// created it — the hoop gateway mints a fresh connection id per
+		// created it — the lyric-iam gateway mints a fresh connection id per
 		// request. Entries are removed and closed in sessionCleanup.
 		mcpGateways sync.Map
 
@@ -161,7 +161,7 @@ type (
 		// MCP (ADR-0004). mcpTransport selects the backend transport
 		// (stdio | streamable-http | sse); mcpEnv is the child process
 		// environment for stdio backends, collected from MCPENV_* keys.
-		// A dedicated prefix is required because every hoop secret already
+		// A dedicated prefix is required because every lyric-iam secret already
 		// arrives as envvar:NAME, so "envvar:*" cannot distinguish the
 		// child's environment from the connection's own settings.
 		mcpTransport string
@@ -402,13 +402,20 @@ func (a *Agent) processSessionOpen(pkt *pb.Packet) {
 			return
 		}
 
-		connParams.EnvVars["envvar:HOOP_CONNECTION_NAME"] = b64Enc([]byte(connParams.ConnectionName))
-		connParams.EnvVars["envvar:HOOP_CONNECTION_TYPE"] = b64Enc([]byte(connParams.ConnectionType))
-		connParams.EnvVars["envvar:HOOP_CLIENT_ORIGIN"] = b64Enc([]byte(connParams.ClientOrigin))
-		connParams.EnvVars["envvar:HOOP_CLIENT_VERB"] = b64Enc([]byte(connParams.ClientVerb))
-		connParams.EnvVars["envvar:HOOP_USER_ID"] = b64Enc([]byte(connParams.UserID))
-		connParams.EnvVars["envvar:HOOP_USER_EMAIL"] = b64Enc([]byte(connParams.UserEmail))
-		connParams.EnvVars["envvar:HOOP_SESSION_ID"] = b64Enc(sessionID)
+		// Both names are exported: LYRIC_IAM_* is the current one, HOOP_* is kept
+		// so runbooks and connection scripts written before the rename still resolve.
+		for suffix, value := range map[string][]byte{
+			"CONNECTION_NAME": []byte(connParams.ConnectionName),
+			"CONNECTION_TYPE": []byte(connParams.ConnectionType),
+			"CLIENT_ORIGIN":   []byte(connParams.ClientOrigin),
+			"CLIENT_VERB":     []byte(connParams.ClientVerb),
+			"USER_ID":         []byte(connParams.UserID),
+			"USER_EMAIL":      []byte(connParams.UserEmail),
+			"SESSION_ID":      sessionID,
+		} {
+			connParams.EnvVars["envvar:LYRIC_IAM_"+suffix] = b64Enc(value)
+			connParams.EnvVars["envvar:HOOP_"+suffix] = b64Enc(value)
+		}
 
 		// Embedded mode usually has the context of the application.
 		// By having all environment variables in the context of execution
@@ -416,7 +423,7 @@ func (a *Agent) processSessionOpen(pkt *pb.Packet) {
 		if a.config.AgentMode == pb.AgentModeEmbeddedType {
 			for _, envKeyVal := range os.Environ() {
 				envKey, envVal, found := strings.Cut(envKeyVal, "=")
-				if !found || envKey == "HOOP_DSN" || envKey == "HOOP_KEY" {
+				if !found || envKey == "LYRIC_IAM_DSN" || envKey == "LYRIC_IAM_KEY" {
 					continue
 				}
 				key := fmt.Sprintf("envvar:%s", envKey)

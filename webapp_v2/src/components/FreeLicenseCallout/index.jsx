@@ -3,7 +3,7 @@ import { AlertCircle, Info } from 'lucide-react'
 import Alert from '@/components/Alert'
 import { useUserStore } from '@/stores/useUserStore'
 
-const SALES_URL = 'https://hoop.dev/meet'
+const SALES_URL = 'https://lyric.tech/meet'
 const INTERCOM_MESSAGE = 'I want to upgrade my current plan'
 
 /**

@@ -11,7 +11,7 @@ import (
 )
 
 // StandaloneAgentName is the dedicated agent record used by the standalone
-// mode (`hoop start standalone`). Its secret is stored recoverable in the
+// mode (`lyric-iam start standalone`). Its secret is stored recoverable in the
 // agents table (the same pattern used by the `_default` org key), so every
 // boot reconstructs the same DSN without persisting credentials outside the
 // database.
@@ -64,7 +64,7 @@ func StandaloneAgentDSN(grpcURL string) (string, error) {
 	}
 	if ag.Key == "" {
 		return "", fmt.Errorf("an agent named %q already exists without a recoverable key; "+
-			"remove it (hoop admin delete agent %s) and run standalone again", StandaloneAgentName, StandaloneAgentName)
+			"remove it (lyric-iam admin delete agent %s) and run standalone again", StandaloneAgentName, StandaloneAgentName)
 	}
 	return dsnkeys.NewString(grpcURL, StandaloneAgentName, ag.Key, proto.AgentModeStandardType)
 }

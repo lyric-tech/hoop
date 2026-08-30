@@ -141,7 +141,7 @@ export default function ReviewSection({ kind = 'command' }) {
           )}
           <Anchor
             size="sm"
-            href="https://hoop.dev/docs/features/jit-reviews"
+            href="https://docs.lyric.tech/access/features/jit-reviews"
             target="_blank"
             rel="noopener noreferrer"
             display="inline-flex"

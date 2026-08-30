@@ -25,7 +25,7 @@ import (
 )
 
 // TestStandaloneLifecycle drives the standalone agent provisioning the way
-// `hoop start standalone` does, against a gateway running on the embedded
+// `lyric-iam start standalone` does, against a gateway running on the embedded
 // PGlite database. The subtests run in order and share the gateway state
 // deliberately — each stage is a precondition of the next, mirroring the
 // command's own boot sequence.
@@ -64,7 +64,7 @@ func TestStandaloneLifecycle(t *testing.T) {
 	}
 
 	// Reboot equivalence: a second provisioning call (what every subsequent
-	// `hoop start standalone` boot performs) must reconstruct the exact
+	// `lyric-iam start standalone` boot performs) must reconstruct the exact
 	// same DSN from the stored recoverable key — no rotation, no drift.
 	t.Run("reprovisioning is credential-stable", func(t *testing.T) {
 		again, err := services.StandaloneAgentDSN(grpcURL)
@@ -83,7 +83,7 @@ func TestStandaloneLifecycle(t *testing.T) {
 		client, err := commongrpc.Connect(commongrpc.ClientConfig{
 			ServerAddress: gw.GRPCAddr,
 			Token:         dsn,
-			UserAgent:     "hoop-standalone-itest",
+			UserAgent:     "lyric-iam-standalone-itest",
 			Insecure:      true,
 		}, commongrpc.WithOption("origin", pb.ConnectionOriginAgent))
 		if err != nil {
@@ -176,7 +176,7 @@ func TestServerLogsAgentShipping(t *testing.T) {
 	client, err := commongrpc.Connect(commongrpc.ClientConfig{
 		ServerAddress: gw.GRPCAddr,
 		Token:         dsn,
-		UserAgent:     "hoop-serverlogs-itest",
+		UserAgent:     "lyric-iam-serverlogs-itest",
 		Insecure:      true,
 	}, commongrpc.WithOption("origin", pb.ConnectionOriginAgent))
 	if err != nil {

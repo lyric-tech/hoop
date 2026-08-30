@@ -136,7 +136,7 @@ func StartGateway(ctx context.Context, opts GatewayOptions) (gw *Gateway, err er
 		// The embedded database boots from a throwaway data directory; the
 		// pglite:// URI only carries the directory (gateway/main.go boots
 		// the instance after appconfig.Load, and so does this harness).
-		dataDir, derr := os.MkdirTemp("", "hoop-pglite-*")
+		dataDir, derr := os.MkdirTemp("", "lyric-iam-pglite-*")
 		if derr != nil {
 			return nil, fmt.Errorf("create pglite data dir: %w", derr)
 		}
@@ -260,7 +260,7 @@ func (g *Gateway) Close() {
 // not reorder. The audit plugin persists session WAL logs under a path it
 // stat-checks at startup, so we point it at a throwaway temp dir first.
 func (g *Gateway) registerPlugins() error {
-	auditPath, err := os.MkdirTemp("", "hoop-audit-*")
+	auditPath, err := os.MkdirTemp("", "lyric-iam-audit-*")
 	if err != nil {
 		return fmt.Errorf("create audit temp dir: %w", err)
 	}

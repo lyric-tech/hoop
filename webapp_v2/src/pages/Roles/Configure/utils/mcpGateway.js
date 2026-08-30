@@ -32,7 +32,7 @@ export const STDIO_TRANSPORTS = new Set(['stdio', 'client-stdio'])
 export const DEFAULT_TRANSPORT = 'streamable-http'
 
 export const AUTH_MODES = [
-  { value: 'oauth', label: 'OAuth login (Hoop brokers the flow)' },
+  { value: 'oauth', label: 'OAuth login (Lyric IAM brokers the flow)' },
   { value: 'static', label: 'API key or personal access token' },
   { value: 'passthrough', label: 'Each user sends their own credential' },
   { value: 'none', label: 'No authentication' },
@@ -139,7 +139,7 @@ export function credentialHeaderKey(secret) {
  * The auth mode to render for a saved connection.
  *
  * MCP_AUTH alone cannot answer this: the agent accepts none|static|passthrough
- * and has no oauth mode at all, because Hoop brokers that login itself and
+ * and has no oauth mode at all, because Lyric IAM brokers that login itself and
  * resolves the result into a header before the session opens
  * (gateway/services/mcp_oauth_grant.go). So an OAuth connection is stored as
  * MCP_AUTH=static and is indistinguishable from a pasted token — by design,
@@ -197,12 +197,12 @@ export function authEnvValue(mode) {
  * Modes to offer for a catalog entry.
  *
  * A server the catalog does not know (custom / self-hosted) gets every mode:
- * Hoop cannot know what it accepts and the admin does. A known server gets
+ * Lyric IAM cannot know what it accepts and the admin does. A known server gets
  * what the gateway said it supports — anything else strands the admin on a
  * flow the provider cannot complete (an OAuth login against google-maps runs
  * RFC 9728 discovery on an endpoint that publishes no authorization server).
  *
- * Passthrough is the exception: it is a Hoop capability, not a provider one,
+ * Passthrough is the exception: it is a Lyric IAM capability, not a provider one,
  * sending a bearer credential in the same header a static token uses but
  * sourced per caller. Any server documenting a static credential can serve it.
  * A server taking no credential at all cannot.

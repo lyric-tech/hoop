@@ -8,9 +8,9 @@
    [webapp.components.button :as button]
    [webapp.components.code-snippet :as code-snippet]))
 
-(defn values-yml [hoop-key]
+(defn values-yml [lyric-iam-key]
   (str "config:\n"
-       "  HOOP_KEY: " hoop-key "\n"
+       "  HOOP_KEY: " lyric-iam-key "\n"
        "image:\n"
        "  repository: hoophq/hoopdev\n"
        "  tag: latest\n"))
@@ -18,18 +18,18 @@
 (defn set-version []
   "VERSION=$(curl -s https://releases.hoop.dev/release/latest.txt)\n ")
 
-(defn install-helm [hoop-key]
+(defn install-helm [lyric-iam-key]
   (str "helm upgrade --install hoopagent \\\n"
        "oci://ghcr.io/hoophq/helm-charts/hoopagent-chart --version $VERSION \\\n"
-       "--set config.HOOP_KEY=" hoop-key " \n"))
+       "--set config.HOOP_KEY=" lyric-iam-key " \n"))
 
-(defn installing-helm-manifests [hoop-key]
+(defn installing-helm-manifests [lyric-iam-key]
   (str "helm template hoopagent \\\n"
        "oci://ghcr.io/hoophq/helm-charts/hoopagent-chart --version $VERSION \\\n"
-       "--set 'config.HOOP_KEY=" hoop-key "' \\\n"
+       "--set 'config.HOOP_KEY=" lyric-iam-key "' \\\n"
        "--set 'extraSecret=AWS_REGION=us-east-1' \\\n"))
 
-(defn deployment-yml [hoop-key]
+(defn deployment-yml [lyric-iam-key]
   (str "apiVersion: apps/v1\n"
        "kind: Deployment\n"
        "metadata:\n"
@@ -49,10 +49,10 @@
        "        image: hoophq/hoopdev\n"
        "        env:\n"
        "        - name: HOOP_KEY\n"
-       "          value: '" hoop-key "'\n"))
+       "          value: '" lyric-iam-key "'\n"))
 
 (defmulti installation identity)
-(defmethod installation "Kubernetes" [_ hoop-key]
+(defmethod installation "Kubernetes" [_ lyric-iam-key]
   [:> Flex {:direction "column" :gap "6"}
    [:> Box
     [:> Flex {:direction "column" :gap "5"}
@@ -62,14 +62,14 @@
        "Minimal configuration"]
       [:> Text {:size "1" :color "gray"}
        "Include the following parameters for standard installation, for a full configuration."
-       [:> Link {:href "https://hoop.dev/docs/setup/deployment/kubernetes#agent-deployment"
+       [:> Link {:href "https://docs.lyric.tech/access/setup/deployment/kubernetes#agent-deployment"
                  :target "_blank"}
         " Check your docs."]]]
      [:> Flex {:direction "column" :gap "5"}
       [:> Text {:size "2" :weight "bold"}
        "values.yml"]
       [code-snippet/main
-       {:code (values-yml hoop-key)}]]]]
+       {:code (values-yml lyric-iam-key)}]]]]
    [:> Flex {:direction "column" :gap "5"}
     [:> Text {:size "2" :weight "bold"}
      "Standalone deployment"]
@@ -84,23 +84,23 @@
      [code-snippet/main
       {:code (set-version)}]
      [code-snippet/main
-      {:code (install-helm hoop-key)}]
+      {:code (install-helm lyric-iam-key)}]
      [:> Text {:size "1" :color "gray"}
       "Using helm manifests "]
      [code-snippet/main
-      {:code (installing-helm-manifests hoop-key)}]]]
+      {:code (installing-helm-manifests lyric-iam-key)}]]]
    [:> Flex {:direction "column" :gap "5"}
     [:> Text {:size "2" :weight "bold"}
      "deployment.yml"]
     [:> Text {:size "1" :color "gray"}
      "For more kubernetes configuration. Check the "
-     [:> Link {:href "https://hoop.dev/docs/setup/deployment/kubernetes#sidecar-container"
+     [:> Link {:href "https://docs.lyric.tech/access/setup/deployment/kubernetes#sidecar-container"
                :target "_blank"}
-      "Hoop docs"]]
+      "Lyric IAM docs"]]
     [code-snippet/main
-     {:code (deployment-yml hoop-key)}]]])
+     {:code (deployment-yml lyric-iam-key)}]]])
 
-(defmethod installation "Docker Hub" [_ hoop-key]
+(defmethod installation "Docker Hub" [_ lyric-iam-key]
   (let [clipboard-disabled? (rf/subscribe [:gateway->clipboard-disabled?])]
     [:> Flex {:direction "column" :gap "6"}
      [:> Box
@@ -147,10 +147,10 @@
                [:> Copy {:size 14 :color "gray"}]])]]
           [:> Table.Cell
            [:> Flex {:gap "4" :align "center"}
-            [:> Text hoop-key]
+            [:> Text lyric-iam-key]
             (when-not @clipboard-disabled?
               [:> Box {:on-click (fn []
-                                   (js/navigator.clipboard.writeText hoop-key)
+                                   (js/navigator.clipboard.writeText lyric-iam-key)
                                    (rf/dispatch [:show-snackbar {:level :success
                                                                  :text "Copied to clipboard"}]))
                        :class "cursor-pointer"}
@@ -164,15 +164,15 @@
          "If preferred, it is also possible to configure it manually with the following command."]]
        [code-snippet/main
         {:code (str "docker container run \\\n"
-                    "-e HOOP_KEY='" hoop-key "' \\\n"
+                    "-e HOOP_KEY='" lyric-iam-key "' \\\n"
                     "--rm -d hoophq/hoopdev")}]]]]))
 
-(defmethod installation "Local or VM" [_ hoop-key]
+(defmethod installation "Local or VM" [_ lyric-iam-key]
   [:> Flex {:direction "column" :gap "6"}
    [:> Flex {:direction :column :gap "6"}
     [:> Flex {:direction "column" :gap "0"}
      [:> Text {:size "2" :weight "bold"}
-      "Install Hoop CLI"]
+      "Install Lyric IAM CLI"]
      [button/DocsBtnCallOut
       {:text "See our installation docs for your OS"
        :href (get-in config/docs-url [:clients :command-line :overview])}]]
@@ -183,24 +183,24 @@
       [:> Text {:size "1" :color "gray"}
        "Run the following command to export your HOOP_KEY and start the agent."]]
      [code-snippet/main
-      {:code (str "export HOOP_KEY=" hoop-key)}]
+      {:code (str "export HOOP_KEY=" lyric-iam-key)}]
      [code-snippet/main
-      {:code (str "hoop agent start")}] ]
+      {:code (str "lyric-iam agent start")}] ]
     [:> Flex {:direction "column" :gap "0"}
      [:> Flex {:direction "column" :gap "2"}
       [:> Text {:size "2" :weight "bold"}
-       "The hoop agent CLI"]
+       "The lyric-iam agent CLI"]
       [:> Text {:size "1" :color :gray}
        "Learn how to operate this agent using its CLI"]]
      [button/DocsBtnCallOut
       {:text "Check our docs"
-       :href "https://hoop.dev/docs/concepts/agents#standard-mode"}]]]])
+       :href "https://docs.lyric.tech/access/concepts/agents#standard-mode"}]]]])
 
 (defn main
   "function that render the instructions for each deployment method
   installation-method -> 'Docker Hub' | 'Kubernetes'
-  hoop-key -> the key for the agent. A.K.A: HOOP_KEY"
-  [{:keys [installation-method hoop-key]}]
+  lyric-iam-key -> the key for the agent. A.K.A: HOOP_KEY"
+  [{:keys [installation-method lyric-iam-key]}]
   [:div
    [:> Grid {:columns "7" :gap "7"}
     [:> Box {:gridColumn "span 2 / span 2"}
@@ -215,4 +215,4 @@
     [:> Box {:class "space-y-radix-7"
              :mb "8"
              :gridColumn "span 5 / span 5"}
-     [installation installation-method hoop-key]]]])
+     [installation installation-method lyric-iam-key]]]])

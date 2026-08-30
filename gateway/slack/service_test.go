@@ -100,7 +100,7 @@ func TestRebuildReviewBlocks(t *testing.T) {
 		}, nil, nil)
 	}
 	original := []slack.Block{
-		slack.NewHeaderBlock(&slack.TextBlockObject{Type: slack.PlainTextType, Text: "Hoop Review"}),
+		slack.NewHeaderBlock(&slack.TextBlockObject{Type: slack.PlainTextType, Text: "Lyric IAM Review"}),
 		label("admin"),
 		slack.NewActionBlock(revID + ":admin:0"),
 		label("sre"),

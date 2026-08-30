@@ -164,7 +164,7 @@ func (r *pgReader) close() {
 // (checked out in the integration-test CI job); when running against the stub
 // there is no way to complete a real PG exchange, so the round-trip skips
 // rather than fails — the same OSS/enterprise split the agent suite relies on.
-const ossLibhoopMarker = "missing protocol hoop library"
+const ossLibhoopMarker = "missing protocol lyric-iam library"
 
 // waitFor blocks until a packet of the given type arrives.
 func (r *pgReader) waitFor(t *testing.T, packetType string, timeout time.Duration) {

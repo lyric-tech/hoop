@@ -272,17 +272,17 @@ func newPasswordConnection(sid, connID string, conn net.Conn, server *passwordSe
 				dba.ExpireAt.Format(time.RFC3339), ctxDuration.Truncate(time.Second).String())
 
 			extensions := map[string]string{
-				"hoop-auth-method":      "password",
-				"hoop-credential-id":    dba.ID,
-				"hoop-user-subject":     dba.UserSubject,
-				"hoop-connection-name":  dba.ConnectionName,
-				"hoop-context-duration": ctxDuration.String(),
+				"lyric-iam-auth-method":      "password",
+				"lyric-iam-credential-id":    dba.ID,
+				"lyric-iam-user-subject":     dba.UserSubject,
+				"lyric-iam-connection-name":  dba.ConnectionName,
+				"lyric-iam-context-duration": ctxDuration.String(),
 			}
 			if models.IsMachineIdentityCredential(dba.ID) {
-				extensions["hoop-is-machine-credential"] = "true"
-				extensions["hoop-machine-identity-org-id"] = dba.OrgID
+				extensions["lyric-iam-is-machine-credential"] = "true"
+				extensions["lyric-iam-machine-identity-org-id"] = dba.OrgID
 			} else if dba.SessionID != "" {
-				extensions["hoop-credential-session-id"] = dba.SessionID
+				extensions["lyric-iam-credential-session-id"] = dba.SessionID
 			}
 			return &ssh.Permissions{Extensions: extensions}, nil
 		},
@@ -307,13 +307,13 @@ func newPasswordConnection(sid, connID string, conn net.Conn, server *passwordSe
 		return nil, fmt.Errorf("missing ssh permissions after authentication")
 	}
 
-	connectionName := sshConn.Permissions.Extensions["hoop-connection-name"]
-	userSubject := sshConn.Permissions.Extensions["hoop-user-subject"]
-	ctxDurationStr := sshConn.Permissions.Extensions["hoop-context-duration"]
-	credentialSessionID := sshConn.Permissions.Extensions["hoop-credential-session-id"]
-	credentialID := sshConn.Permissions.Extensions["hoop-credential-id"]
-	isMachineCredential := sshConn.Permissions.Extensions["hoop-is-machine-credential"] == "true"
-	machineIdentityOrgID := sshConn.Permissions.Extensions["hoop-machine-identity-org-id"]
+	connectionName := sshConn.Permissions.Extensions["lyric-iam-connection-name"]
+	userSubject := sshConn.Permissions.Extensions["lyric-iam-user-subject"]
+	ctxDurationStr := sshConn.Permissions.Extensions["lyric-iam-context-duration"]
+	credentialSessionID := sshConn.Permissions.Extensions["lyric-iam-credential-session-id"]
+	credentialID := sshConn.Permissions.Extensions["lyric-iam-credential-id"]
+	isMachineCredential := sshConn.Permissions.Extensions["lyric-iam-is-machine-credential"] == "true"
+	machineIdentityOrgID := sshConn.Permissions.Extensions["lyric-iam-machine-identity-org-id"]
 
 	if connectionName == "" || userSubject == "" {
 		return nil, fmt.Errorf("missing required SSH connection attributes")

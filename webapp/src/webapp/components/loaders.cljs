@@ -17,7 +17,7 @@
    [:img {:src "/images/hoop-branding/SVG/hoop-symbol_black.svg"
           :height "40"
           :width "40"
-          :alt "hoop"}]
+          :alt "Lyric IAM"}]
    [dots-loader]
    (when (or message description)
      [:div {:class "flex flex-col items-center gap-1 text-center"}
@@ -75,7 +75,7 @@
    [:img {:src "/images/hoop-branding/SVG/hoop-symbol_white.svg"
           :height "40"
           :width "40"
-          :alt "hoop"}]
+          :alt "Lyric IAM"}]
    [dark-dots-loader]
    (when (or message description)
      [:div {:class "flex flex-col items-center gap-1 text-center"}

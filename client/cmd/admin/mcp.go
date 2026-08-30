@@ -25,10 +25,10 @@ var mcpCmd = &cobra.Command{
 var mcpAuthCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "Configure OAuth 2.1 Resource Server authentication for the /api/mcp endpoint",
-	Long: `Configure OAuth 2.1 Resource Server authentication for the Hoop MCP endpoint.
+	Long: `Configure OAuth 2.1 Resource Server authentication for the Lyric IAM MCP endpoint.
 
 When enabled, the /api/mcp endpoint accepts JWTs issued by the configured OIDC
-issuer (in addition to gateway Hoop bearer tokens). The audience claim of inbound
+issuer (in addition to gateway Lyric IAM bearer tokens). The audience claim of inbound
 JWTs must match the configured resource URI.`,
 }
 
@@ -52,7 +52,7 @@ var mcpAuthDisableCmd = &cobra.Command{
 		current := mcpAuthGetOrEmpty()
 		current["enabled"] = false
 		mcpAuthPutOrDie(current)
-		fmt.Println(styles.Fainted("MCP OAuth authentication disabled. The /api/mcp endpoint now accepts only gateway Hoop bearer tokens."))
+		fmt.Println(styles.Fainted("MCP OAuth authentication disabled. The /api/mcp endpoint now accepts only gateway Lyric IAM bearer tokens."))
 	},
 }
 

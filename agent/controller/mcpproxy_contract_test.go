@@ -128,7 +128,7 @@ func TestWebappFormOptionsAreAllAccepted(t *testing.T) {
 		}
 	}
 	// The catalog picker maps every non-"none" entry (18 of 32 are oauth) to
-	// "static", because hoop brokers OAuth itself. Both must be accepted.
+	// "static", because lyric-iam brokers OAuth itself. Both must be accepted.
 	for _, auth := range []string{"none", "static"} {
 		envs := map[string]string{"MCP_TRANSPORT": "stdio", "MCP_AUTH": auth}
 		if _, err := parseConnectionEnvVars(encodeEnvs(envs), pb.ConnectionTypeMcpProxy); err != nil {

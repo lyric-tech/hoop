@@ -1,5 +1,5 @@
-// Package versions implements `hoop versions <subcommand>`: a nvm-style
-// manager for hoop CLI binaries installed under $HOME/.hoop/versions/.
+// Package versions implements `lyric-iam versions <subcommand>`: a nvm-style
+// manager for lyric-iam CLI binaries installed under $HOME/.lyric-iam/versions/.
 package versions
 
 import (
@@ -13,13 +13,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// MainCmd is the parent `hoop versions` command.
+// MainCmd is the parent `lyric-iam versions` command.
 var MainCmd = &cobra.Command{
 	Use:   "versions",
-	Short: "Manage installed hoop CLI versions",
-	Long: `Manage hoop CLI binaries installed under $HOME/.hoop/versions/.
+	Short: "Manage installed lyric-iam CLI versions",
+	Long: `Manage lyric-iam CLI binaries installed under $HOME/.lyric-iam/versions/.
 
-The currently active version is exposed as $HOME/.hoop/bin/hoop. Add
+The currently active version is exposed as $HOME/.lyric-iam/bin/lyric-iam. Add
 that directory to your PATH to use the active version from your shell.`,
 	SilenceUsage: true,
 }
@@ -39,7 +39,7 @@ func init() {
 	// share the post-install PATH-hint flags.
 	for _, cmd := range []*cobra.Command{syncCmd, upgradeCmd} {
 		cmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "Assume yes to interactive prompts (PATH setup)")
-		cmd.Flags().BoolVar(&skipPathHint, "skip-path-hint", false, "Do not prompt to add $HOME/.hoop/bin to PATH")
+		cmd.Flags().BoolVar(&skipPathHint, "skip-path-hint", false, "Do not prompt to add $HOME/.lyric-iam/bin to PATH")
 	}
 
 	MainCmd.AddCommand(listCmd, useCmd, installCmd, removeCmd, syncCmd, upgradeCmd)
@@ -48,7 +48,7 @@ func init() {
 var listCmd = &cobra.Command{
 	Use:          "list",
 	Aliases:      []string{"ls"},
-	Short:        "List installed hoop versions",
+	Short:        "List installed lyric-iam versions",
 	SilenceUsage: true,
 	RunE: func(_ *cobra.Command, _ []string) error {
 		layout, err := upgrade.DefaultLayout()
@@ -61,7 +61,7 @@ var listCmd = &cobra.Command{
 		}
 		entries := store.Sorted()
 		if len(entries) == 0 {
-			fmt.Println("No versions installed yet. Try `hoop versions sync`, `hoop versions upgrade`, or `hoop versions install <version>`.")
+			fmt.Println("No versions installed yet. Try `lyric-iam versions sync`, `lyric-iam versions upgrade`, or `lyric-iam versions install <version>`.")
 			return nil
 		}
 		headers := []string{" ", "VERSION", "PLATFORM", "INSTALLED AT", "PATH"}
@@ -81,7 +81,7 @@ var listCmd = &cobra.Command{
 		}
 		fmt.Println(styles.RenderTable(headers, rows))
 		if store.Active == "" {
-			fmt.Println(styles.Fainted("(no active version set; run `hoop versions use <version>`)"))
+			fmt.Println(styles.Fainted("(no active version set; run `lyric-iam versions use <version>`)"))
 		}
 		return nil
 	},
@@ -89,7 +89,7 @@ var listCmd = &cobra.Command{
 
 var useCmd = &cobra.Command{
 	Use:          "use <version>",
-	Short:        "Set the active hoop version",
+	Short:        "Set the active lyric-iam version",
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE: func(_ *cobra.Command, args []string) error {
@@ -103,7 +103,7 @@ var useCmd = &cobra.Command{
 			return err
 		}
 		if !store.Has(target) {
-			return fmt.Errorf("version %s is not installed; install it with `hoop versions install %s`", target, target)
+			return fmt.Errorf("version %s is not installed; install it with `lyric-iam versions install %s`", target, target)
 		}
 		if err := upgrade.SetActive(layout, store, target); err != nil {
 			return err
@@ -111,7 +111,7 @@ var useCmd = &cobra.Command{
 		if err := store.Save(layout); err != nil {
 			return err
 		}
-		fmt.Printf("Active hoop version is now %s\n", target)
+		fmt.Printf("Active lyric-iam version is now %s\n", target)
 		fmt.Printf("Active CLI: %s\n", layout.BinLink)
 		return nil
 	},
@@ -119,7 +119,7 @@ var useCmd = &cobra.Command{
 
 var installCmd = &cobra.Command{
 	Use:          "install <version>",
-	Short:        "Download and install a specific hoop version",
+	Short:        "Download and install a specific lyric-iam version",
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE: func(_ *cobra.Command, args []string) error {
@@ -157,7 +157,7 @@ var installCmd = &cobra.Command{
 					if err := store.Save(layout); err != nil {
 						return err
 					}
-					fmt.Printf("Active hoop version is now %s\n", target)
+					fmt.Printf("Active lyric-iam version is now %s\n", target)
 				}
 				return nil
 			}
@@ -178,9 +178,9 @@ var installCmd = &cobra.Command{
 			if err := store.Save(layout); err != nil {
 				return err
 			}
-			fmt.Printf("Active hoop version is now %s\n", target)
+			fmt.Printf("Active lyric-iam version is now %s\n", target)
 		} else {
-			fmt.Printf("Run `hoop versions use %s` to make it the active version.\n", target)
+			fmt.Printf("Run `lyric-iam versions use %s` to make it the active version.\n", target)
 		}
 		return nil
 	},
@@ -189,7 +189,7 @@ var installCmd = &cobra.Command{
 var removeCmd = &cobra.Command{
 	Use:          "remove <version>",
 	Aliases:      []string{"rm", "uninstall"},
-	Short:        "Remove an installed hoop version",
+	Short:        "Remove an installed lyric-iam version",
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE: func(_ *cobra.Command, args []string) error {

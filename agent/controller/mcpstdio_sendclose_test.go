@@ -101,7 +101,7 @@ func indexOf(order []string, pktType string) int {
 // child and drops the map entry, so a request arriving afterwards finds
 // nothing and spawns a REPLACEMENT MCP server on the user's machine — with its
 // reaping packet already spent. That process then outlives the backend,
-// holding the user's credentials, until the whole hoop session ends.
+// holding the user's credentials, until the whole lyric-iam session ends.
 //
 // The window is real: Send used to check `closed` under b.mu, release it, then
 // write. A Close landing entirely inside that gap inverts the wire order.

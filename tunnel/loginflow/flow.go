@@ -6,9 +6,9 @@
 // callback address pattern. The differences are:
 //
 //   - The callback HTTP server runs inside the daemon (this package)
-//     instead of in the hoop CLI process.
+//     instead of in the lyric-iam CLI process.
 //   - On success we hand the token to a caller-supplied "persist"
-//     callback rather than writing ~/.hoop/config.toml ourselves;
+//     callback rather than writing ~/.lyric-iam/config.toml ourselves;
 //     keeps loginflow free of filesystem assumptions and testable
 //     without a real disk.
 //   - The flow exposes a Start/Poll surface to the IPC layer
@@ -96,7 +96,7 @@ type LoginURLFn func(ctx context.Context, apiURL, authMethod string) (string, er
 // Options configures Flow. APIURL and OnSuccess are required;
 // everything else has sensible defaults.
 type Options struct {
-	// APIURL is the hoop gateway HTTPS base, e.g. "https://hoop.example.com".
+	// APIURL is the lyric-iam gateway HTTPS base, e.g. "https://hoop.example.com".
 	APIURL string
 
 	// OnSuccess receives the token after a successful callback. It
@@ -470,7 +470,7 @@ func (f *Flow) finishAttempt(att *attempt, status Status, msg string) {
 // defaultFetchAuthMethod calls GET <apiURL>/api/publicserverinfo and
 // returns the `auth_method` field. Matches client/cmd/login.go's
 // fetchAuthMethod verbatim so we can rely on the gateway behaving the
-// same as it does for the hoop CLI.
+// same as it does for the lyric-iam CLI.
 func defaultFetchAuthMethod(c *http.Client) AuthMethodFn {
 	return func(ctx context.Context, apiURL string) (string, error) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL+"/api/publicserverinfo", nil)
@@ -555,7 +555,7 @@ func randomState() (string, error) {
 // this tab" cue) can be templated in later without touching the
 // state machine.
 const defaultSuccessHTML = `<!DOCTYPE html>
-<html><head><title>Hoop Tunnel — Signed in</title></head>
+<html><head><title>Lyric IAM Tunnel — Signed in</title></head>
 <body style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 4em auto; text-align: center;">
 <h1>✓ Signed in</h1>
 <p>You can close this tab and return to your terminal.</p>

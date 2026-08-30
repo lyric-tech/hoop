@@ -30,12 +30,12 @@ pub struct WebSocket {
 }
 
 fn build_websocket_url() -> String {
-    let gateway_url = std::env::var("HOOP_GATEWAY_URL");
+    let gateway_url = std::env::var("LYRIC_IAM_GATEWAY_URL");
     // if is not set the gateway_url exit the program
     let gateway_url = match gateway_url {
         Ok(url) => url,
         Err(_) => {
-            error!("HOOP_GATEWAY_URL environment variable is not set");
+            error!("LYRIC_IAM_GATEWAY_URL environment variable is not set");
             std::process::exit(1);
         }
     };
@@ -75,7 +75,7 @@ impl WebSocket {
         );
         request
             .headers_mut()
-            .insert("HOOP_KEY", HeaderValue::from_str(token.as_str())?);
+            .insert("LYRIC_IAM_KEY", HeaderValue::from_str(token.as_str())?);
 
         Ok(WebSocket {
             gateway_url,
@@ -104,7 +104,7 @@ impl WebSocket {
                     return Ok(());
                 }
                 Err(e) if e.to_string().contains("401 Unauthorized") => {
-                    error!("> Unauthorized: Invalid token provided. Please check your HOOP_KEY.");
+                    error!("> Unauthorized: Invalid token provided. Please check your LYRIC_IAM_KEY.");
                     return Err(e);
                 }
                 Err(e) => {

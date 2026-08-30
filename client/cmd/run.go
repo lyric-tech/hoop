@@ -29,16 +29,16 @@ var runFlags = struct {
 }{}
 
 var exampleRunFlag = `
-hoop run --database 'postgres://user:paswd@externalhost:5432/mydb'
-hoop run --name shell-console --command 'bash --verbose'
+lyric-iam run --database 'postgres://user:paswd@externalhost:5432/mydb'
+lyric-iam run --name shell-console --command 'bash --verbose'
 
 # run YOUR_COMMAND in foreground
-hoop run --command 'rails console' -- YOUR_COMMAND --YOUR-FLAG
+lyric-iam run --command 'rails console' -- YOUR_COMMAND --YOUR-FLAG
 `
 
 func init() {
 	osruntime := appruntime.OS()
-	dbConnectionURI := os.Getenv("HOOP_DB_URI")
+	dbConnectionURI := os.Getenv("LYRIC_IAM_DB_URI")
 	runCmd.Flags().StringVarP(&runFlags.Name, "name", "n", osruntime["hostname"], "The name of the connection resource, defaults to local hostname")
 	runCmd.Flags().StringVar(&runFlags.EnvExport, "export", "", "Which envs to export from the host. e.g.: --export HOSTNAME,TERM. By defaut expose all")
 	runCmd.Flags().StringVar(&runFlags.Command, "command", "", "The entrypoint command of the connection. Defaults to $SHELL or database type commands")

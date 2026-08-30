@@ -98,7 +98,7 @@
 
 (def auth-mode-labels
   "How each mode is described, in the order the form offers them."
-  [{:value "oauth" :text "OAuth login (Hoop brokers the flow)"}
+  [{:value "oauth" :text "OAuth login (Lyric IAM brokers the flow)"}
    {:value "static" :text "API key or personal access token"}
    {:value "passthrough" :text "Each user sends their own credential"}
    {:value "none" :text "No authentication"}])
@@ -110,11 +110,11 @@
   "Modes to offer for a catalog entry, as {:value :text} options.
 
   A server the catalog does not know (custom/self-hosted) gets every mode:
-  hoop cannot know what it accepts, and the admin does. A known server gets
+  lyric-iam cannot know what it accepts, and the admin does. A known server gets
   what the gateway said it supports — anything else is a flow the provider
   cannot complete.
 
-  Passthrough is the exception, and it is a hoop capability rather than a
+  Passthrough is the exception, and it is a lyric-iam capability rather than a
   provider one: it sends a bearer credential in exactly the same header a
   static token uses, only sourced from each caller instead of the connection.
   So any server that documents a static credential can serve it, and the
@@ -191,7 +191,7 @@
   "MCP_AUTH the agent receives for a chosen mode.
 
   The agent accepts none|static|passthrough (agent/controller/mcpproxy.go).
-  OAuth is not among them and does not need to be: hoop brokers that login
+  OAuth is not among them and does not need to be: lyric-iam brokers that login
   itself and resolves the result into HEADER_AUTHORIZATION before the session
   opens, so the agent sees a credential indistinguishable from a static one.
 

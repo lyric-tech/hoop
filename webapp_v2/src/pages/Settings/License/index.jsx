@@ -24,7 +24,7 @@ import { openSupport } from '@/utils/support'
 
 // Wider than the global banner's 30 days: renewal happens here.
 const EXPIRATION_WARNING_DAYS = 90
-const SUPPORT_MESSAGE = 'I want to renew my hoop license'
+const SUPPORT_MESSAGE = 'I want to renew my lyric-iam license'
 
 function licenseTypeLabel(type) {
   if (type === 'enterprise') return 'Enterprise License'
@@ -123,7 +123,7 @@ function SettingsLicense() {
             variant="subtle"
             color="gray"
             component="a"
-            href="https://help.hoop.dev/"
+            href="https://docs.lyric.tech/access/"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -221,7 +221,7 @@ function SettingsLicense() {
             License Management documentation
           </Anchor>
           {' '}or{' '}
-          <Anchor href="https://help.hoop.dev/" target="_blank" size="xs">
+          <Anchor href="https://docs.lyric.tech/access/" target="_blank" size="xs">
             contact us
           </Anchor>
           .

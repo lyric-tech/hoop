@@ -1,11 +1,11 @@
 // Package upgrade implements the version-manager subsystem used by
-// the `hoop versions` command group. It manages CLI binaries under
-// $HOME/.hoop/versions/<version>/hoop and keeps a single symlink at
-// $HOME/.hoop/bin/hoop pointing at the active version.
+// the `lyric-iam versions` command group. It manages CLI binaries under
+// $HOME/.lyric-iam/versions/<version>/hoop and keeps a single symlink at
+// $HOME/.lyric-iam/bin/lyric-iam pointing at the active version.
 //
 // Inspired by nvm and fnm, but simplified: a single global active version
 // is selected via one stable symlink, so users only need to add
-// $HOME/.hoop/bin to their PATH once. No shell function is required.
+// $HOME/.lyric-iam/bin to their PATH once. No shell function is required.
 package upgrade
 
 import (
@@ -15,37 +15,37 @@ import (
 	"runtime"
 )
 
-// File and directory names under $HOME/.hoop used by the version manager.
+// File and directory names under $HOME/.lyric-iam used by the version manager.
 const (
-	homeDirName       = ".hoop"
+	homeDirName       = ".lyric-iam"
 	binDirName        = "bin"
 	versionsDirName   = "versions"
 	versionsStoreFile = "versions.toml"
 )
 
-// binaryName is the hoop executable filename on the host OS. On Windows
-// the Go toolchain appends a .exe suffix at build time, so the release
-// tarball contains hoop.exe and both the per-version install path and the
-// active-version file must use that same name — otherwise os.Stat checks
-// and PATH resolution would look for a file that doesn't exist.
-var binaryName = executableName(runtime.GOOS == "windows")
+// binaryName is the executable filename the CLI is installed under on the
+// host OS. On Windows the Go toolchain appends a .exe suffix at build time,
+// so both the per-version install path and the active-version file must use
+// that same name — otherwise os.Stat checks and PATH resolution would look
+// for a file that doesn't exist.
+var binaryName = localExecutableName(runtime.GOOS == "windows")
 
 // Layout resolves the absolute paths the version manager works with.
 // All fields are absolute paths. Layout does not create any directories;
 // callers must use EnsureDirs when they actually need to write.
 type Layout struct {
-	// Home is the hoop home directory ($HOME/.hoop).
+	// Home is the lyric-iam home directory ($HOME/.lyric-iam).
 	Home string
-	// BinDir is the directory containing the active symlink ($HOME/.hoop/bin).
+	// BinDir is the directory containing the active symlink ($HOME/.lyric-iam/bin).
 	BinDir string
 	// BinLink is the symlink path users put on their PATH
-	// ($HOME/.hoop/bin/hoop).
+	// ($HOME/.lyric-iam/bin/lyric-iam).
 	BinLink string
 	// VersionsDir is the parent directory for installed versions
-	// ($HOME/.hoop/versions).
+	// ($HOME/.lyric-iam/versions).
 	VersionsDir string
 	// StoreFile is the TOML file tracking installed versions and the
-	// currently active version ($HOME/.hoop/versions.toml).
+	// currently active version ($HOME/.lyric-iam/versions.toml).
 	StoreFile string
 }
 
@@ -72,13 +72,13 @@ func LayoutFromHome(home string) Layout {
 }
 
 // VersionDir returns the install directory for a specific version, e.g.
-// $HOME/.hoop/versions/1.73.0.
+// $HOME/.lyric-iam/versions/1.73.0.
 func (l Layout) VersionDir(version string) string {
 	return filepath.Join(l.VersionsDir, version)
 }
 
-// VersionBinary returns the path to the hoop binary for a specific version,
-// e.g. $HOME/.hoop/versions/1.73.0/hoop.
+// VersionBinary returns the path to the lyric-iam binary for a specific version,
+// e.g. $HOME/.lyric-iam/versions/1.73.0/hoop.
 func (l Layout) VersionBinary(version string) string {
 	return filepath.Join(l.VersionDir(version), binaryName)
 }

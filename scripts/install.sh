@@ -60,7 +60,7 @@ handle_existing_installation() {
             read -r reply
         else
             # Non-interactive mode
-            if [ -n "$HOOP_CLEAN_INSTALL" ] && [ "$HOOP_CLEAN_INSTALL" = "yes" ]; then
+            if [ -n "$LYRIC_IAM_CLEAN_INSTALL" ] && [ "$LYRIC_IAM_CLEAN_INSTALL" = "yes" ]; then
                 reply="y"
             else
                 reply="n"

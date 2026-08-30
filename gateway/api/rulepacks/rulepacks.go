@@ -238,7 +238,7 @@ func Post(c *gin.Context) {
 // UpdateRulepack
 //
 //	@Summary		Update Rulepack
-//	@Description	Update an existing rulepack. Returns 403 if the rulepack is Hoop-managed.
+//	@Description	Update an existing rulepack. Returns 403 if the rulepack is Lyric IAM-managed.
 //	@Tags			Rulepacks
 //	@Accept			json
 //	@Produce		json
@@ -317,7 +317,7 @@ func Put(c *gin.Context) {
 // DeleteRulepack
 //
 //	@Summary		Delete Rulepack
-//	@Description	Delete a rulepack. Returns 403 if Hoop-managed. Cascades delete to its attributes and their feature junctions.
+//	@Description	Delete a rulepack. Returns 403 if Lyric IAM-managed. Cascades delete to its attributes and their feature junctions.
 //	@Tags			Rulepacks
 //	@Produce		json
 //	@Param			id	path	string	true	"Rulepack ID"

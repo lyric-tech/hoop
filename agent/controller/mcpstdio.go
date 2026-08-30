@@ -7,11 +7,11 @@ package controller
 // filesystem, their SSH agent, their already-authenticated CLI tools. This
 // transport keeps every inspection stage where it is — policy, guardrails,
 // masking and audit all still run in the agent — and moves only the process
-// to the machine that ran `hoop connect`.
+// to the machine that ran `lyric-iam connect`.
 //
-//	MCP client -> hoop connect (local port) -> gateway -> agent
+//	MCP client -> lyric-iam connect (local port) -> gateway -> agent
 //	  -> mcpproxy gateway (policy, masking, audit)
-//	  -> clientStdioBackend  ==tunnel==>  hoop connect -> child stdin/stdout
+//	  -> clientStdioBackend  ==tunnel==>  lyric-iam connect -> child stdin/stdout
 //
 // The tunnel rides the same gRPC stream the client already owns, so the
 // answer returns to the session that asked. Nothing here is MCP-specific
@@ -34,7 +34,7 @@ import (
 
 // mcpTransportClientStdio is the MCP_TRANSPORT value selecting this backend.
 // It is deliberately not one of mcpproxy's own transport strings: the library
-// never constructs it, hoop injects the factory directly.
+// never constructs it, lyric-iam injects the factory directly.
 const mcpTransportClientStdio = "client-stdio"
 
 // mcpStdioRecvBuffer bounds the queue of server-initiated messages waiting for
@@ -53,8 +53,8 @@ const mcpStdioRecvBuffer = 64
 // child process on the connecting user's machine.
 //
 // Lifetime is one MCP session, per the Backend contract. Several can exist
-// concurrently under one hoop session when a user reconnects their MCP client,
-// which is why the backend id — not the hoop session id — scopes the child.
+// concurrently under one lyric-iam session when a user reconnects their MCP client,
+// which is why the backend id — not the lyric-iam session id — scopes the child.
 type clientStdioBackend struct {
 	agent     *Agent
 	name      string
@@ -224,7 +224,7 @@ func (b *clientStdioBackend) Send(ctx context.Context, msg []byte) error {
 // order: the CLI reaps the child on MCPStdioClose, then the late
 // MCPStdioRequest finds no entry in its child map and spawns a REPLACEMENT MCP
 // server on the user's machine — one whose reaping packet has already been
-// spent, so it survives until the whole hoop session ends.
+// spent, so it survives until the whole lyric-iam session ends.
 //
 // b.mu is taken inside sendMu, never the other way round, and is released
 // before the write: deliver runs on the agent's shared recv loop and must
@@ -465,7 +465,7 @@ func (a *Agent) closeClientStdioBackends(sessionID string) {
 }
 
 // nextMCPStdioBackendID mints an id unique within a session, so two MCP
-// sessions under one hoop session get two children instead of sharing one.
+// sessions under one lyric-iam session get two children instead of sharing one.
 func (a *Agent) nextMCPStdioBackendID(sessionID string) string {
 	obj, _ := a.mcpStdioSeq.LoadOrStore(sessionID, &atomic.Uint64{})
 	seq := obj.(*atomic.Uint64)

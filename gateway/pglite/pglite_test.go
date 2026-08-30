@@ -32,7 +32,7 @@ func TestStartQueryAndResume(t *testing.T) {
 	}
 	t.Logf("connected: %s", version)
 
-	// Schema-qualified DDL, mirroring how hoop migrations and models
+	// Schema-qualified DDL, mirroring how lyric-iam migrations and models
 	// reference objects (see DSN docs about the backend's search_path).
 	if _, err := db.Exec(`
 		CREATE TABLE public.pglite_smoke (
@@ -135,7 +135,7 @@ func TestStartQueryAndResume(t *testing.T) {
 	}
 }
 
-// TestHoopMigrations applies the entire embedded hoop migration set against
+// TestHoopMigrations applies the entire embedded lyric-iam migration set against
 // the embedded database, then restarts the instance and applies them again —
 // the upgrade path every release exercises: an existing cluster must
 // recognize the already-applied version from the pinned migrations table.

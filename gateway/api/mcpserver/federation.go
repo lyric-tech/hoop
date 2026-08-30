@@ -27,7 +27,7 @@ func oauthRequiredEnvelope(sc *storagev2.Context, connectionName string) map[str
 	consentURL, err := apiconnections.BuildFederationConsentURL(sc, connectionName, "")
 	if err != nil {
 		log.Warnf("mcp: failed building federation consent url for connection %q: %v", connectionName, err)
-		env["error"] = "could not build the Google consent link automatically; open the Hoop web app and " +
+		env["error"] = "could not build the Google consent link automatically; open the Lyric IAM web app and " +
 			"connect your Google account for this connection, then retry"
 	} else {
 		env["consent_url"] = consentURL

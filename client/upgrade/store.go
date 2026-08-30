@@ -22,7 +22,7 @@ type VersionEntry struct {
 
 // Store is the on-disk state of the version manager. It is the source of
 // truth for which versions are installed and which is active; the symlink
-// at $HOME/.hoop/bin/hoop only mirrors it.
+// at $HOME/.lyric-iam/bin/lyric-iam only mirrors it.
 type Store struct {
 	Active   string         `toml:"active"`
 	Versions []VersionEntry `toml:"versions"`

@@ -38,7 +38,7 @@ func (f *fakeIssuer) GenerateAccessToken(_ context.Context, principal string, sc
 // resolver can parse for client_email. The actual key material is not used
 // because the issuer is mocked.
 func fakeAdminSAJSON() []byte {
-	return []byte(`{"type":"service_account","client_email":"hoop-admin@proj.iam.gserviceaccount.com"}`)
+	return []byte(`{"type":"service_account","client_email":"lyric-iam-admin@proj.iam.gserviceaccount.com"}`)
 }
 
 func newResolverWithIssuer(issuer *fakeIssuer) *Resolver {
@@ -78,20 +78,20 @@ func TestResolve_HappyPath(t *testing.T) {
 	if issuer.calledLifetime != 30*time.Minute {
 		t.Errorf("issuer received lifetime %v, want 30m", issuer.calledLifetime)
 	}
-	if got := res.EnvVars["HOOP_GCP_ACCESS_TOKEN"]; got != "ya29.deadbeef" {
-		t.Errorf("HOOP_GCP_ACCESS_TOKEN=%q, want ya29.deadbeef", got)
+	if got := res.EnvVars["LYRIC_IAM_GCP_ACCESS_TOKEN"]; got != "ya29.deadbeef" {
+		t.Errorf("LYRIC_IAM_GCP_ACCESS_TOKEN=%q, want ya29.deadbeef", got)
 	}
 	if got := res.EnvVars["CLOUDSDK_CORE_PROJECT"]; got != "my-proj" {
 		t.Errorf("CLOUDSDK_CORE_PROJECT=%q, want my-proj", got)
 	}
-	if got := res.EnvVars["HOOP_FEDERATED_PRINCIPAL"]; got != "alice@acme.com" {
-		t.Errorf("HOOP_FEDERATED_PRINCIPAL=%q, want alice@acme.com", got)
+	if got := res.EnvVars["LYRIC_IAM_FEDERATED_PRINCIPAL"]; got != "alice@acme.com" {
+		t.Errorf("LYRIC_IAM_FEDERATED_PRINCIPAL=%q, want alice@acme.com", got)
 	}
 	if !res.TokenExpiresAt.Equal(expectedExpiry) {
 		t.Errorf("TokenExpiresAt=%v, want %v", res.TokenExpiresAt, expectedExpiry)
 	}
-	if res.AdminPrincipal != "hoop-admin@proj.iam.gserviceaccount.com" {
-		t.Errorf("AdminPrincipal=%q, want hoop-admin@proj.iam.gserviceaccount.com", res.AdminPrincipal)
+	if res.AdminPrincipal != "lyric-iam-admin@proj.iam.gserviceaccount.com" {
+		t.Errorf("AdminPrincipal=%q, want lyric-iam-admin@proj.iam.gserviceaccount.com", res.AdminPrincipal)
 	}
 }
 

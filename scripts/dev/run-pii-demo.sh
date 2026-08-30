@@ -8,7 +8,7 @@
 #      path; the agent never touches the DB itself)
 #   4. enable the experimental.rdp_pii_guard flag for the org and restart the
 #      gateway so it re-warms the flag cache
-#   5. start the agent with the matching HOOP_KEY
+#   5. start the agent with the matching LYRIC_IAM_KEY
 #
 # The agent image bundles its OCR engine and runs the agentrs PII gate; it
 # calls Presidio at MSPRESIDIO_ANALYZER_URL. The gateway pushes the guard
@@ -23,7 +23,7 @@ FLAG="experimental.rdp_pii_guard"
 AGENT_ID="e72e6fba-8ed3-5cde-9ff6-36f062e1e51b"
 dc() { docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"; }
 
-# Stable secret for the run; the agent uses it via HOOP_KEY, the gateway stores
+# Stable secret for the run; the agent uses it via LYRIC_IAM_KEY, the gateway stores
 # its sha256 as key_hash. Regenerated each invocation. `head` closing the pipe
 # early would SIGPIPE `tr` under pipefail, so generate without a head/tr pipe.
 AGENT_SECRET="xagt-$(LC_ALL=C openssl rand -hex 21)"
@@ -61,7 +61,7 @@ until [ "$(dc ps gateway --format '{{.Health}}' 2>/dev/null)" = "healthy" ]; do
   sleep 2
 done
 
-echo "[demo] starting agent (HOOP_KEY wired)"
+echo "[demo] starting agent (LYRIC_IAM_KEY wired)"
 dc up -d agent
 
 cat <<EOF

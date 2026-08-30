@@ -123,7 +123,7 @@
            [selection-card
             {:icon (r/as-element [:> Cloud {:size 20}])
              :title "IAM Federation"
-             :description "Issue short-lived credentials at session start by federating the user's Hoop identity to a cloud IAM principal. No static credentials are stored on this role."
+             :description "Issue short-lived credentials at session start by federating the user's Lyric IAM identity to a cloud IAM principal. No static credentials are stored on this role."
              :selected? (= connection-method "iam_federation")
              :on-click #(rf/dispatch [:connection-setup/update-connection-method "iam_federation"])}])]))))
 

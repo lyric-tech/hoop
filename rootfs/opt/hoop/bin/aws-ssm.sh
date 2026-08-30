@@ -4,7 +4,7 @@ set -eo pipefail
 
 [[ "$CONNECTION_DEBUG" == "1" ]] && set -x
 
-if [[ "$HOOP_CLIENT_VERB" == "connect" ]]; then
+if [[ "$LYRIC_IAM_CLIENT_VERB" == "connect" ]]; then
     if [[ -z "$INSTANCE_ID" ]]; then
       echo "Error: INSTANCE_ID is required for connect"
       exit 1

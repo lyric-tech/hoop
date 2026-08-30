@@ -47,7 +47,7 @@
             [:> Box
              [:> Heading {:as "h4" :size "3" :weight "medium" :class "text-gray-12"} "Native Access"]
              [:> Text {:as "p" :size "2" :class "text-gray-11"}
-              "Access resources through Hoop using their native protocols"]]]]])
+              "Access resources through Lyric IAM using their native protocols"]]]]])
 
        (when (:webapp access-methods)
          [:> Card {:size "1"}
@@ -89,7 +89,7 @@
                         :color "gray"
                         :fallback (r/as-element [:> SquareTerminal {:size 18}])}]
             [:> Box
-             [:> Heading {:as "h4" :size "3" :weight "medium" :class "text-gray-12"} "Hoop CLI"]
+             [:> Heading {:as "h4" :size "3" :weight "medium" :class "text-gray-12"} "Lyric IAM CLI"]
              [:> Text {:as "p" :size "2" :class "text-gray-11"}
               "Access resources and execute commands natively in your favorite apps."]]]]])]])])
 
@@ -150,7 +150,7 @@
            [:> Text {:color "gray" :size "3"} description]]]
 
          [:> Flex {:gap "3" :class "mb-6"}
-          [:> Link {:href (str "https://hoop.dev/docs/"
+          [:> Link {:href (str "https://docs.lyric.tech/access/"
                                (get-in connection [:documentationConfig :path]))
                     :target "_blank"}
            [:> Button {:variant "soft"

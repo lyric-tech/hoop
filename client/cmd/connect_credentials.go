@@ -41,7 +41,7 @@ func printPersistentCredentialTip(connectionName string) {
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, styles.Fainted(
 		"Tip: use persistent credentials without keeping this CLI running:\n"+
-			"     hoop connect %s --persistent-credential",
+			"     lyric-iam connect %s --persistent-credential",
 		connectionName))
 }
 
@@ -90,7 +90,7 @@ type httpProxyCommands struct {
 }
 
 // runPersistentCredentialFlow handles the --persistent-credential branch of
-// `hoop connect`: it POSTs to /api/connections/{name}/credentials, prints the
+// `lyric-iam connect`: it POSTs to /api/connections/{name}/credentials, prints the
 // credentials (or a review-required notice), and exits. No local tunnel is
 // opened — the credentials are meant to be pasted into a native client
 // (DBeaver, psql, kubectl, ...) that can reach the gateway directly.
@@ -135,7 +135,7 @@ func runPersistentCredentialFlow(connectionName string, accessDurationSec int, j
 	default:
 		fatalErr(false,
 			"subtype %q is not supported by --persistent-credential.\n"+
-				"Re-run without the flag to use the legacy tunnel, or use the Hoop webapp.",
+				"Re-run without the flag to use the legacy tunnel, or use the Lyric IAM webapp.",
 			resp.ConnectionSubType)
 	}
 }
@@ -241,7 +241,7 @@ func renderKubernetes(resp *credentialsResponse) {
 		fatalErr(false, "failed decoding kubernetes credentials: %v", err)
 	}
 
-	clusterName := fmt.Sprintf("hoop-%s", resp.ConnectionName)
+	clusterName := fmt.Sprintf("lyric-iam-%s", resp.ConnectionName)
 	scheme := schemeFromCommandBlob(creds.Command)
 	server := fmt.Sprintf("%s://%s:%s", scheme, creds.Hostname, creds.Port)
 	kubeconfig := fmt.Sprintf(`apiVersion: v1
@@ -254,11 +254,11 @@ clusters:
 contexts:
 - context:
     cluster: %s
-    user: hoop
+    user: lyric-iam
   name: %s
 current-context: %s
 users:
-- name: hoop
+- name: lyric-iam
   user:
     token: %s
 `, server, clusterName, clusterName, clusterName, clusterName, creds.ProxyToken)

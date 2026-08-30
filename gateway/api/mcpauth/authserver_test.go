@@ -31,7 +31,7 @@ func TestBuildAuthServerMetadata(t *testing.T) {
 
 	t.Run("public client", func(t *testing.T) {
 		got := buildAuthServerMetadata(
-			effectiveConfig{ClientID: "hoop-mcp"}, idpMeta,
+			effectiveConfig{ClientID: "lyric-iam-mcp"}, idpMeta,
 			"https://gw.example.com", "https://gw.example.com/api/mcp/oauth/register")
 
 		// Issuer is the gateway (RFC 8414 requires it to match the URL the
@@ -50,7 +50,7 @@ func TestBuildAuthServerMetadata(t *testing.T) {
 
 	t.Run("confidential client", func(t *testing.T) {
 		got := buildAuthServerMetadata(
-			effectiveConfig{ClientID: "hoop-mcp", ClientSecret: "s3cr3t"}, idpMeta,
+			effectiveConfig{ClientID: "lyric-iam-mcp", ClientSecret: "s3cr3t"}, idpMeta,
 			"https://gw.example.com", "https://gw.example.com/api/mcp/oauth/register")
 		assert.Equal(t, []string{"client_secret_basic", "client_secret_post"}, got.TokenEndpointAuthMethodsSupported)
 	})
@@ -75,8 +75,8 @@ func TestBuildRegistrationResponse(t *testing.T) {
 	}
 
 	t.Run("public client", func(t *testing.T) {
-		got := buildRegistrationResponse(effectiveConfig{ClientID: "hoop-mcp"}, req)
-		assert.Equal(t, "hoop-mcp", got.ClientID)
+		got := buildRegistrationResponse(effectiveConfig{ClientID: "lyric-iam-mcp"}, req)
+		assert.Equal(t, "lyric-iam-mcp", got.ClientID)
 		assert.Empty(t, got.ClientSecret)
 		assert.Nil(t, got.ClientSecretExpiresAt)
 		assert.Equal(t, "none", got.TokenEndpointAuthMethod)
@@ -89,7 +89,7 @@ func TestBuildRegistrationResponse(t *testing.T) {
 	})
 
 	t.Run("confidential client", func(t *testing.T) {
-		got := buildRegistrationResponse(effectiveConfig{ClientID: "hoop-mcp", ClientSecret: "s3cr3t"}, req)
+		got := buildRegistrationResponse(effectiveConfig{ClientID: "lyric-iam-mcp", ClientSecret: "s3cr3t"}, req)
 		assert.Equal(t, "s3cr3t", got.ClientSecret)
 		if assert.NotNil(t, got.ClientSecretExpiresAt) {
 			assert.Equal(t, int64(0), *got.ClientSecretExpiresAt) // never expires
@@ -100,10 +100,10 @@ func TestBuildRegistrationResponse(t *testing.T) {
 	t.Run("confidential client honors requested client_secret_post", func(t *testing.T) {
 		r := req
 		r.TokenEndpointAuthMethod = "client_secret_post"
-		got := buildRegistrationResponse(effectiveConfig{ClientID: "hoop-mcp", ClientSecret: "s3cr3t"}, r)
+		got := buildRegistrationResponse(effectiveConfig{ClientID: "lyric-iam-mcp", ClientSecret: "s3cr3t"}, r)
 		assert.Equal(t, "client_secret_post", got.TokenEndpointAuthMethod)
 		// Public clients never honor a secret-based method.
-		got = buildRegistrationResponse(effectiveConfig{ClientID: "hoop-mcp"}, r)
+		got = buildRegistrationResponse(effectiveConfig{ClientID: "lyric-iam-mcp"}, r)
 		assert.Equal(t, "none", got.TokenEndpointAuthMethod)
 	})
 

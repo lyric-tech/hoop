@@ -746,7 +746,7 @@ jobs:
           sbom: false
           push: true
           build-args: |
-            HOOP_IMAGE=hoophq/hoop:${{ env.GIT_TAG }}
+            LYRIC_IAM_IMAGE=hoophq/hoop:${{ env.GIT_TAG }}
           tags: |
             hoophq/hoop-agent-ocr:${{ env.GIT_TAG }}
             hoophq/hoop-agent-ocr:latest
@@ -779,7 +779,7 @@ jobs:
           sbom: false
           push: true
           build-args: |
-            HOOP_IMAGE=hoophq/hoop:${{ env.GIT_TAG }}
+            LYRIC_IAM_IMAGE=hoophq/hoop:${{ env.GIT_TAG }}
           tags: |
             hoophq/hoop-agent-ocr:${{ env.GIT_TAG }}-gpu
 

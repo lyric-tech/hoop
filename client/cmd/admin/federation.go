@@ -5,7 +5,7 @@
 //
 // Layout decisions:
 //
-//   - A dedicated `hoop admin federation` subtree rather than extending
+//   - A dedicated `lyric-iam admin federation` subtree rather than extending
 //     parseResourceOrDie. The endpoints are nested under connections, the
 //     write path carries a write-only secret blob, and the dry-run verb has
 //     no analog elsewhere in admin — three good reasons to escape the flat
@@ -108,8 +108,8 @@ type federationFile struct {
 var federationGetCmd = &cobra.Command{
 	Use:   "get CONNECTION",
 	Short: "Get federation configuration for a connection",
-	Example: `  hoop admin federation get my-bq
-  hoop admin federation get my-bq -o json`,
+	Example: `  lyric-iam admin federation get my-bq
+  lyric-iam admin federation get my-bq -o json`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			_ = cmd.Usage()
@@ -145,10 +145,10 @@ var federationSetCmd = &cobra.Command{
 	Use:   "set CONNECTION --file FILE [--credentials-file SA_FILE]",
 	Short: "Create or update federation configuration for a connection",
 	Example: `  # First-time setup
-  hoop admin federation set my-bq --file federation.yaml --credentials-file sa.json
+  lyric-iam admin federation set my-bq --file federation.yaml --credentials-file sa.json
 
   # Update policy only, keep stored credentials
-  hoop admin federation set my-bq --file federation.yaml`,
+  lyric-iam admin federation set my-bq --file federation.yaml`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			_ = cmd.Usage()

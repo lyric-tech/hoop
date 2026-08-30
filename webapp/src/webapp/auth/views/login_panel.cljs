@@ -16,7 +16,7 @@
 
 (defmulti ^:private login-error-message identity)
 (defmethod ^:private login-error-message "slack_not_configured" [_]
-  "You must configure your Slack with Hoop")
+  "You must configure your Slack with Lyric IAM")
 (defmethod ^:private login-error-message "code_exchange_failure" [_]
   "Something went wrong. Try again and if the error persist, talk to the account administrator")
 (defmethod ^:private login-error-message "pending_review" [_]

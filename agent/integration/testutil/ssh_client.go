@@ -29,12 +29,12 @@ import (
 //
 // # Why this exists
 //
-// libhoop's SSH proxy speaks hoop's custom envelope on the agent ←→
+// libhoop's SSH proxy speaks lyric-iam's custom envelope on the agent ←→
 // gateway wire, not raw SSH. So tests can't simply wrap MockTransport
 // in a net.Conn and call ssh.NewClient — the agent would receive raw
 // SSH bytes and reject them with "unknown packet type". The
 // PipedSSHClient mirrors the client/proxy/ssh.go pattern from the
-// real hoop CLI: it stands up an ssh.ServerConn on a net.Pipe, the
+// real lyric-iam CLI: it stands up an ssh.ServerConn on a net.Pipe, the
 // test's SSH client connects to it as if it were any other SSH
 // server, and the bridging layer translates SSH channel/request/data
 // events into sshtypes envelopes shipped over the MockTransport.
@@ -69,7 +69,7 @@ type PipedSSHClient struct {
 	// SSH server-side state
 	srvConn *ssh.ServerConn
 
-	// Bridge: maps hoop channel IDs ↔ ssh.Channel on the server side so
+	// Bridge: maps lyric-iam channel IDs ↔ ssh.Channel on the server side so
 	// inbound Data packets can find the channel to write to.
 	chanMu     sync.Mutex
 	channels   map[uint16]*serverChannelState
@@ -174,7 +174,7 @@ func DialPipedSSH(t *testing.T, tr *MockTransport, demux *RecvDemux,
 
 	// Session-close watcher: when the agent ends the session (upstream
 	// failure, guardrails block, or the OSS libhoop stub's "missing
-	// protocol hoop library"), tear the piped transport down so every
+	// protocol lyric-iam library"), tear the piped transport down so every
 	// blocked x/crypto/ssh call errors out immediately. Without this,
 	// a SessionClose is invisible to the SSH client — it has no
 	// per-connection ID so the demux never routes it here — and the
@@ -245,7 +245,7 @@ func (p *PipedSSHClient) SessionID() string { return p.sessionID }
 func (p *PipedSSHClient) ConnID() string { return p.connID }
 
 // serveNewChannels handles each new channel request from the test's
-// SSH client by accepting it on the server side, allocating a hoop
+// SSH client by accepting it on the server side, allocating a lyric-iam
 // channel ID, and forwarding it to the agent as sshtypes.OpenChannel.
 // Once accepted, the channel's I/O is bridged to sshtypes.Data /
 // sshtypes.SSHRequest packets in dedicated goroutines.

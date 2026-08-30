@@ -297,7 +297,7 @@
         [:<>
          [:> Callout.Root {:size "1" :color "gray"}
           [:> Callout.Text
-           "Claude Code runs in Vertex mode against hoop. hoop mints a short-lived "
+           "Claude Code runs in Vertex mode against lyric-iam. lyric-iam mints a short-lived "
            "token from the service account below and proxies requests to Google Vertex AI."]]
 
          [forms/input {:label "GCP Region"
@@ -358,7 +358,7 @@
 
 ;; MCP role form - HTTP proxy subtype whose endpoint is protected by OAuth
 ;; (e.g. https://mcp.figma.com/mcp). The admin resolves the MCP authorization
-;; here at setup: Hoop drives the OAuth login and freezes the obtained access
+;; here at setup: Lyric IAM drives the OAuth login and freezes the obtained access
 ;; token into the connection's HEADER_AUTHORIZATION credential.
 (defn mcp-role-form [role-index]
   (let [credentials @(rf/subscribe [:resource-setup/role-credentials role-index])
@@ -393,7 +393,7 @@
        [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
         "Log in to the MCP server to obtain an access token. The token is stored in this connection's Authorization header."]]
 
-      ;; Optional pre-registered client credentials. Left blank, Hoop registers
+      ;; Optional pre-registered client credentials. Left blank, Lyric IAM registers
       ;; a client dynamically with the MCP server. These inputs are auth-flow
       ;; only and are never stored as connection environment variables.
       [:> Box {:class "space-y-3"}
@@ -536,7 +536,7 @@
                     (if (cs/blank? t) "streamable-http" t))
         ;; Both stdio transports configure a command instead of a URL. They
         ;; differ only in WHICH machine runs it: "stdio" is the agent host,
-        ;; "client-stdio" is the laptop of whoever runs `hoop connect`.
+        ;; "client-stdio" is the laptop of whoever runs `lyric-iam connect`.
         client-stdio? (= transport "client-stdio")
         stdio? (contains? constants/mcp-stdio-transports transport)
         status (:status mcp-state :idle)
@@ -633,7 +633,7 @@
                       :on-change (on-change "command")}]
         [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
          (if client-stdio?
-           "Each user runs this command on their own machine through `hoop connect`, so the server sees their filesystem and their credentials. Every tool call is still inspected by hoop before it reaches them."
+           "Each user runs this command on their own machine through `lyric-iam connect`, so the server sees their filesystem and their credentials. Every tool call is still inspected by lyric-iam before it reaches them."
            "The agent runs this command as a child process. Add secrets it needs as environment variables prefixed with MCPENV_ below.")]]
 
        [forms/input {:label "MCP Server URL"
@@ -651,7 +651,7 @@
      ;; github, linear and stripe all accept either an OAuth login or a token,
      ;; and only the admin knows which credential they hold.
      ;;
-     ;;  oauth   hoop brokers the login through /mcp-oauth and freezes the
+     ;;  oauth   lyric-iam brokers the login through /mcp-oauth and freezes the
      ;;          result into HEADER_AUTHORIZATION.
      ;;  static  the admin pastes a key or PAT. It rides in the header that
      ;;          provider expects — which is NOT always Authorization
@@ -667,7 +667,7 @@
          [:> Heading {:as "h4" :size "3" :weight "medium" :class "text-[--gray-12]"}
           "MCP Authorization"]
          [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
-          "How Hoop authenticates to this server. Every user of this connection shares the credential configured here."]]
+          "How Lyric IAM authenticates to this server. Every user of this connection shares the credential configured here."]]
 
         ;; A dropdown with one option is a decision the admin does not have.
         ;; Where the provider accepts only one credential, say which and move
@@ -710,7 +710,7 @@
           [:> Box {:class "space-y-2"}
            [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
             (str "No credential is stored on this connection. Each user's MCP client sends its own "
-                 "token, and Hoop forwards it to the server — so the server sees who is calling, "
+                 "token, and Lyric IAM forwards it to the server — so the server sees who is calling, "
                  "and access follows each user's own permissions.")]
            [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
             "Users set this header in their MCP client configuration:"]
@@ -734,7 +734,7 @@
 
             :else
             [:> Box {:class "space-y-3"}
-             ;; Pre-registered client credentials. Left blank, Hoop registers a
+             ;; Pre-registered client credentials. Left blank, Lyric IAM registers a
              ;; client dynamically (RFC 7591). Plenty of authorization servers
              ;; do not offer that — GitHub's publishes no registration_endpoint
              ;; — and for those an OAuth app the admin created by hand is the
@@ -762,7 +762,7 @@
               [:> ShieldCheck {:size 16}]
               (if busy? "Authorizing…" "Authorize with MCP")]
              [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
-              (str "Hoop discovers the server's authorization server, logs in, and stores the resulting "
+              (str "Lyric IAM discovers the server's authorization server, logs in, and stores the resulting "
                    "access token in this connection's Authorization header. Register the callback below "
                    "as the redirect URI of your OAuth app.")]
              [:> Text {:as "p" :size "1" :class "text-[--gray-11] font-mono break-all"}
@@ -1149,11 +1149,11 @@
        [:> Heading {:as "h2" :size "6" :weight "bold" :class "text-gray-12"}
         "Setup your Resource roles"]
        [:> Text {:as "p" :size "3" :class "text-gray-12"}
-        "Roles are the central concept in Hoop.dev that serve as secure bridges between users and your organization's resources. They enable controlled access to internal services, databases, and other resources while maintaining security and compliance."]
+        "Roles are the central concept in Lyric IAM.dev that serve as secure bridges between users and your organization's resources. They enable controlled access to internal services, databases, and other resources while maintaining security and compliance."]
        [:> Text {:as "p" :size "2" :class "text-gray-11 flex items-center gap-1"}
         "Access"
         [:> Flex {:align "center" :gap "1"}
-         [:> Link {:href "https://hoop.dev/docs/"
+         [:> Link {:href "https://docs.lyric.tech/access/"
                    :target "_blank"}
           " our Docs"]
          [:> ArrowUpRight {:size 12 :class "text-primary-11"}]]

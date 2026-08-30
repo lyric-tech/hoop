@@ -19,7 +19,7 @@ import (
 // Windows will not let a process overwrite or delete a running executable,
 // but it WILL let one be renamed. So when the bin copy is the very process
 // performing the upgrade, copyActivate first renames the live binary aside
-// (hoop.exe.old-<nanos>) and then drops the new binary into place. Retired
+// (lyric-iam.exe.old-<nanos>) and then drops the new binary into place. Retired
 // copies are swept on a later run, once the process holding them exits.
 //
 // The function refuses to clobber a bin file the manager didn't create:
@@ -88,7 +88,7 @@ func assertOwnedCopy(l Layout, store *Store, binPath string) error {
 	}
 	return fmt.Errorf(`%w:
 
-%s already exists and was not created by `+"`hoop versions`"+`.
+%s already exists and was not created by `+"`lyric-iam versions`"+`.
 
 To recover, move or delete it and re-run the same command:
   - keep it:    move "%s" to another location

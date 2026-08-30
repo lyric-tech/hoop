@@ -134,7 +134,7 @@
      [:> Heading {:as "h2" :size "5"} "Automatic AWS Database Discovery"]]
     [:> Text {:as "p" :size "2"}
      (str "Connect to your AWS environment to automatically discover and configure your database resources. "
-          "This automated process will scan your AWS account for database instances and create resource roles in Hoop, "
+          "This automated process will scan your AWS account for database instances and create resource roles in Lyric IAM, "
           "saving you time and ensuring proper configuration.")]
     [:> Button {:size "3"
                 :class "mt-2"

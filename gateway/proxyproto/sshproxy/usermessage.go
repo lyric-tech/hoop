@@ -10,9 +10,9 @@ import (
 
 // upstreamFailurePrefix is the line prefix used when writing a
 // translated upstream error to the user's SSH channel stderr. Keeping
-// it consistent ("hoop: ") makes the line easy to recognize in user
+// it consistent ("lyric-iam: ") makes the line easy to recognize in user
 // terminals and easy to grep for in logs that mirror the message.
-const upstreamFailurePrefix = "hoop: "
+const upstreamFailurePrefix = "lyric-iam: "
 
 // agentClosePayloadPrefix is the prefix the gateway adds when
 // converting an inbound ClientSessionClose into a cancellation cause.
@@ -73,8 +73,8 @@ func translateUpstreamError(cause string) string {
 		return "authentication failed against target server"
 	case strings.Contains(lower, "session timed out before it was ready"):
 		return "session timed out waiting for the target server"
-	case strings.Contains(lower, "missing protocol hoop library"):
-		return "ssh is not enabled on this hoop agent build, contact your administrator"
+	case strings.Contains(lower, "missing protocol lyric-iam library"):
+		return "ssh is not enabled on this lyric-iam agent build, contact your administrator"
 	case strings.Contains(lower, "credential revoked"),
 		strings.Contains(lower, "access expired"):
 		return "your access to this target server has been revoked"

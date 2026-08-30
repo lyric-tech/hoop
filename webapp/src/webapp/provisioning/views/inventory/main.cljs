@@ -108,7 +108,7 @@
         :title    (if manage? "Admin accounts needed" "Role provisioning needed")
         :subtitle (str (data/pluralize total-in-stage "resource")
                        (if manage?
-                         " need an admin account before Hoop can provision roles."
+                         " need an admin account before Lyric IAM can provision roles."
                          " have an admin account but haven't had roles provisioned."))
         :actions  [:<>
                    [:> Button {:size "2" :variant "outline"
@@ -267,7 +267,7 @@
     [:> Heading {:size "8"} "Provisioning Hub"]
     [:> Flex {:align "center" :gap "3"}
      [:> Text {:size "2" :color "gray"}
-      "Track and provision every database resource connected to Hoop."]
+      "Track and provision every database resource connected to Lyric IAM."]
      [:> Box {:style {:width 1 :height 12 :background "var(--gray-5)" :flex-shrink 0}}]
      [:> Text {:size "2" :color "gray"} (data/pluralize total-resources "resource")]
      [status-dot {:color "green" :size 5}]

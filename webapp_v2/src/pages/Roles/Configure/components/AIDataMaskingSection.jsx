@@ -49,7 +49,7 @@ export default function AIDataMaskingSection() {
             size="sm"
             leftSection={<ArrowUpRight size={14} />}
             component="a"
-            href="https://hoop.dev/docs/features/ai-data-masking"
+            href="https://docs.lyric.tech/access/features/ai-data-masking"
             target="_blank"
             rel="noopener noreferrer"
           >

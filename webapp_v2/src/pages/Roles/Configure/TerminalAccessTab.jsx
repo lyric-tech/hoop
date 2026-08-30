@@ -12,7 +12,7 @@ import ReviewSection from '@/pages/Roles/Configure/components/ReviewSection'
 import { hasReviewConfig } from '@/pages/Roles/Configure/utils/reviewConfig'
 
 // Terminal Access tab: every per-connection setting that affects how
-// commands run from the web terminal or hoop CLI's exec/connect flows.
+// commands run from the web terminal or lyric-iam CLI's exec/connect flows.
 // The CLJS version also exposes a backward-compat "Review by Command"
 // section that's only shown when the connection already has a review
 // config — same omission as NativeAccessTab, falls back to legacy
@@ -39,7 +39,7 @@ export default function TerminalAccessTab({ connection }) {
     <Stack gap="xl" maw={720}>
       <ToggleSection
         title="Terminal access availability"
-        description="Use hoop.dev's Web Terminal or our CLI's One-Offs commands directly in your terminal."
+        description="Use Lyric IAM's Web Terminal or our CLI's One-Offs commands directly in your terminal."
         checked={drafts.access_mode_exec === 'enabled'}
         onChange={(checked) =>
           setDraft({ access_mode_exec: checked ? 'enabled' : 'disabled' })
@@ -64,7 +64,7 @@ export default function TerminalAccessTab({ connection }) {
             leftSection={<ArrowUpRight size={14} />}
             w="fit-content"
             component="a"
-            href="https://hoop.dev/docs/features/runbooks"
+            href="https://docs.lyric.tech/access/features/runbooks"
             target="_blank"
             rel="noopener noreferrer"
           >

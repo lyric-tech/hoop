@@ -167,7 +167,7 @@ export function canOpenWebTerminal(connection) {
   )
 }
 
-// Whether the connection can be reached with `hoop connect`. Everything the
+// Whether the connection can be reached with `lyric-iam connect`. Everything the
 // CLI can open qualifies except custom RDP, which needs the native client.
 export function canHoopCli(connection) {
   if (!connection || connection.access_mode_connect !== 'enabled') return false

@@ -67,7 +67,7 @@
          ;; Native access availability
          [toggle-section
           {:title "Native access availability"
-           :description "Access from your client of preference using hoop.dev to channel resource roles using our Desktop App or our Command Line Interface."
+           :description "Access from your client of preference using Lyric IAM to channel resource roles using our Desktop App or our Command Line Interface."
            :checked native-access-enabled?
            :on-change #(rf/dispatch [:connection-setup/toggle-access-mode :native])}]
 

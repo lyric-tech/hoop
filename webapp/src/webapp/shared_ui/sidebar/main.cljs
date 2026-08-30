@@ -131,7 +131,7 @@
                 [:img {:src (str config/webapp-url
                                  "/images/hoop-branding/SVG/hoop-symbol+text_white.svg")
                        :class "max-w-full h-auto"
-                       :alt "Hoop"}]]]
+                       :alt "Lyric IAM"}]]]
               [:nav {:class "flex flex-1 flex-col"
                      :aria-label "Primary"}
                [:ul {:role "list"

@@ -11,7 +11,7 @@ import ConnectionTagsEditor from '@/pages/Roles/Configure/sections/ConnectionTag
 // user sees the meaningful tail (e.g. `hoop.dev/infrastructure.cloud`
 // renders as `cloud`). Names without the prefix pass through unchanged.
 function labelForAttribute(name) {
-  const m = name && name.match(/^hoop\.dev\/[^.]+\.([^.]+)$/)
+  const m = name && name.match(/^lyric-iam\.dev\/[^.]+\.([^.]+)$/)
   return m ? m[1] : name
 }
 
@@ -23,7 +23,7 @@ export default function DetailsTab({ connection }) {
   const setDraft = useConfigureRoleStore((s) => s.setDraft)
   const attributesList = useConfigureRoleStore((s) => s.attributesList)
 
-  // Hoop-managed attributes (the protection-profile attribute) are regular
+  // Lyric IAM-managed attributes (the protection-profile attribute) are regular
   // members of the connection's attribute list — removable and re-addable
   // like any other — but carry the award styling and the profile label.
   const attributeOptions = attributesList.map((a) => ({

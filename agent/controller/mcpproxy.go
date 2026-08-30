@@ -175,7 +175,7 @@ func (a *Agent) handleMCPProxyWrite(pkt *pb.Packet) {
 	}
 }
 
-// mcpGatewayHolder memoises one gateway per hoop session. sync.Once rather
+// mcpGatewayHolder memoises one gateway per lyric-iam session. sync.Once rather
 // than a plain LoadOrStore because building the gateway is expensive and, for
 // the client-stdio transport, has side effects (it registers a backend
 // registry entry); two concurrent HTTP requests on a fresh session must not
@@ -192,10 +192,10 @@ type mcpGatewayHolder struct {
 
 // mcpGatewayFor returns the session's mcpproxy gateway, building it once.
 //
-// One gateway per hoop SESSION, not per HTTP request. An MCP session lives
+// One gateway per lyric-iam SESSION, not per HTTP request. An MCP session lives
 // inside exactly one gateway: the gateway mints an Mcp-Session-Id on
 // `initialize` and resolves every later message against its own session map,
-// answering 404 on a miss. The hoop gateway's HTTP listener mints a fresh
+// answering 404 on a miss. The lyric-iam gateway's HTTP listener mints a fresh
 // connection id per inbound request (that id is its response-routing key), so
 // building a gateway per connection id meant the client's second message
 // reached a gateway that had never seen its session — `initialize` worked and
@@ -284,7 +284,7 @@ func (a *Agent) mcpGatewayFor(
 
 // buildMCPGateway assembles the mcpproxy gateway for one MCP connection.
 //
-// One gateway per hoop session (see mcpGatewayFor): mcpproxy freezes
+// One gateway per lyric-iam session (see mcpGatewayFor): mcpproxy freezes
 // gateway.Options at construction, so the options map built here is never
 // mutated afterwards.
 func (a *Agent) buildMCPGateway(
@@ -421,8 +421,8 @@ const mcpAuthPassthrough = "passthrough"
 // It reuses the name libhoop's byte-relay httpproxy already defines
 // (X-Hoop-Upstream-Authorization) so one MCP client config works against both
 // MCP connection types. It is deliberately not "Authorization": that header
-// authenticates the caller to hoop, and a passthrough client presents two
-// credentials — one for hoop, one for the server behind it.
+// authenticates the caller to lyric-iam, and a passthrough client presents two
+// credentials — one for lyric-iam, one for the server behind it.
 const mcpUpstreamAuthHeader = "X-Hoop-Upstream-Authorization"
 
 // mcpTokenSource returns the outbound credential minter for a connection, or
@@ -436,7 +436,7 @@ const mcpUpstreamAuthHeader = "X-Hoop-Upstream-Authorization"
 //
 // mcpproxy's own NewPassthrough is not used, for one reason: its
 // missing-credential error names ITS header (X-Mcpproxy-Upstream-Authorization)
-// while hoop reads X-Hoop-Upstream-Authorization, so a user who forgot the
+// while lyric-iam reads X-Hoop-Upstream-Authorization, so a user who forgot the
 // header would be told to set one that does nothing. The lookup is a context
 // read either way.
 func (a *Agent) mcpTokenSource(connenv *connEnv) func(context.Context) (string, error) {
@@ -715,7 +715,7 @@ func (c *connEnv) mcpPolicy() mcpconfig.Policy {
 // instead of growing agent memory without bound.
 const mcpAuditQueueSize = 1024
 
-// mcpAuditSink returns the sink that turns MCP protocol events into hoop
+// mcpAuditSink returns the sink that turns MCP protocol events into lyric-iam
 // session events, and starts the goroutine that writes them.
 //
 // Each event is written back to the gateway on the client stream as a

@@ -90,7 +90,7 @@ type UserPatchSlackID struct {
 }
 
 // UserSignupOriginRequest carries the answer to the onboarding
-// "How did you hear about Hoop?" survey. A user may answer only once.
+// "How did you hear about Lyric IAM?" survey. A user may answer only once.
 type UserSignupOriginRequest struct {
 	// The acquisition channel the user picked
 	Origin string `json:"origin" binding:"required" enums:"search-engine,ai-discovery,referral,already-in-use-at-company,tech-community,social-media,hoop-free-tools,other" example:"ai-discovery"`
@@ -143,7 +143,7 @@ type UserInfo struct {
 	// Pending organization invitations for this user. When non-empty, the user can migrate
 	// to one of these organizations. Only populated in multi-tenant environments.
 	PendingOrgInvitations []PendingOrgInvitation `json:"pending_org_invitations,omitempty"`
-	// Whether the "How did you hear about Hoop?" survey should still be offered.
+	// Whether the "How did you hear about Lyric IAM?" survey should still be offered.
 	// True only while the user has not answered it and is within 7 days of their
 	// user record being created. Always false for anonymous users.
 	ShowOriginSurvey bool `json:"show_origin_survey"`
@@ -280,7 +280,7 @@ type AIAgentResponse struct {
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 }
 
-// AgentSPIFFEMapping ties a SPIFFE identity (exact ID or prefix) to a Hoop
+// AgentSPIFFEMapping ties a SPIFFE identity (exact ID or prefix) to a Lyric IAM
 // agent plus a set of groups that feed into RBAC on authentication.
 //
 // Exactly one of SPIFFEID or SPIFFEPrefix must be set. Similarly, exactly
@@ -302,10 +302,10 @@ type AgentSPIFFEMapping struct {
 	// SPIFFE ID prefix. Matches any SVID whose sub begins with this string;
 	// longest-prefix wins on lookup. Mutually exclusive with SPIFFEID.
 	SPIFFEPrefix string `json:"spiffe_prefix,omitempty" example:"spiffe://customer.com/agent/"`
-	// ID of the Hoop agent this mapping resolves to (exact form). Mutually
+	// ID of the Lyric IAM agent this mapping resolves to (exact form). Mutually
 	// exclusive with AgentTemplate.
 	AgentID string `json:"agent_id,omitempty" format:"uuid"`
-	// Go text/template that renders to a Hoop agent name. Used with
+	// Go text/template that renders to a Lyric IAM agent name. Used with
 	// SPIFFEPrefix. See the SPIFFE docs for template field details.
 	// Mutually exclusive with AgentID.
 	AgentTemplate string `json:"agent_template,omitempty"`
@@ -455,11 +455,11 @@ type Connection struct {
 	// JitAccessDurationSec is the fixed access duration in seconds enforced by a JIT access request rule.
 	// When set, the user cannot choose a custom duration and must request access for this exact window.
 	JitAccessDurationSec *int `json:"jit_access_duration_sec,omitempty" example:"1800"`
-	// Attributes associated with this connection. Includes Hoop-managed
+	// Attributes associated with this connection. Includes Lyric IAM-managed
 	// attributes (e.g. the active protection profile attribute); omitting a
 	// managed name on update detaches the connection from it.
 	Attributes []string `json:"attributes" example:"production,pii"`
-	// Hoop-managed attributes associated with this connection (e.g. the
+	// Lyric IAM-managed attributes associated with this connection (e.g. the
 	// active protection profile attribute). Computed on reads; manage the
 	// association through the attributes field.
 	ManagedAttributes []string `json:"managed_attributes,omitempty" readonly:"true" example:"hoop_protection_profile-soc2_type2"`
@@ -524,7 +524,7 @@ type Connection struct {
 	MCPOAuthGranted bool `json:"mcp_oauth_granted,omitempty" readonly:"true" example:"true"`
 }
 
-// ConnectionEffectiveFeatures reports which hoop features will actually act on a
+// ConnectionEffectiveFeatures reports which lyric-iam features will actually act on a
 // connection when it is used.
 //
 // This is deliberately distinct from the stored fields on Connection. Guardrails,
@@ -680,7 +680,7 @@ type ConnectionTag struct {
 
 type ExecRequest struct {
 	// The input of the execution
-	Script string `json:"script" example:"echo 'hello from hoop'"`
+	Script string `json:"script" example:"echo 'hello from lyric-iam'"`
 	// The target connection
 	Connection string `json:"connection" example:"bash"`
 	// DEPRECATED in flavor of metadata
@@ -1425,7 +1425,7 @@ type OrgHideRoleInfoResponse struct {
 }
 
 // OrgProtectionProfileRequest selects the organization's default protection
-// profile. Pass null to switch to manual configuration: all Hoop-managed
+// profile. Pass null to switch to manual configuration: all Lyric IAM-managed
 // protection rules and the profile attribute are removed.
 type OrgProtectionProfileRequest struct {
 	// The protection profile id, or null for manual configuration
@@ -1437,7 +1437,7 @@ type OrgProtectionProfileRequest struct {
 type OrgProtectionProfileResponse struct {
 	// The active protection profile id; null means manual configuration
 	Profile *string `json:"profile" example:"protection-medium"`
-	// The Hoop-managed attribute that binds the profile's rules to
+	// The Lyric IAM-managed attribute that binds the profile's rules to
 	// connections; null when no profile is active
 	AttributeName *string `json:"attribute_name" example:"hoop_protection_profile-protection_medium"`
 }
@@ -1753,7 +1753,7 @@ type JiraIssueTemplateRequest struct {
 		{
 		  "items": [
 		    {
-		      "description": "Hoop Connection Name",
+		      "description": "Lyric IAM Connection Name",
 		      "jira_field": "customfield_10050",
 		      "type": "preset",
 		      "value": "session.connection"
@@ -1886,9 +1886,9 @@ type GuardRailRuleResponse struct {
 	Name string `json:"name" example:"my-strict-rule"`
 	// The rule description
 	Description string `json:"description" example:"description about this rule"`
-	// Set to "hoop" when the rule is materialized and lifecycle-managed by a
+	// Set to "lyric-iam" when the rule is materialized and lifecycle-managed by a
 	// protection profile; managed rules are read-only through this API
-	ManagedBy *string `json:"managed_by" readonly:"true" example:"hoop"`
+	ManagedBy *string `json:"managed_by" readonly:"true" example:"lyric-iam"`
 
 	// The input rule. Each rule entry accepts an optional "message" field that
 	// is shown to the user when that specific rule is hit.
@@ -2295,9 +2295,9 @@ type DataMaskingRule struct {
 	// The unique identifier of the data masking rule
 	ID string `json:"id" format:"uuid" example:"15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"`
 	// Managed By is a read only field that indicates who manages this rule.
-	// When set (e.g. "hoop" for protection profiles), the rule cannot be
+	// When set (e.g. "lyric-iam" for protection profiles), the rule cannot be
 	// modified or deleted directly.
-	ManagedBy              *string `json:"managed_by" readonly:"true" example:"hoop"`
+	ManagedBy              *string `json:"managed_by" readonly:"true" example:"lyric-iam"`
 	DataMaskingRuleRequest `json:",inline"`
 }
 
@@ -2388,7 +2388,7 @@ type ConnectionFederationConfig struct {
 	// HasAdminCredentials is server-set on GET responses to let the UI know
 	// whether a credential is stored without exposing its value.
 	HasAdminCredentials bool `json:"has_admin_credentials,omitempty" example:"true"`
-	// IdentitySourceAttribute is a JSONPath-like accessor into the Hoop user
+	// IdentitySourceAttribute is a JSONPath-like accessor into the Lyric IAM user
 	// (defaults to $.user.email).
 	IdentitySourceAttribute string `json:"identity_source_attribute" example:"$.user.email"`
 	// IdentityTargetTemplate is the principal template the source attribute
@@ -2487,10 +2487,10 @@ type FederationTestResponse struct {
 	// ResolvedPrincipal is the principal the resolver impersonated.
 	ResolvedPrincipal string `json:"resolved_principal,omitempty" example:"alice@example.com"`
 	// AdminPrincipal is the impersonator identity (e.g. admin SA email).
-	AdminPrincipal string `json:"admin_principal,omitempty" example:"hoop-admin@proj.iam.gserviceaccount.com"`
+	AdminPrincipal string `json:"admin_principal,omitempty" example:"lyric-iam-admin@proj.iam.gserviceaccount.com"`
 	// EnvVarKeys lists the env vars the resolver injected into the probe.
 	// Values are never returned.
-	EnvVarKeys []string `json:"env_var_keys,omitempty" example:"HOOP_GCP_ACCESS_TOKEN,HOOP_GCP_TOKEN_EXPIRES_AT"`
+	EnvVarKeys []string `json:"env_var_keys,omitempty" example:"LYRIC_IAM_GCP_ACCESS_TOKEN,LYRIC_IAM_GCP_TOKEN_EXPIRES_AT"`
 	// SupersededEnvVars lists the candidate connection's static env var
 	// names that the provider's output supersedes and that were therefore
 	// stripped from the probe (and would be stripped from a real session).
@@ -2635,14 +2635,14 @@ type ServerMiscConfig struct {
 }
 
 // SSHUserMapping configures which certificate attribute is matched against
-// which Hoop user attribute to authorize certificate-based SSH connections.
+// which Lyric IAM user attribute to authorize certificate-based SSH connections.
 // Required when trusted_cas is set.
 type SSHUserMapping struct {
 	// CertAttribute is the certificate field used for the lookup.
 	// "principal" checks all ValidPrincipals; the first match wins.
 	// "key_id" uses the certificate's KeyId field.
 	CertAttribute string `json:"cert_attr" enums:"principal,key_id" example:"principal"`
-	// UserAttribute is the Hoop user table column matched against the cert value.
+	// UserAttribute is the Lyric IAM user table column matched against the cert value.
 	UserAttribute string `json:"user_attr" enums:"email,subject,user_id" example:"email"`
 }
 
@@ -2656,7 +2656,7 @@ type SSHServerConfig struct {
 	// UserMapping is required when TrustedCAs is set.
 	TrustedCAs []string `json:"trusted_cas,omitempty" example:"ssh-ed25519 AAAA..."`
 	// UserMapping is required when TrustedCAs is configured. It defines how
-	// the certificate is matched against a Hoop user.
+	// the certificate is matched against a Lyric IAM user.
 	UserMapping *SSHUserMapping `json:"user_mapping,omitempty"`
 }
 
@@ -2679,13 +2679,13 @@ type ServerAuthOidcConfig struct {
 	// Identity Provider Issuer URL (Oauth2)
 	IssuerURL string `json:"issuer_url" example:"https://auth.domain.tld/oidc" binding:"required"`
 	// Oauth2 Client ID
-	ClientID string `json:"client_id" example:"hoop-client-id" binding:"required"`
+	ClientID string `json:"client_id" example:"lyric-iam-client-id" binding:"required"`
 	// Oauth2 Client Secret
-	ClientSecret string `json:"client_secret" example:"hoop-client-secret" binding:"required"`
+	ClientSecret string `json:"client_secret" example:"lyric-iam-client-secret" binding:"required"`
 	// Additional Oauth2 scopes to append in the request. Default values are openid, profile and email.
 	Scopes []string `json:"scopes" example:"openid,email,profile"`
 	// Identity Provider Audience (Oauth2)
-	Audience string `json:"audience" example:"hoop-audience"`
+	Audience string `json:"audience" example:"lyric-iam-audience"`
 	// Specifies the claim identifier used to configure group propagation.
 	GroupsClaim string `json:"groups_claim" example:"groups"`
 }
@@ -2745,12 +2745,12 @@ type ServerAuthConfig struct {
 
 // ServerMcpAuthConfig configures the OAuth 2.1 Resource Server profile for the
 // /mcp endpoint per the MCP 2025-11-25 authorization specification. When
-// disabled (the default), /mcp continues to accept Hoop-issued bearer tokens
+// disabled (the default), /mcp continues to accept Lyric IAM-issued bearer tokens
 // only; when enabled, /mcp additionally accepts JWTs issued by the configured
 // OIDC issuer whose `aud` claim matches resource_uri.
 type ServerMcpAuthConfig struct {
 	// Whether the /mcp endpoint accepts IdP-issued OAuth 2.1 JWTs in addition
-	// to Hoop-issued bearer tokens.
+	// to Lyric IAM-issued bearer tokens.
 	Enabled bool `json:"enabled"`
 	// Canonical resource URI used for RFC 8707 audience binding. Defaults to
 	// "<API_URL>/api/mcp" when empty. Compared against the `aud` claim of
@@ -2765,7 +2765,7 @@ type ServerMcpAuthConfig struct {
 	// server and serves a Dynamic Client Registration shim that returns this
 	// client to MCP clients; tokens whose `aud` claim matches this client ID
 	// are accepted in addition to resource_uri.
-	ClientID string `json:"client_id" example:"hoop-mcp"`
+	ClientID string `json:"client_id" example:"lyric-iam-mcp"`
 	// Optional client secret paired with client_id. Leave empty to use a
 	// public client with PKCE (recommended): the registration shim discloses
 	// this value to any registering MCP client.
@@ -2882,8 +2882,8 @@ type HttpProxyConnectionInfo struct {
 	Command string `json:"command"`
 	// VertexProjectID is set only for claude-code connections federated to
 	// Google Vertex AI (experimental.claude_code_vertex). It is the GCP project
-	// `hoop claude configure` writes to ANTHROPIC_VERTEX_PROJECT_ID so Claude
-	// Code runs in Vertex mode against the hoop proxy. Empty otherwise.
+	// `lyric-iam claude configure` writes to ANTHROPIC_VERTEX_PROJECT_ID so Claude
+	// Code runs in Vertex mode against the lyric-iam proxy. Empty otherwise.
 	VertexProjectID string `json:"vertex_project_id,omitempty"`
 	// VertexRegion is the GCP region (CLOUD_ML_REGION) for the Vertex-federated
 	// claude-code connection. Empty for non-Vertex connections.
@@ -3144,7 +3144,7 @@ type ResourceHealthCheckBatchResponse struct {
 type ResourcePlanItem struct {
 	// The resource name to plan provisioning for. Required for batch requests.
 	ResourceName string `json:"resource_name" example:"my-postgres"`
-	// Role management mode. "managed" creates and fully owns the postgres role (password managed by hoop).
+	// Role management mode. "managed" creates and fully owns the postgres role (password managed by lyric-iam).
 	// "external" attaches the role as a member of an existing parent role specified by source_role.
 	Type string `json:"type" enums:"managed,external" binding:"required" example:"managed"`
 	// A short label used to derive the generated postgres role name (e.g. "ro", "rw", "analyst").
@@ -3509,10 +3509,10 @@ type AccessRequestRule struct {
 	AccessMaxDuration *int `json:"access_max_duration" example:"3600"`
 	// Minimum number of approvals required
 	MinApprovals *int `json:"min_approvals" example:"2"`
-	// Set to "hoop" when the rule is materialized and lifecycle-managed by a
+	// Set to "lyric-iam" when the rule is materialized and lifecycle-managed by a
 	// protection profile; only approval settings and group lists can be
 	// changed on managed rules, and they cannot be deleted
-	ManagedBy *string `json:"managed_by" readonly:"true" example:"hoop"`
+	ManagedBy *string `json:"managed_by" readonly:"true" example:"lyric-iam"`
 	// The time the resource was created
 	CreatedAt time.Time `json:"created_at" readonly:"true" example:"2024-07-25T15:56:35.317601Z"`
 	// The time the resource was updated
@@ -3636,9 +3636,9 @@ type AISessionAnalyzerRule struct {
 	// When true, the analyzer runs an agentic tool-calling loop over past sessions
 	// and resource metadata before classifying.
 	Agentic bool `json:"agentic" example:"false"`
-	// Set to "hoop" when the rule is materialized and lifecycle-managed by a
+	// Set to "lyric-iam" when the rule is materialized and lifecycle-managed by a
 	// protection profile; managed rules are read-only through this API
-	ManagedBy *string `json:"managed_by" readonly:"true" example:"hoop"`
+	ManagedBy *string `json:"managed_by" readonly:"true" example:"lyric-iam"`
 	// The time the resource was created
 	CreatedAt time.Time `json:"created_at" readonly:"true" example:"2024-07-25T15:56:35.317601Z"`
 	// The time the resource was updated
@@ -3655,9 +3655,9 @@ type Attributes struct {
 	// The description of the attribute
 	Description *string `json:"description" example:"Blocks high-risk SQL commands"`
 	// Managed By is a read only field that indicates who manages this
-	// attribute. When set (e.g. "hoop" for protection profiles), the
+	// attribute. When set (e.g. "lyric-iam" for protection profiles), the
 	// attribute cannot be modified or deleted directly.
-	ManagedBy *string `json:"managed_by" readonly:"true" example:"hoop"`
+	ManagedBy *string `json:"managed_by" readonly:"true" example:"lyric-iam"`
 	// Connection names associated with this attribute
 	ConnectionNames []string `json:"connection_names" example:"pgdemo,mysql-prod"`
 	// Access request rule names associated with this attribute
@@ -3720,7 +3720,7 @@ type Rulepack struct {
 	Version *string `json:"version,omitempty" example:"1.0.0"`
 	// Tags for grouping and filtering rulepacks
 	Tags []string `json:"tags" example:"pci,production"`
-	// True for Hoop-managed rulepacks (read-only for users)
+	// True for Lyric IAM-managed rulepacks (read-only for users)
 	IsManaged bool `json:"is_managed" readonly:"true" example:"false"`
 	// Data masking rules attached to this rulepack
 	DataMaskingRules []DataMaskingRule `json:"data_masking_rules"`

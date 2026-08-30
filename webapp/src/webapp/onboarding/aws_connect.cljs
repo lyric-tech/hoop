@@ -69,7 +69,7 @@
         url (js/URL.createObjectURL blob)
         link (js/document.createElement "a")]
     (set! (.-href link) url)
-    (set! (.-download link) "hoop-aws-database-credentials.json")
+    (set! (.-download link) "lyric-iam-aws-database-credentials.json")
     (.appendChild js/document.body link)
     (.click link)
     (.removeChild js/document.body link)
@@ -144,7 +144,7 @@
           [:> Text {:as "label" :size "3" :weight "medium" :htmlFor "gateway-profile" :class "text-[--gray-12] block"}
            "Gateway Instance Profile"]
           [:> Text {:as "p" :size "2" :class "text-[--gray-12]"}
-           "Automatically uses the IAM role attached to the Hoop.dev gateway. No credential entry required - the system handles authentication seamlessly."]]]
+           "Automatically uses the IAM role attached to the Lyric IAM.dev gateway. No credential entry required - the system handles authentication seamlessly."]]]
 
         [:> Flex {:gap "3" :align "start"}
          [:> RadioGroup.Item {:value "aws-credentials" :id "aws-credentials"}]
@@ -615,7 +615,7 @@
      "Confirm finishing setup?"]
 
     [:> Text {:as "p" :size "2" :mb "4" :class "text-[--gray-11]"}
-     "Completing this setup will automatically reset the root passwords for your selected database resources. These new credentials will be securely stored and accessible only through Hoop.dev."]
+     "Completing this setup will automatically reset the root passwords for your selected database resources. These new credentials will be securely stored and accessible only through Lyric IAM.dev."]
 
     [:> Text {:as "p" :size "2" :mb "5" :class "text-[--gray-11]"}
      "Do you want to proceed and confirm finishing this setup?"]

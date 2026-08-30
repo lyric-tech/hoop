@@ -10,7 +10,7 @@ import (
 
 func TestVersionCheckCallbackInvokedOnResponse(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Server", "hoopgateway/9.9.9")
+		w.Header().Set("Server", "lyric-iam-gateway/9.9.9")
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
@@ -46,8 +46,8 @@ func TestVersionCheckCallbackInvokedOnResponse(t *testing.T) {
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	if got != "hoopgateway/9.9.9" {
-		t.Fatalf("callback got %q, want %q", got, "hoopgateway/9.9.9")
+	if got != "lyric-iam-gateway/9.9.9" {
+		t.Fatalf("callback got %q, want %q", got, "lyric-iam-gateway/9.9.9")
 	}
 }
 

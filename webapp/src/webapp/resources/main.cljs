@@ -12,7 +12,7 @@
             [webapp.resources.helpers :refer [can-open-web-terminal?
                                               can-test-connection? is-connection-testing?
                                               can-connect? can-hoop-cli? can-access-native-client?]]
-            [webapp.connections.views.hoop-cli-modal :as hoop-cli-modal]
+            [webapp.connections.views.hoop-cli-modal :as lyric-iam-cli-modal]
             [webapp.connections.views.tag-selector :as tag-selector]
             [webapp.connections.views.test-connection-modal :as test-connection-modal]
             [webapp.config :as config]))
@@ -29,7 +29,7 @@
      [:> Text {:size "3" :class "text-gray-11 text-center"}
       (if is-admin?
         "Get started by setting up your environment resources in your Organization"
-        "Discover the resources your organization can connect to securely through Hoop")]
+        "Discover the resources your organization can connect to securely through Lyric IAM")]
 
      [:> Button {:size "3"
                  :onClick #(rf/dispatch [:navigate :resource-catalog])}
@@ -196,10 +196,10 @@
                        (not (can-access-native-client? connection postgres-proxy-enabled?)))
               [:> DropdownMenu.Item {:on-click
                                      #(rf/dispatch [:modal->open
-                                                    {:content [hoop-cli-modal/main (:name connection)]
+                                                    {:content [lyric-iam-cli-modal/main (:name connection)]
                                                      :maxWidth "1100px"
                                                      :class "overflow-hidden"}])}
-               "Open with Hoop CLI"])
+               "Open with Lyric IAM CLI"])
 
             (when (can-access-native-client? connection postgres-proxy-enabled?)
               [:> DropdownMenu.Item {:on-click

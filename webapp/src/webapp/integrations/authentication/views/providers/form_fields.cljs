@@ -13,9 +13,9 @@
     [:> Grid {:columns "7" :gap "7"}
      [:> Box {:grid-column "span 2 / span 2"}
       [:> Heading {:as "h3" :size "4" :weight "bold" :class "text-[--gray-12]"}
-       "Hoop Local Authentication"]
+       "Lyric IAM Local Authentication"]
       [:> Text {:size "3" :class "text-[--gray-11]"}
-       "Turn off Hoop native authentication to manage it only with Identity Providers."]]
+       "Turn off Lyric IAM native authentication to manage it only with Identity Providers."]]
 
      [:> Box {:class "space-y-radix-4" :grid-column "span 5 / span 5"}
       [:> Flex {:align "center" :gap "3"}

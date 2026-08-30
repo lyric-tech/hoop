@@ -29,7 +29,7 @@ func TestHumanizeNetErrorConnectionRefused(t *testing.T) {
 		t.Fatal("expected error")
 	}
 	msg := got.Error()
-	if !strings.Contains(msg, "cannot reach the hoop gateway at "+testAPIURL) {
+	if !strings.Contains(msg, "cannot reach the lyric-iam gateway at "+testAPIURL) {
 		t.Errorf("message should mention apiURL: %q", msg)
 	}
 	if strings.Contains(msg, "/api/serverinfo") {
@@ -49,7 +49,7 @@ func TestHumanizeNetErrorDNS(t *testing.T) {
 	if !strings.Contains(msg, "DNS lookup failed") {
 		t.Errorf("expected DNS branch, got: %q", msg)
 	}
-	if !strings.Contains(msg, "hoop config create --api-url") {
+	if !strings.Contains(msg, "lyric-iam config create --api-url") {
 		t.Errorf("expected recovery hint: %q", msg)
 	}
 }
@@ -64,7 +64,7 @@ func (fakeTimeout) Temporary() bool { return true }
 func TestHumanizeNetErrorTimeout(t *testing.T) {
 	raw := &url.Error{Op: "Get", URL: testAPIURL, Err: fakeTimeout{}}
 	msg := HumanizeNetError(testAPIURL, raw).Error()
-	if !strings.Contains(msg, "timed out reaching the hoop gateway") {
+	if !strings.Contains(msg, "timed out reaching the lyric-iam gateway") {
 		t.Errorf("expected timeout branch, got: %q", msg)
 	}
 }
@@ -75,8 +75,8 @@ func TestHumanizeNetErrorTLS(t *testing.T) {
 	if !strings.Contains(msg, "TLS handshake failed") {
 		t.Errorf("expected TLS branch, got: %q", msg)
 	}
-	if !strings.Contains(msg, "HOOP_TLS_SKIP_VERIFY") {
-		t.Errorf("expected hint about HOOP_TLS_SKIP_VERIFY: %q", msg)
+	if !strings.Contains(msg, "LYRIC_IAM_TLS_SKIP_VERIFY") {
+		t.Errorf("expected hint about LYRIC_IAM_TLS_SKIP_VERIFY: %q", msg)
 	}
 }
 

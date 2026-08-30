@@ -28,7 +28,7 @@ type recordingMCPServer struct {
 	auth []string
 	// upstreamHeader records any X-Hoop-Upstream-Authorization that leaked
 	// through to the server. It must always be empty: that header addresses
-	// hoop, not the MCP server, and forwarding it would disclose the caller's
+	// lyric-iam, not the MCP server, and forwarding it would disclose the caller's
 	// credential twice under two names.
 	upstreamHeader []string
 }
@@ -166,7 +166,7 @@ func TestPassthroughForwardsTheCallersOwnCredential(t *testing.T) {
 			t.Fatalf("request %d reached the server with Authorization %q, want the caller's own token", i, got)
 		}
 	}
-	// The passthrough header addresses hoop, not the MCP server. Forwarding
+	// The passthrough header addresses lyric-iam, not the MCP server. Forwarding
 	// it would hand the backend the same secret twice under a second name.
 	if len(leaked) != 0 {
 		t.Fatalf("the passthrough header reached the mcp server: %v", leaked)

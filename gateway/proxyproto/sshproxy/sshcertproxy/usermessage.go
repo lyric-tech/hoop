@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const upstreamFailurePrefix = "hoop: "
+const upstreamFailurePrefix = "lyric-iam: "
 const agentClosePayloadPrefix = "connection closed by server, payload="
 
 // translateUpstreamError converts a raw libhoop / agent error string into a
@@ -48,8 +48,8 @@ func translateUpstreamError(cause string) string {
 		return "authentication failed against target server"
 	case strings.Contains(lower, "session timed out before it was ready"):
 		return "session timed out waiting for the target server"
-	case strings.Contains(lower, "missing protocol hoop library"):
-		return "ssh is not enabled on this hoop agent build, contact your administrator"
+	case strings.Contains(lower, "missing protocol lyric-iam library"):
+		return "ssh is not enabled on this lyric-iam agent build, contact your administrator"
 	case strings.Contains(lower, "credential revoked"),
 		strings.Contains(lower, "access expired"):
 		return "your access to this target server has been revoked"

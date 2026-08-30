@@ -1,11 +1,11 @@
-// Package mcpauth implements OAuth 2.1 Resource Server semantics for the Hoop
+// Package mcpauth implements OAuth 2.1 Resource Server semantics for the Lyric IAM
 // MCP endpoint per the Model Context Protocol 2025-11-25 authorization profile.
 //
 // It exposes the RFC 9728 protected-resource metadata document and a Gin
 // middleware that strictly validates IdP-issued JWTs (RFC 8707 audience
 // binding, RFC 6750 WWW-Authenticate challenges) and falls back to the legacy
-// Hoop bearer-token middleware when MCP OAuth is disabled or the incoming
-// token is a Hoop-issued web token.
+// Lyric IAM bearer-token middleware when MCP OAuth is disabled or the incoming
+// token is a Lyric IAM-issued web token.
 //
 // Per the MCP spec, the IdP JWT is consumed at the gateway and never forwarded
 // to downstream backend connections.
@@ -28,7 +28,7 @@ type LegacyAuthMiddleware func(c *gin.Context)
 
 // Middleware returns a Gin handler that authenticates MCP requests. When MCP
 // OAuth is disabled for the current org, or when the bearer token is not a
-// JWT, the (gateway) legacy Hoop auth path is used unchanged. JWT bearers are validated
+// JWT, the (gateway) legacy Lyric IAM auth path is used unchanged. JWT bearers are validated
 // against the configured OIDC issuer with strict audience binding.
 func Middleware(legacyAuth LegacyAuthMiddleware) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -88,8 +88,8 @@ func MetadataHandler(c *gin.Context) {
 		Resource:               cfg.ResourceURI,
 		AuthorizationServers:   []string{authorizationServer},
 		BearerMethodsSupported: []string{"header"},
-		ResourceName:           "Hoop MCP",
-		ResourceDocumentation:  "https://hoop.dev/docs",
+		ResourceName:           "Lyric IAM MCP",
+		ResourceDocumentation:  "https://docs.lyric.tech/access",
 	})
 }
 
@@ -120,9 +120,9 @@ func extractBearer(c *gin.Context) string {
 }
 
 // isFederatedJWT reports whether the bearer should be routed through the OAuth
-// 2.1 validation path rather than the legacy Hoop middleware. It peeks at the
+// 2.1 validation path rather than the legacy Lyric IAM middleware. It peeks at the
 // JWT's `iss` claim WITHOUT verifying the signature and returns true only when
-// the issuer matches the configured IdP issuer. Hoop-issued tokens (same JWT
+// the issuer matches the configured IdP issuer. Lyric IAM-issued tokens (same JWT
 // shape but signed with a different key) fall through to legacy auth so they
 // are not rejected by the JWKS keyfunc during dual-accept rollout.
 //

@@ -17,7 +17,7 @@ export function ClaudeCodeCredentials({ credentials, connectionName }) {
   const baseUrl = `${window.location.protocol}//${hostname}:${port}`
   const isVertex = Boolean(vertex_project_id)
 
-  // Vertex mode forwards the full Vertex path through hoop, so the base URL has
+  // Vertex mode forwards the full Vertex path through lyric-iam, so the base URL has
   // to keep the /v1 segment the Anthropic Vertex SDK appends /projects/... to.
   const config = isVertex
     ? {
@@ -72,7 +72,7 @@ export function ClaudeCodeCredentials({ credentials, connectionName }) {
           <Text fz="sm" c="dimmed" mb="xs">
             Or run this command to apply automatically:
           </Text>
-          <CodeSnippet code={`hoop claude configure ${connectionName}`} />
+          <CodeSnippet code={`lyric-iam claude configure ${connectionName}`} />
         </Box>
       </Stack>
 

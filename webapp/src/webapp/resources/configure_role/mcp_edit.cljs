@@ -80,7 +80,7 @@
             [:> Text {:as "p" :size "2" :class "text-[--gray-11]"}
              "Log in to the MCP server to obtain an access token. The token is stored in this connection's Authorization header."]]
 
-           ;; Optional pre-registered client credentials. Left blank, Hoop
+           ;; Optional pre-registered client credentials. Left blank, Lyric IAM
            ;; registers a client dynamically. Auth-flow only \u2014 never stored as
            ;; connection environment variables.
            [:> Box {:class "space-y-3"}

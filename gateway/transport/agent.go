@@ -140,7 +140,7 @@ func (s *Server) listenAgentMessages(pctx *plugintypes.Context, stream *streamcl
 		// stream and the gateway's internal httpproxy listener — reads what
 		// proxyStream.Send writes below. A per-listener filter only protects
 		// the listeners someone remembered to patch, which is exactly how
-		// `hoop connect` ended up writing audit JSON into an MCP client.
+		// `lyric-iam connect` ended up writing audit JSON into an MCP client.
 		if len(pkt.Spec[pb.SpecMCPEventKey]) > 0 {
 			continue
 		}

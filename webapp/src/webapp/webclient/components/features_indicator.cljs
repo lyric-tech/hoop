@@ -1,5 +1,5 @@
 (ns webapp.webclient.components.features-indicator
-  "Toolbar indicator that tells the user which hoop features are active on the
+  "Toolbar indicator that tells the user which lyric-iam features are active on the
    selected resource role before they run anything.
 
    Hover lists the active features; clicking opens the Features Active modal.

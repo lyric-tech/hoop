@@ -102,7 +102,7 @@ func (c *grpcConnector) clientConfig(token string) commongrpc.ClientConfig {
 	return commongrpc.ClientConfig{
 		ServerAddress: c.addr,
 		Token:         token,
-		UserAgent:     "hoop-transport-itest",
+		UserAgent:     "lyric-iam-transport-itest",
 		Insecure:      true,
 	}
 }

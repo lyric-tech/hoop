@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores/useUserStore'
 
 const ACTION_TYPES = {
   WEB_TERMINAL: 'web-terminal',
-  HOOP_CLI: 'hoop-cli',
+  LYRIC_IAM_CLI: 'lyric-iam-cli',
   NATIVE_CLIENT: 'native-client',
   CONFIGURE: 'configure',
 }

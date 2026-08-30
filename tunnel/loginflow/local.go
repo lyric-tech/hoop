@@ -43,7 +43,7 @@ type localAuthRequest struct {
 var ErrInvalidLocalCredentials = errors.New("loginflow: invalid email or password")
 
 // LocalAuth posts the credentials to /api/localauth/login on the
-// given hoop gateway and returns the bearer token from the `Token`
+// given lyric-iam gateway and returns the bearer token from the `Token`
 // response header.
 //
 // The caller is responsible for persisting the token (same OnSuccess

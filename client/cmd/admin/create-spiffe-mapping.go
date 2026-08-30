@@ -33,8 +33,8 @@ func init() {
 var createSpiffeMappingCmd = &cobra.Command{
 	Use:     "spiffe-mapping",
 	Aliases: []string{"spiffemapping"},
-	Short:   "Create a SPIFFE-ID to Hoop agent mapping.",
-	Long: `Create a SPIFFE-ID to Hoop agent mapping.
+	Short:   "Create a SPIFFE-ID to Lyric IAM agent mapping.",
+	Long: `Create a SPIFFE-ID to Lyric IAM agent mapping.
 
 Exactly one of --spiffe-id and --spiffe-prefix must be set.
 Exactly one of --agent-id and --agent-template must be set.

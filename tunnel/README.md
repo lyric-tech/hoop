@@ -81,13 +81,13 @@ go build -o /tmp/hsh-tunneld ./tunnel/cmd/hsh-tunneld
 Set the same env vars the `hoop` CLI honors:
 
 ```bash
-export HOOP_APIURL=http://127.0.0.1:8009
-export HOOP_TOKEN=<your bearer token>
-# HOOP_GRPCURL is optional; if unset the daemon discovers it from
+export LYRIC_IAM_APIURL=http://127.0.0.1:8009
+export LYRIC_IAM_TOKEN=<your bearer token>
+# LYRIC_IAM_GRPCURL is optional; if unset the daemon discovers it from
 # GET /api/serverinfo, same as `hoop login`.
 ```
 
-`hoop login` writes these to `~/.hoop/config.toml`; you can `eval` them
+`hoop login` writes these to `~/.lyric-iam/config.toml`; you can `eval` them
 out of there or source them yourself.
 
 ### 3. Start the daemon
@@ -160,7 +160,7 @@ are intentionally filtered out of the resolver. Use `hoop connect <name>`
 for those.
 
 httpproxy connections are served on port **80** only: the client speaks
-plain HTTP to the tunnel (`curl http://api-prod.hoop/path`) and the
+plain HTTP to the tunnel (`curl http://api-prod.lyric-iam/path`) and the
 agent terminates TLS to the connection's `REMOTE_URL` upstream. Because
 the bytes cross the agent in cleartext, guardrails and DLP inspection
 apply exactly as they do for `hoop connect`. `https://<name>.hoop` can

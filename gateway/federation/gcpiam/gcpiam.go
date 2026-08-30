@@ -9,10 +9,10 @@
 //
 // Env-var contract emitted to the agent:
 //
-//	HOOP_GCP_ACCESS_TOKEN         The short-lived OAuth bearer token.
-//	HOOP_GCP_TOKEN_EXPIRES_AT     RFC3339 expiry of the bearer.
+//	LYRIC_IAM_GCP_ACCESS_TOKEN         The short-lived OAuth bearer token.
+//	LYRIC_IAM_GCP_TOKEN_EXPIRES_AT     RFC3339 expiry of the bearer.
 //	CLOUDSDK_CORE_PROJECT         The GCP project id from extra_config.project_id.
-//	HOOP_FEDERATED_PRINCIPAL      The resolved user principal (e.g. user@org.com).
+//	LYRIC_IAM_FEDERATED_PRINCIPAL      The resolved user principal (e.g. user@org.com).
 //	                              Informational, surfaces in audit + bq logs.
 //
 // Superseded static envs (removed from the connection's secret map at
@@ -161,10 +161,10 @@ func (r *Resolver) Resolve(ctx context.Context, req federation.ResolveRequest) (
 
 	return &federation.Result{
 		EnvVars: map[string]string{
-			"HOOP_GCP_ACCESS_TOKEN":     token,
-			"HOOP_GCP_TOKEN_EXPIRES_AT": expiresAt.UTC().Format(time.RFC3339),
+			"LYRIC_IAM_GCP_ACCESS_TOKEN":     token,
+			"LYRIC_IAM_GCP_TOKEN_EXPIRES_AT": expiresAt.UTC().Format(time.RFC3339),
 			"CLOUDSDK_CORE_PROJECT":     extra.ProjectID,
-			"HOOP_FEDERATED_PRINCIPAL":  req.ResolvedPrincipal,
+			"LYRIC_IAM_FEDERATED_PRINCIPAL":  req.ResolvedPrincipal,
 		},
 		// GOOGLE_APPLICATION_CREDENTIALS is the legacy SA-key auth path; the
 		// federated access token replaces it end-to-end (gateway mints token
@@ -234,7 +234,7 @@ func preflightServiceAccountPrincipal(principal string) error {
 			"resolved principal %q has a GCP service-account name %q that is only %d character(s) long: "+
 				"GCP requires service-account names to be at least 6 characters. The {user.email} portion of your "+
 				"identity template expands to the local part of the user's email (before the @), which is too short "+
-				"here. Add a literal prefix to pad it (e.g. \"hoop-{user.email}@<project>%s\") or map the user to a "+
+				"here. Add a literal prefix to pad it (e.g. \"lyric-iam-{user.email}@<project>%s\") or map the user to a "+
 				"longer handle",
 			principal, localPart, n, saEmailSuffix,
 		)

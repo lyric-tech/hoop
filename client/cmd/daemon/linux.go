@@ -13,7 +13,7 @@ import (
 var vi = version.Get()
 
 func LogsLinuxAgent() error {
-	logsAgent("hoop-agent")
+	logsAgent("lyric-iam-agent")
 	return nil
 }
 
@@ -34,7 +34,7 @@ func StartLinuxAgent() error {
 	}
 
 	opts := Options{
-		ServiceName: "hoop-agent",
+		ServiceName: "lyric-iam-agent",
 		ExecArgs:    " start agent",
 		Env:         envKeys,
 		WantedBy:    "default.target",
@@ -92,8 +92,8 @@ func install(opts Options) error {
 }
 
 func StopLinuxAgent() error {
-	if err := stop("hoop-agent"); err != nil {
-		return fmt.Errorf("failed to stop hoop-agent: %w", err)
+	if err := stop("lyric-iam-agent"); err != nil {
+		return fmt.Errorf("failed to stop lyric-iam-agent: %w", err)
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ func stop(serviceName string) error {
 }
 
 func RemoveLinuxAgent() error {
-	if err := remove("hoop-agent"); err != nil {
+	if err := remove("lyric-iam-agent"); err != nil {
 		return err
 	}
 	return nil

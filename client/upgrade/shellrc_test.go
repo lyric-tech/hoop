@@ -53,7 +53,7 @@ func TestRCFileFor(t *testing.T) {
 }
 
 func TestPathExportLine(t *testing.T) {
-	if l := PathExportLine(ShellZsh); !strings.Contains(l, `export PATH=`) || !strings.Contains(l, `.hoop/bin`) {
+	if l := PathExportLine(ShellZsh); !strings.Contains(l, `export PATH=`) || !strings.Contains(l, `.lyric-iam/bin`) {
 		t.Fatalf("zsh line: %s", l)
 	}
 	if l := PathExportLine(ShellFish); !strings.Contains(l, `fish_add_path`) {
@@ -66,15 +66,15 @@ func TestPathExportLine(t *testing.T) {
 
 func TestIsPathConfigured(t *testing.T) {
 	home := "/Users/test"
-	hoopBin := home + "/.hoop/bin"
+	hoopBin := home + "/.lyric-iam/bin"
 
 	if !IsPathConfigured(hoopBin+":/usr/bin", home) {
 		t.Fatalf("absolute path should match")
 	}
-	if !IsPathConfigured("$HOME/.hoop/bin:/usr/bin", home) {
+	if !IsPathConfigured("$HOME/.lyric-iam/bin:/usr/bin", home) {
 		t.Fatalf("$HOME expansion should match")
 	}
-	if !IsPathConfigured("~/.hoop/bin:/usr/bin", home) {
+	if !IsPathConfigured("~/.lyric-iam/bin:/usr/bin", home) {
 		t.Fatalf("tilde expansion should match")
 	}
 	if IsPathConfigured("/usr/bin:/bin", home) {

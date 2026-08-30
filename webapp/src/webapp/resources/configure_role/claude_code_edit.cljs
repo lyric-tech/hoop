@@ -91,7 +91,7 @@
                [:<>
                 [:> Callout.Root {:size "1" :color "gray"}
                  [:> Callout.Text
-                  "Claude Code runs in Vertex mode against hoop. hoop mints a short-lived "
+                  "Claude Code runs in Vertex mode against lyric-iam. lyric-iam mints a short-lived "
                   "token from the service account below and proxies requests to Google Vertex AI."]]
 
                 [forms/input

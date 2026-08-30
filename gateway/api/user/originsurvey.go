@@ -20,7 +20,7 @@ import (
 const signupOriginOther = "other"
 
 // validSignupOrigins are the accepted answers of the onboarding
-// "How did you hear about Hoop?" survey. These identifiers are the analytics
+// "How did you hear about Lyric IAM?" survey. These identifiers are the analytics
 // contract: renaming one breaks the acquisition-channel reports, so add new
 // options instead of repurposing existing ones. The user-facing labels live in
 // the webapp.
@@ -43,7 +43,7 @@ const maxSignupOriginOtherLength = 255
 // PostSignupOrigin
 //
 //	@Summary		Answer Signup Origin Survey
-//	@Description	Record how the authenticated user heard about Hoop. Each user may answer only once; a second attempt returns 409.
+//	@Description	Record how the authenticated user heard about Lyric IAM. Each user may answer only once; a second attempt returns 409.
 //	@Tags			User Management
 //	@Accept			json
 //	@Produce		json

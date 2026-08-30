@@ -320,7 +320,7 @@ func (m *MCPStdio) childCount() int {
 // The agent orders the two with sendMu, so a request seen after the close is a
 // straggler the gateway or the transport delayed. Spawning for it strands an
 // MCP server whose reaping packet has already been spent: it keeps running
-// with the user's credentials until the whole hoop session ends.
+// with the user's credentials until the whole lyric-iam session ends.
 func TestRequestAfterCloseNeverSpawns(t *testing.T) {
 	tr := &recordingTransport{}
 	m := NewMCPStdio(tr, "sid")

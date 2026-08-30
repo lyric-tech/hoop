@@ -50,7 +50,7 @@
                                                             [:> Text {:as "span"}
                                                              "If you lose access, refer to the "]
                                                             [:> Text {:as "span" :weight "medium" :class "text-blue-600 underline cursor-pointer"
-                                                                      :on-click #(js/window.open "https://hoop.dev/docs/setup/configuration/idp/get-started#troubleshooting" "_blank")}
+                                                                      :on-click #(js/window.open "https://docs.lyric.tech/access/setup/configuration/idp/get-started#troubleshooting" "_blank")}
                                                              "troubleshooting documentation"]
                                                             [:> Text {:as "span"}
                                                              " for recovery procedures."]]

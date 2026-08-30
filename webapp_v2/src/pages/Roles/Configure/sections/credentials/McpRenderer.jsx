@@ -186,7 +186,7 @@ export default function McpRenderer({
         finishError('Authorization URL was not returned')
         return
       }
-      const popup = window.open(data.authorization_url, 'hoop-mcp-oauth', POPUP_FEATURES)
+      const popup = window.open(data.authorization_url, 'lyric-iam-mcp-oauth', POPUP_FEATURES)
       if (!popup) {
         finishError('Popup blocked. Allow popups for this site and retry.')
         return

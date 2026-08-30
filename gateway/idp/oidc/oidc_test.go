@@ -49,9 +49,9 @@ func TestAudienceContains(t *testing.T) {
 	})
 
 	t.Run("opaque client ids stay case-sensitive exact", func(t *testing.T) {
-		assert.True(t, audienceContains("hoop-MCP-Client", "hoop-MCP-Client"))
-		assert.False(t, audienceContains("hoop-mcp-client", "hoop-MCP-Client"))
-		assert.False(t, audienceContains("hoop-MCP-Client/", "hoop-MCP-Client"))
+		assert.True(t, audienceContains("lyric-iam-MCP-Client", "lyric-iam-MCP-Client"))
+		assert.False(t, audienceContains("lyric-iam-mcp-client", "lyric-iam-MCP-Client"))
+		assert.False(t, audienceContains("lyric-iam-MCP-Client/", "lyric-iam-MCP-Client"))
 	})
 }
 
@@ -68,7 +68,7 @@ func TestCanonicalResourceURI(t *testing.T) {
 		{"https://demo.hoop.dev/api/mcp?tenant=a", "https://demo.hoop.dev/api/mcp?tenant=a"},
 		{"https://DEMO.hoop.dev:443/api/mcp/?tenant=a", "https://demo.hoop.dev/api/mcp?tenant=a"},
 		// Non-URI audiences pass through untouched.
-		{"hoop-mcp", "hoop-mcp"},
+		{"lyric-iam-mcp", "lyric-iam-mcp"},
 		{"urn:example:mcp", "urn:example:mcp"},
 		{"", ""},
 	}
@@ -84,7 +84,7 @@ func TestAudienceQueryIsolation(t *testing.T) {
 }
 
 func TestTokenBoundToClient(t *testing.T) {
-	const clientID = "hoop-mcp-client"
+	const clientID = "lyric-iam-mcp-client"
 
 	t.Run("client id in aud", func(t *testing.T) {
 		assert.True(t, tokenBoundToClient(jwt.MapClaims{"aud": clientID}, []string{clientID}))

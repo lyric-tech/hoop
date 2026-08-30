@@ -45,12 +45,12 @@ type ConnectFlags struct {
 var connectFlags = ConnectFlags{}
 var inputEnvVars []string
 
-var connectExampleDesc = `hoop connect bash
-hoop connect bash -e MYENV=value -- --posix
-hoop connect postgres-srv --port 5432
-hoop connect postgres-srv -d 5m
-hoop connect postgres-srv --persistent-credential
-hoop connect postgres-srv --persistent-credential -d 30m
+var connectExampleDesc = `lyric-iam connect bash
+lyric-iam connect bash -e MYENV=value -- --posix
+lyric-iam connect postgres-srv --port 5432
+lyric-iam connect postgres-srv -d 5m
+lyric-iam connect postgres-srv --persistent-credential
+lyric-iam connect postgres-srv --persistent-credential -d 30m
 `
 
 var connectLongDesc = `Connect to a remote resource.
@@ -183,7 +183,7 @@ func runConnect(args []string, clientEnvVars map[string]string, durationFlagChan
 			if jsonMode {
 				sessionID := string(pkt.Spec[pb.SpecGatewaySessionID])
 				emitWaitingApprovalAndExit(sessionID, string(pkt.Payload),
-					"poll status with: hoop admin get sessions "+sessionID+" -o json | check review.status field")
+					"poll status with: lyric-iam admin get sessions "+sessionID+" -o json | check review.status field")
 			} else {
 				loader.Color("yellow")
 				if !loader.Active() {
@@ -439,7 +439,7 @@ func runConnect(args []string, clientEnvVars map[string]string, durationFlagChan
 					fmt.Println("Your current terminal environment (Windows/DOS) is not compatible with the Linux-based connection you're trying to access. To proceed, please use one of these options: ")
 					fmt.Println("1. Windows Subsystem for Linux (WSL)")
 					fmt.Println("2. Any Linux-compatible terminal emulator")
-					fmt.Println("For more information, please visit https://hoop.dev/docs/clients/cli or contact us if you need further assistance.")
+					fmt.Println("For more information, please visit https://docs.lyric.tech/access/clients/cli or contact us if you need further assistance.")
 					os.Exit(1)
 				}
 				c.client.StartKeepAlive()
@@ -792,12 +792,12 @@ func printVersionMismatchWarningTo(w io.Writer, cliVersion, agentVersion string)
 	// version), fall back to the docs rather than printing an install command
 	// that would fail with a floor error.
 	target := clientupgrade.NormalizeVersion(agentVersion)
-	action := "For installation options, visit: https://hoop.dev/docs/clients/cli-versions"
+	action := "For installation options, visit: https://docs.lyric.tech/access/clients/cli-versions"
 	if clientupgrade.ValidateInstallableVersion(target) == nil {
 		action = fmt.Sprintf(
-			"Install and activate the matching version with the hoop CLI version manager:\n"+
-				"  hoop versions install %s --use\n\n"+
-				"For more options, visit: https://hoop.dev/docs/clients/cli-versions",
+			"Install and activate the matching version with the lyric-iam CLI version manager:\n"+
+				"  lyric-iam versions install %s --use\n\n"+
+				"For more options, visit: https://docs.lyric.tech/access/clients/cli-versions",
 			target)
 	}
 
@@ -943,10 +943,10 @@ clusters:
 - cluster:
     server: %s
     insecure-skip-tls-verify: true
-  name: hoop-local-tunnel
+  name: lyric-iam-local-tunnel
 contexts:
 - context:
-    cluster: hoop-local-tunnel
+    cluster: lyric-iam-local-tunnel
     user: local-tunnel
   name: default
 current-context: default

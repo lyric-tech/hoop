@@ -13,7 +13,7 @@
 //     connections, and the gateway must cap its pool at one connection
 //     (clients must connect with sslmode=disable; TLS and query
 //     cancellation requests are not supported by the bridge)
-//   - a single database (template1) — hoop's schema lives there
+//   - a single database (template1) — lyric-iam's schema lives there
 //   - the cluster runs with fsync=on: committed transactions reach the
 //     WAL on the host filesystem. Close() performs a clean shutdown
 //     (checkpoint); after a hard kill the next boot runs WAL crash
@@ -95,7 +95,7 @@ type Instance struct {
 
 // DSN returns a libpq-style connection URI for the embedded database.
 //
-// Note for ad-hoc consumers: hoop's data layer always schema-qualifies its
+// Note for ad-hoc consumers: lyric-iam's data layer always schema-qualifies its
 // objects (the migrations pin `SET search_path TO private`), because the
 // single-user wasm backend ignores startup parameters and database-level
 // settings, and its ambient search_path is a system schema that differs
@@ -354,14 +354,14 @@ func extractRuntime(root string) error {
 }
 
 // installUUIDOSSPShim writes a SQL-only uuid-ossp extension into the runtime
-// share directory. The runtime archive ships only plpgsql, but hoop's first
+// share directory. The runtime archive ships only plpgsql, but lyric-iam's first
 // migration runs `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"` and later
 // migrations call uuid_generate_v4(). The shim provides uuid_generate_v4()
 // on top of the core gen_random_uuid() (identical semantics: random v4
-// UUID). No other uuid-ossp function is used by hoop migrations or code.
+// UUID). No other uuid-ossp function is used by lyric-iam migrations or code.
 func installUUIDOSSPShim(root string) error {
 	extDir := filepath.Join(root, guestPrefix, "share", "postgresql", "extension")
-	control := `# uuid-ossp compatibility shim shipped by hoop (see gateway/pglite)
+	control := `# uuid-ossp compatibility shim shipped by lyric-iam (see gateway/pglite)
 comment = 'compatibility shim: uuid_generate_v4() backed by core gen_random_uuid()'
 default_version = '1.1'
 relocatable = true

@@ -20,10 +20,10 @@ var (
 	outputFlag string
 )
 
-var listExampleDesc = `hoop list
-hoop ls
-hoop list -o wide
-hoop list -o json`
+var listExampleDesc = `lyric-iam list
+lyric-iam ls
+lyric-iam list -o wide
+lyric-iam list -o json`
 
 var listCmd = &cobra.Command{
 	Use:     "list",
@@ -273,7 +273,7 @@ func formatSingleTagForList(key, value string) string {
 		return ""
 	}
 
-	// If it's an internal Hoop tag: hoop.dev/group.key
+	// If it's an internal Lyric IAM tag: hoop.dev/group.key
 	if strings.HasPrefix(key, "hoop.dev/") {
 		// Remove the "hoop.dev/" prefix
 		remaining := strings.TrimPrefix(key, "hoop.dev/")

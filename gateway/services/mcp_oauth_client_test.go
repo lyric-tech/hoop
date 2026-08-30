@@ -44,8 +44,8 @@ func defaultASMetadata(base string) map[string]any {
 }
 
 // RFC 9728 §3.3: a protected resource's metadata must name that resource and
-// no other. A server that advertises someone else's identifier turns Hoop into
-// a confused deputy — the RFC 8707 resource indicator Hoop sends is taken from
+// no other. A server that advertises someone else's identifier turns Lyric IAM into
+// a confused deputy — the RFC 8707 resource indicator Lyric IAM sends is taken from
 // this field, so the authorization server would mint a token audienced for a
 // resource the admin never chose and hand it to the server that asked for it.
 func TestDiscoverRejectsForeignResourceIdentifier(t *testing.T) {

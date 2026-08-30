@@ -14,7 +14,7 @@ import (
 // GetMcpAuthConfig
 //
 //	@Summary		Get MCP OAuth 2.1 Resource Server Configuration
-//	@Description	Returns the per-org MCP OAuth Resource Server settings. When disabled (default), /mcp accepts Hoop-issued bearer tokens only.
+//	@Description	Returns the per-org MCP OAuth Resource Server settings. When disabled (default), /mcp accepts Lyric IAM-issued bearer tokens only.
 //	@Tags			Server Management
 //	@Produce		json
 //	@Success		200		{object}	openapi.ServerMcpAuthConfig

@@ -38,7 +38,7 @@ type MCPServer struct {
 
 func New(releaseConnFn reviewapi.TransportReleaseConnectionFunc) *MCPServer {
 	server := mcp.NewServer(&mcp.Implementation{
-		Name:    "hoop",
+		Name:    "lyric-iam",
 		Version: version.Get().Version,
 	}, nil)
 

@@ -19,7 +19,7 @@ import (
 // CDN warm-ups are possible.
 const downloadTimeout = 5 * time.Minute
 
-// Installer downloads, verifies and extracts hoop release artifacts into
+// Installer downloads, verifies and extracts lyric-iam release artifacts into
 // the layout's versions directory.
 //
 // Callers will typically use the package-level Install function. The
@@ -41,10 +41,10 @@ func NewInstaller(l Layout) *Installer {
 }
 
 // Install downloads version for platform, verifies its sha256 against the
-// release's checksums.txt, extracts the hoop binary into the version dir
+// release's checksums.txt, extracts the lyric-iam binary into the version dir
 // and returns the resulting store entry. It does NOT change the active
 // symlink; callers do that explicitly to keep semantics separable
-// (`hoop versions install` without `--use` should not switch).
+// (`lyric-iam versions install` without `--use` should not switch).
 //
 // If the version is already on disk and not corrupted, Install is a no-op
 // and returns the existing entry (after re-verifying that the binary
@@ -202,7 +202,7 @@ func (i *Installer) downloadFile(url, dst string) (string, error) {
 // from a gzip+tar archive into dst. Any other entries are skipped.
 //
 // wantName is platform-dependent: the Windows release tarball carries
-// hoop.exe while the Unix tarballs carry hoop (see Platform.ExecutableName),
+// lyric-iam.exe while the Unix tarballs carry lyric-iam (see Platform.ExecutableName),
 // so callers pass the name for the platform they are installing.
 func extractHoopBinary(tarball, dst, wantName string) error {
 	f, err := os.Open(tarball)
@@ -238,12 +238,12 @@ func extractHoopBinary(tarball, dst, wantName string) error {
 		// contents are trusted; no need to cap the size.
 		if _, err := io.Copy(out, tr); err != nil {
 			out.Close()
-			return fmt.Errorf("failed extracting hoop binary: %w", err)
+			return fmt.Errorf("failed extracting lyric-iam binary: %w", err)
 		}
 		if err := out.Close(); err != nil {
 			return fmt.Errorf("failed closing %s: %w", dst, err)
 		}
 		return nil
 	}
-	return fmt.Errorf("hoop binary (%s) not found inside %s", wantName, tarball)
+	return fmt.Errorf("lyric-iam binary (%s) not found inside %s", wantName, tarball)
 }

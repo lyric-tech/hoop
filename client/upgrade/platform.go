@@ -44,7 +44,7 @@ func platformFor(goos, goarch string) (Platform, error) {
 	case "windows":
 		osLabel = "Windows"
 	default:
-		return Platform{}, fmt.Errorf("unsupported OS %q: no hoop release artifact is published for this platform", goos)
+		return Platform{}, fmt.Errorf("unsupported OS %q: no lyric-iam release artifact is published for this platform", goos)
 	}
 
 	var archLabel string
@@ -54,7 +54,7 @@ func platformFor(goos, goarch string) (Platform, error) {
 	case "arm64":
 		archLabel = "arm64"
 	default:
-		return Platform{}, fmt.Errorf("unsupported arch %q: no hoop release artifact is published for this architecture", goarch)
+		return Platform{}, fmt.Errorf("unsupported arch %q: no lyric-iam release artifact is published for this architecture", goarch)
 	}
 
 	return Platform{OS: osLabel, Arch: archLabel}, nil
@@ -66,23 +66,33 @@ func ArtifactName(version string, p Platform) string {
 	return fmt.Sprintf("hoop_%s_%s.tar.gz", version, p)
 }
 
-// ExecutableName returns the hoop executable filename packaged inside the
-// release artifact for this platform. Windows binaries carry a .exe
-// suffix because the Go toolchain appends it for GOOS=windows builds, so
-// the Windows tarball contains hoop.exe rather than hoop.
+// ExecutableName returns the executable filename packaged inside the
+// release artifact for this platform. Release tarballs are produced upstream
+// and still carry the binary as "hoop", so this name is fixed by the artifact
+// format and is NOT the name the CLI is installed under (see paths.go).
+// Windows binaries carry a .exe suffix because the Go toolchain appends it
+// for GOOS=windows builds.
 func (p Platform) ExecutableName() string {
 	return executableName(p.OS == "Windows")
 }
 
-// executableName is the single source of truth for the OS-dependent hoop
-// binary filename. It is shared by Platform.ExecutableName (which keys off
-// the release OS label) and the host-side layout (which keys off
-// runtime.GOOS) so the two can never drift.
+// executableName is the OS-dependent filename of the binary inside a release
+// tarball. It keys off the release OS label.
 func executableName(windows bool) string {
 	if windows {
 		return "hoop.exe"
 	}
 	return "hoop"
+}
+
+// localExecutableName is the OS-dependent filename the CLI is installed and
+// invoked under on the host. It differs from executableName because the
+// release artifact is produced upstream under the old name.
+func localExecutableName(windows bool) string {
+	if windows {
+		return "lyric-iam.exe"
+	}
+	return "lyric-iam"
 }
 
 // ArtifactURL returns the full https URL for the release tarball.

@@ -21,7 +21,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const mssqlJDBCGuardRailRules = `{"input_rules":[{"rules":[{"type":"deny_words_list","words":["secret_table"],"pattern_regex":"","message":"blocked by hoop guardrail: secret_table is off limits"}]}],"output_rules":[{"rules":[]}]}`
+const mssqlJDBCGuardRailRules = `{"input_rules":[{"rules":[{"type":"deny_words_list","words":["secret_table"],"pattern_regex":"","message":"blocked by lyric-iam guardrail: secret_table is off limits"}]}],"output_rules":[{"rules":[]}]}`
 
 type agentInjectTransport struct {
 	*testutil.MockTransport

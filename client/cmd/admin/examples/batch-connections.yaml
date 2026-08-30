@@ -1,5 +1,5 @@
-# Example: Batch connection creation for hoop CLI
-# Usage: hoop admin create connections --from-file batch-connections.yaml
+# Example: Batch connection creation for lyric-iam CLI
+# Usage: lyric-iam admin create connections --from-file batch-connections.yaml
 
 # Top-level defaults (applied to all connections unless overridden)
 agent: default

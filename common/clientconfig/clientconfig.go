@@ -9,21 +9,21 @@ import (
 const (
 	AgentFile          string = "agent.toml"
 	ClientFile         string = "config.toml"
-	clientConfigFolder string = ".hoop"
+	clientConfigFolder string = ".lyric-iam"
 
 	SaaSWebURL  string = "https://use.hoop.dev"
 	SaaSGrpcURL string = "use.hoop.dev:8443"
 
 	// ModeEnv is when a client is loaded with environment variables
 	ModeEnv = "env"
-	// ModeEnv is when a client is loaded with the environment variable HOOP_KEY
+	// ModeEnv is when a client is loaded with the environment variable LYRIC_IAM_KEY
 	ModeDsn = "dsn"
 	// ModeSVID is when an agent is loaded with the environment variable
-	// HOOP_SPIFFE_KEY_FILE pointing at a file that contains a bare JWT-SVID.
+	// LYRIC_IAM_SPIFFE_KEY_FILE pointing at a file that contains a bare JWT-SVID.
 	// The file is re-read on every reconnect so rotated tokens are picked up.
 	ModeSVID = "svid"
 	// ModeLocal detects if the client has found a local instance
-	// of the hoop gateway, this mode indicates the gRPC connection
+	// of the lyric-iam gateway, this mode indicates the gRPC connection
 	// should be established without tls encryption. For security
 	// sake, only the localhost address should receive insecure connections
 	ModeLocal = "local"
@@ -38,7 +38,7 @@ const (
 )
 
 // newHomeDir creates a home dir and any inner level folders passed in
-// Passing any folder path will create only the default hoop home dir folder
+// Passing any folder path will create only the default lyric-iam home dir folder
 func newHomeDir(folderPaths ...string) (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -48,7 +48,7 @@ func newHomeDir(folderPaths ...string) (string, error) {
 	hoopHomeDir := filepath.Join(hoopHomeDirParts...)
 	if _, err := os.Stat(hoopHomeDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(hoopHomeDir, 0700); err != nil {
-			return "", fmt.Errorf("failed creating hoop home dir (%s), err=%v", hoopHomeDir, err)
+			return "", fmt.Errorf("failed creating lyric-iam home dir (%s), err=%v", hoopHomeDir, err)
 		}
 	}
 	return hoopHomeDir, nil

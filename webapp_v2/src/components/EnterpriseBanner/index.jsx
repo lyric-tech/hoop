@@ -3,7 +3,7 @@ import Button from '@/components/Button'
 import { useUserStore } from '@/stores/useUserStore'
 import classes from './EnterpriseBanner.module.css'
 
-const SALES_URL = 'https://hoop.dev/meet'
+const SALES_URL = 'https://lyric.tech/meet'
 const INTERCOM_MESSAGE = 'I want to upgrade my current plan'
 
 const DEFAULT_TITLE = 'Unlock all protection controls'

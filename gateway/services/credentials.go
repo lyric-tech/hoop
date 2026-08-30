@@ -97,7 +97,7 @@ func BuildCredentialInfo(
 	serverConf *models.ServerMiscConfig,
 	secretKey string,
 ) *CredentialInfo {
-	const dummyString = "hoop"
+	const dummyString = "lyric-iam"
 
 	info := &CredentialInfo{
 		ID:                cred.ID,

@@ -27,7 +27,7 @@ import (
 
 // DefaultTLD is the suffix the resolver answers for. The label is matched
 // case-insensitively and without a trailing dot.
-const DefaultTLD = "hoop"
+const DefaultTLD = "lyric-iam"
 
 // Resolver answers DNS queries from a name->address table. The table is
 // backed by an addressing.Allocator; the resolver itself never adds names.
@@ -40,7 +40,7 @@ type Resolver struct {
 }
 
 // New returns a Resolver that consults alloc for forward (name->IP) lookups
-// and uses tld (case-insensitive, "hoop" by default) as the suffix it owns.
+// and uses tld (case-insensitive, "lyric-iam" by default) as the suffix it owns.
 func New(alloc *addressing.Allocator, tld string) *Resolver {
 	if tld == "" {
 		tld = DefaultTLD
@@ -94,7 +94,7 @@ func (r *Resolver) answer(in *dns.Msg) *dns.Msg {
 	// allocator key is everything before the trailing ".<tld>".
 	connName := strings.TrimSuffix(name, "."+r.tld)
 	if connName == name || connName == "" {
-		// Means name was exactly the TLD ("hoop.") — not a resource.
+		// Means name was exactly the TLD ("lyric-iam.") — not a resource.
 		resp.Rcode = dns.RcodeNameError
 		resp.Ns = append(resp.Ns, r.soa()) // RFC 2308 negative response
 		return resp

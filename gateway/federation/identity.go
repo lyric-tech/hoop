@@ -72,7 +72,7 @@ func ResolveIdentity(srcAttr, targetTemplate string, ctx IdentityContext) (strin
 // email from a human email: for input "alice@acme.com" it renders "alice",
 // which paired with a literal "@<project>.iam.gserviceaccount.com" suffix
 // produces a valid SA email without forcing the operator to also model a
-// separate "handle" attribute on the Hoop user.
+// separate "handle" attribute on the Lyric IAM user.
 //
 // If UserEmail does not contain "@" the helper falls back to the full
 // UserEmail; downstream resolvers (e.g. gcpiam) validate whether the rendered

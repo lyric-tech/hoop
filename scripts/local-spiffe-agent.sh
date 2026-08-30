@@ -16,7 +16,7 @@ set -euo pipefail
 
 # ---- knobs (must match local-spiffe-kubernetes.sh) ----
 TRUST_DOMAIN="${TRUST_DOMAIN:-local.hoop.dev}"
-HOOP_NS="${HOOP_NS:-hoop}"
+LYRIC_IAM_NS="${LYRIC_IAM_NS:-hoop}"
 
 AGENT_NAME="${AGENT_NAME:-local-spiffe}"
 SPIFFE_ID="spiffe://${TRUST_DOMAIN}/hoop-agent/${AGENT_NAME}"
@@ -24,10 +24,10 @@ AUDIENCE="${AUDIENCE:-http://localhost:8009}"
 
 AGENT_IMAGE_TAG="${AGENT_IMAGE_TAG:-1403.0.0-5a9bd6f}"
 
-# Path to the hoop CLI; HOOP_BIN can be overridden if installed elsewhere.
-HOOP_BIN="${HOOP_BIN:-$HOME/.hoop/dev/hoop}"
-command -v "$HOOP_BIN" >/dev/null 2>&1 || [ -x "$HOOP_BIN" ] \
-  || { echo "hoop CLI not found at $HOOP_BIN — set HOOP_BIN or 'make build-dev-client'"; exit 1; }
+# Path to the hoop CLI; LYRIC_IAM_BIN can be overridden if installed elsewhere.
+LYRIC_IAM_BIN="${LYRIC_IAM_BIN:-$HOME/.lyric-iam/dev/lyric-iam}"
+command -v "$LYRIC_IAM_BIN" >/dev/null 2>&1 || [ -x "$LYRIC_IAM_BIN" ] \
+  || { echo "hoop CLI not found at $LYRIC_IAM_BIN — set LYRIC_IAM_BIN or 'make build-dev-client'"; exit 1; }
 
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 
@@ -41,7 +41,7 @@ else
   HELM_VERSION_FLAG=()
 fi
 
-WORKDIR="${WORKDIR:-${HOME}/.hoop/local-spiffe}"
+WORKDIR="${WORKDIR:-${HOME}/.lyric-iam/local-spiffe}"
 mkdir -p "$WORKDIR"
 
 log()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -62,13 +62,13 @@ if [[ "$AGENT_CHART" != oci://* ]]; then
 fi
 
 # Confirm the gateway is up; phase 1 should have created it.
-kubectl -n "$HOOP_NS" get deploy/hoopgateway >/dev/null 2>&1 \
-  || { echo "deploy/hoopgateway not found in ns/$HOOP_NS — run scripts/local-spiffe-kubernetes.sh first"; exit 1; }
+kubectl -n "$LYRIC_IAM_NS" get deploy/hoopgateway >/dev/null 2>&1 \
+  || { echo "deploy/hoopgateway not found in ns/$LYRIC_IAM_NS — run scripts/local-spiffe-kubernetes.sh first"; exit 1; }
 
 # Confirm the operator is logged in. 'hoop admin get agents' is the cheapest
 # call that exercises both the cached token and the gateway connection — if
 # it fails, the rest of the script can't proceed anyway.
-if ! "$HOOP_BIN" admin get agents -o json >/dev/null 2>&1; then
+if ! "$LYRIC_IAM_BIN" admin get agents -o json >/dev/null 2>&1; then
   cat <<EOM
 
 ================================================================================
@@ -79,7 +79,7 @@ Make sure phase 1 has finished, then:
   1. Open http://localhost:8009 and complete the local-auth signup
      (or log in if you already have a user on this gateway).
   2. Create an agent named "${AGENT_NAME}" (mode: standard) in the UI.
-  3. Run:    $HOOP_BIN login
+  3. Run:    $LYRIC_IAM_BIN login
   4. Re-run this script.
 ================================================================================
 
@@ -94,7 +94,7 @@ fi
 # matches (otherwise pipefail would silently kill the script).
 log "lookup agent (${AGENT_NAME})"
 AGENT_ID=$(
-  "$HOOP_BIN" admin get agents -o json 2>/dev/null \
+  "$LYRIC_IAM_BIN" admin get agents -o json 2>/dev/null \
     | jq -r --arg name "$AGENT_NAME" \
         'try (.[] | select(.name == $name) | .id) catch empty' \
     | head -n1
@@ -106,7 +106,7 @@ if [ -z "$AGENT_ID" ]; then
 Agent record "${AGENT_NAME}" not found.
 
 Open http://localhost:8009, create an agent named "${AGENT_NAME}" (mode:
-standard) — the UI will show a HOOP_KEY but the SPIFFE flow won't use it
+standard) — the UI will show a LYRIC_IAM_KEY but the SPIFFE flow won't use it
 at runtime. Then re-run this script.
 ================================================================================
 
@@ -119,7 +119,7 @@ echo "AGENT_ID = $AGENT_ID"
 # --overwrite makes the call idempotent: it updates the existing row
 # (matched by trust_domain + spiffe_id) instead of failing with HTTP 409.
 log "create spiffe-mapping (trust_domain=${TRUST_DOMAIN}, spiffe_id=${SPIFFE_ID})"
-"$HOOP_BIN" admin create spiffe-mapping \
+"$LYRIC_IAM_BIN" admin create spiffe-mapping \
   --trust-domain "$TRUST_DOMAIN" \
   --spiffe-id "$SPIFFE_ID" \
   --agent-id "$AGENT_ID" \
@@ -161,31 +161,31 @@ EOF
 log "agent helm upgrade ($AGENT_CHART${CHART_VERSION:+ @ $CHART_VERSION})"
 helm upgrade --install hoopagent "$AGENT_CHART" \
   ${HELM_VERSION_FLAG[@]+"${HELM_VERSION_FLAG[@]}"} \
-  -n "$HOOP_NS" \
+  -n "$LYRIC_IAM_NS" \
   -f "$WORKDIR/agent-values.yaml"
 
 log "wait for agent"
-kubectl -n "$HOOP_NS" rollout status deploy/hoopagent --timeout=180s
+kubectl -n "$LYRIC_IAM_NS" rollout status deploy/hoopagent --timeout=180s
 
 # ---- 4. Verify ----
 log "verify"
-kubectl -n "$HOOP_NS" get pods
-kubectl -n "$HOOP_NS" logs deploy/hoopgateway -c hoopgateway --tail=200 \
+kubectl -n "$LYRIC_IAM_NS" get pods
+kubectl -n "$LYRIC_IAM_NS" logs deploy/hoopgateway -c hoopgateway --tail=200 \
   | grep -i 'spiffe' | tail -5 || true
-kubectl -n "$HOOP_NS" logs deploy/hoopagent  -c agent --tail=30 \
+kubectl -n "$LYRIC_IAM_NS" logs deploy/hoopagent  -c agent --tail=30 \
   | grep -E 'connecting to|connected' || true
-"$HOOP_BIN" admin get agents
+"$LYRIC_IAM_BIN" admin get agents
 
 cat <<EOM
 
 Done. Phase 2 is idempotent — re-run any time.
 
 Useful follow-ups:
-  kubectl -n ${HOOP_NS} logs deploy/hoopagent -c spiffe-helper -f
-  kubectl -n ${HOOP_NS} logs deploy/hoopagent -c agent -f
-  kubectl -n ${HOOP_NS} logs deploy/hoopgateway -c hoopgateway -f
+  kubectl -n ${LYRIC_IAM_NS} logs deploy/hoopagent -c spiffe-helper -f
+  kubectl -n ${LYRIC_IAM_NS} logs deploy/hoopagent -c agent -f
+  kubectl -n ${LYRIC_IAM_NS} logs deploy/hoopgateway -c hoopgateway -f
 
-  $HOOP_BIN admin get agents
-  $HOOP_BIN admin get spiffe-mappings
+  $LYRIC_IAM_BIN admin get agents
+  $LYRIC_IAM_BIN admin get spiffe-mappings
 
 EOM

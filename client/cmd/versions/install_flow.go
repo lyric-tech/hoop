@@ -11,8 +11,8 @@ import (
 	"github.com/hoophq/hoop/client/upgrade"
 )
 
-// installFlags holds the toggles shared by `hoop versions sync` and
-// `hoop versions upgrade`. Both commands download a target version,
+// installFlags holds the toggles shared by `lyric-iam versions sync` and
+// `lyric-iam versions upgrade`. Both commands download a target version,
 // switch the active symlink, and optionally walk the user through PATH
 // setup, so they share the same flag surface.
 var (
@@ -27,7 +27,7 @@ var (
 //
 // The function prints the same progress lines regardless of which
 // upstream produced the target, so the user-visible output is
-// consistent between `hoop versions sync` and `hoop versions upgrade`.
+// consistent between `lyric-iam versions sync` and `lyric-iam versions upgrade`.
 func installAndActivate(target string) error {
 	layout, err := upgrade.DefaultLayout()
 	if err != nil {
@@ -75,7 +75,7 @@ func installAndActivate(target string) error {
 		return err
 	}
 
-	fmt.Printf("Active hoop version is now %s\n", entry.Version)
+	fmt.Printf("Active lyric-iam version is now %s\n", entry.Version)
 	fmt.Printf("Installed at: %s\n", layout.VersionBinary(entry.Version))
 	fmt.Printf("Active CLI:   %s\n", layout.BinLink)
 
@@ -85,7 +85,7 @@ func installAndActivate(target string) error {
 	return nil
 }
 
-// runPathHint checks whether $HOME/.hoop/bin is on PATH; if not, it
+// runPathHint checks whether $HOME/.lyric-iam/bin is on PATH; if not, it
 // prompts the user (or, with -y, applies non-interactively) to append
 // the appropriate export line to their shell rc file. Returning an
 // error is intentionally non-fatal at the call site: a missing PATH
@@ -107,7 +107,7 @@ func runPathHint(layout upgrade.Layout) error {
 	if runtime.GOOS == "windows" {
 		fmt.Println()
 		fmt.Println(styles.KeywordHighlight("Heads up:") + " " + layout.BinDir + " is not in your PATH.")
-		fmt.Println("Add it to your user PATH so new terminals can find the active hoop CLI:")
+		fmt.Println("Add it to your user PATH so new terminals can find the active lyric-iam CLI:")
 		fmt.Printf("  PowerShell: [Environment]::SetEnvironmentVariable(\"Path\", [Environment]::GetEnvironmentVariable(\"Path\", \"User\") + \";%s\", \"User\")\n", layout.BinDir)
 		fmt.Println("Then open a new terminal. You can also add it via System Settings > Environment Variables.")
 		return nil
@@ -120,13 +120,13 @@ func runPathHint(layout upgrade.Layout) error {
 		fmt.Println()
 		fmt.Println(styles.KeywordHighlight("Heads up:") + " " + layout.BinDir + " is not in your PATH.")
 		fmt.Println("Add it manually to your shell profile, for example:")
-		fmt.Println(`  export PATH="$HOME/.hoop/bin:$PATH"`)
+		fmt.Println(`  export PATH="$HOME/.lyric-iam/bin:$PATH"`)
 		return nil
 	}
 
 	fmt.Println()
 	fmt.Println(styles.KeywordHighlight("Heads up:") + " " + layout.BinDir + " is not in your PATH.")
-	fmt.Printf("The following line will activate the symlinked hoop CLI for new shells:\n")
+	fmt.Printf("The following line will activate the symlinked lyric-iam CLI for new shells:\n")
 	fmt.Printf("  %s\n", line)
 
 	if !yesFlag {

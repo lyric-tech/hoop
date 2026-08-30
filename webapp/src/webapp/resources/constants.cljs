@@ -40,5 +40,5 @@
   set lives here rather than being spelled out in each of them.
 
   The two differ only in WHICH machine runs the command: \"stdio\" is the agent
-  host, \"client-stdio\" is the laptop of whoever runs `hoop connect`."
+  host, \"client-stdio\" is the laptop of whoever runs `lyric-iam connect`."
   #{"stdio" "client-stdio"})

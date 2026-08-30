@@ -42,9 +42,9 @@ var getLongDesc = `Display one or many resources. Available ones:
 `
 
 var getExamplesDesc = `
-hoop admin get agents
-hoop admin get connections -o json
-hoop admin get plugins`
+lyric-iam admin get agents
+lyric-iam admin get connections -o json
+lyric-iam admin get plugins`
 
 var getCmd = &cobra.Command{
 	Use:     "get RESOURCE",

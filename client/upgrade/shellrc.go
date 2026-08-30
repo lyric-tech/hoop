@@ -63,23 +63,23 @@ func RCFileFor(kind ShellKind, home string) string {
 }
 
 // PathExportLine returns the shell-specific line that prepends
-// $HOME/.hoop/bin to PATH. The fish line uses fish_add_path which is
+// $HOME/.lyric-iam/bin to PATH. The fish line uses fish_add_path which is
 // idempotent within fish itself.
 func PathExportLine(kind ShellKind) string {
 	switch kind {
 	case ShellFish:
-		return `fish_add_path -p "$HOME/.hoop/bin"`
+		return `fish_add_path -p "$HOME/.lyric-iam/bin"`
 	case ShellZsh, ShellBash:
-		return `export PATH="$HOME/.hoop/bin:$PATH"`
+		return `export PATH="$HOME/.lyric-iam/bin:$PATH"`
 	default:
 		return ""
 	}
 }
 
 // IsPathConfigured reports whether the given PATH string already contains
-// the hoop bin directory (resolved against home).
+// the lyric-iam bin directory (resolved against home).
 func IsPathConfigured(path, home string) bool {
-	hoopBin := filepath.Clean(filepath.Join(home, ".hoop", "bin"))
+	hoopBin := filepath.Clean(filepath.Join(home, ".lyric-iam", "bin"))
 	for _, entry := range filepath.SplitList(path) {
 		entry = strings.ReplaceAll(entry, "$HOME", home)
 		entry = expandTilde(entry, home)
@@ -127,7 +127,7 @@ func AppendIfMissing(rcFile, line string) (bool, error) {
 	}
 	defer f.Close()
 
-	block := "\n# Added by `hoop versions` to expose the active hoop CLI version\n" + line + "\n"
+	block := "\n# Added by `lyric-iam versions` to expose the active lyric-iam CLI version\n" + line + "\n"
 	if _, err := f.WriteString(block); err != nil {
 		return false, fmt.Errorf("failed writing to %s: %w", rcFile, err)
 	}

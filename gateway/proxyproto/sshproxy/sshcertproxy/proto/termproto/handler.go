@@ -196,7 +196,7 @@ func (h *Handler) startPTYForwarding(clientCh ssh.Channel, clientRequests <-chan
 	stdinW := pb.NewStreamWriter(h.grpcClient, pbagent.TerminalWriteStdin, spec)
 
 	// Send an initial enter keystroke to trigger the shell prompt, mirroring
-	// what the hoop CLI terminal proxy does (client/proxy/terminal.go).
+	// what the lyric-iam CLI terminal proxy does (client/proxy/terminal.go).
 	_, _ = stdinW.Write([]byte{'\n'})
 
 	h.channelWg.Go(func() {
@@ -309,7 +309,7 @@ func (h *Handler) onSessionClose(pkt *pb.Packet) {
 // AcceptAndServe is not applicable to command-line terminal connections;
 // session channels are handled by ServeSession. This satisfies ChannelHandler.
 func (h *Handler) AcceptAndServe(newCh ssh.NewChannel, _ uint16) error {
-	_ = newCh.Reject(ssh.Prohibited, "hoop: direct-tcpip not supported on command-line connections")
+	_ = newCh.Reject(ssh.Prohibited, "lyric-iam: direct-tcpip not supported on command-line connections")
 	return fmt.Errorf("termproto.Handler does not support direct-tcpip channels")
 }
 

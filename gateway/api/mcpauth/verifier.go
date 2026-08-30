@@ -74,7 +74,7 @@ func loadConfig() (effectiveConfig, bool) {
 }
 
 // authenticateOAuth21 validates a JWT bearer per the MCP OAuth 2.1 Resource
-// Server profile, materializes the Hoop user context (creating the user on
+// Server profile, materializes the Lyric IAM user context (creating the user on
 // first sight), and stores it on the gin.Context so downstream handlers see
 // the same shape as a legacy AuthMiddleware request.
 func authenticateOAuth21(c *gin.Context, bearer string, cfg effectiveConfig) error {
@@ -147,7 +147,7 @@ func extractGroups(claims map[string]any, claimName string) []string {
 	return nil
 }
 
-// syncMcpUser materializes a Hoop user record for the given OAuth 2.1 subject.
+// syncMcpUser materializes a Lyric IAM user record for the given OAuth 2.1 subject.
 // It mirrors the single-tenant OIDC login flow (gateway/api/login/oidc) so an
 // MCP-only user shows up in audit, review, slack, and access-control plugins
 // identical to a web-UI user with the same subject.
@@ -250,7 +250,7 @@ func refreshExistingUser(ctx *models.Context, uinfo idptypes.ProviderUserInfo) e
 }
 
 // mergeAdmin preserves a pre-existing admin grant so an MCP login from an IdP
-// that does not emit the admin group cannot accidentally demote a Hoop admin.
+// that does not emit the admin group cannot accidentally demote a Lyric IAM admin.
 func mergeAdmin(groups []string, ctx *models.Context) []string {
 	deduped := dedupe(groups)
 	if ctx.IsAdmin() && !slices.Contains(deduped, types.GroupAdmin) {

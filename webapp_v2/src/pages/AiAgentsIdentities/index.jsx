@@ -89,7 +89,7 @@ export default function AiAgentsIdentities() {
       {agents.length === 0 ? (
         <EmptyState
           title="No AI agents yet"
-          description="Create an AI Agent identity to give programmatic, auditable access to Hoop from your AI tools."
+          description="Create an AI Agent identity to give programmatic, auditable access to Lyric IAM from your AI tools."
           action={{ label: 'Create new AI Agent', onClick: () => navigate(NEW_PATH) }}
         />
       ) : (

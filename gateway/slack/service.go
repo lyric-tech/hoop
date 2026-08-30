@@ -197,7 +197,7 @@ func escapeSlackText(s string) string {
 var slackTextEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
 
 func (s *SlackService) SendMessageReview(msg *MessageReviewRequest) (result string) {
-	title := "Hoop Review"
+	title := "Lyric IAM Review"
 
 	header := slack.NewHeaderBlock(&slack.TextBlockObject{
 		Type: slack.PlainTextType,

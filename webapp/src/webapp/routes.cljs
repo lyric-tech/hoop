@@ -10,7 +10,7 @@
 (defmulti panels identity)
 (def base-route
   "In production, the webapp base prefix path will replaced in runtime replacing the transpiled files."
-  (if (= config/release-type "hoop-ui")
+  (if (= config/release-type "lyric-iam-ui")
     "/hardcoded-runtime-prefix"
     ""))
 
@@ -53,7 +53,7 @@
      ;; had no caller outside the deleted CLJS panels and is gone.
      "/guardrails" [["" :guardrails]
                     ["/new" :create-guardrail]]
-     "/hoop-app" :hoop-app
+     "/hoop-app" :lyric-iam-app
      "/idplogin" :idplogin-hoop
      "/integrations" [["/aws-connect" :integrations-aws-connect]
                       ["/aws-connect/setup" :integrations-aws-connect-setup]

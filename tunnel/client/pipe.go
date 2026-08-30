@@ -14,7 +14,7 @@
 //	DialAndPipe then:
 //	  1. Opens a NEW bidirectional gRPC stream to the gateway with the
 //	     "connection-name" metadata header set. The gateway's auth +
-//	     plugin pipeline treats this stream as a plain `hoop connect`
+//	     plugin pipeline treats this stream as a plain `lyric-iam connect`
 //	     session.
 //	  2. Sends pbagent.SessionOpen and waits for pbclient.SessionOpenOK.
 //	  3. For TCP-style connections, sends the initial
@@ -63,10 +63,10 @@ const connectionIDOnPipe = "1"
 type PipeOptions struct {
 	// GatewayConfig is the gRPC client config for the gateway. The
 	// caller must populate ServerAddress, Token, and TLS fields exactly
-	// as the `hoop connect` CLI would.
+	// as the `lyric-iam connect` CLI would.
 	GatewayConfig grpc.ClientConfig
 
-	// ConnectionName is the hoop connection (e.g. "pg-prod") that the
+	// ConnectionName is the lyric-iam connection (e.g. "pg-prod") that the
 	// gateway should route this stream to. Sent both as a gRPC metadata
 	// header and as the verb spec on SessionOpen.
 	ConnectionName string
@@ -206,7 +206,7 @@ type packetProfile struct {
 	isHTTPProxy bool
 }
 
-// profileFor returns the packet profile for a hoop connection type, or
+// profileFor returns the packet profile for a lyric-iam connection type, or
 // ok=false when the type is not tunnelable.
 func profileFor(connType string) (packetProfile, bool) {
 	switch pb.ConnectionType(connType) {

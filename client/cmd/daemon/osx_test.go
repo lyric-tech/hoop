@@ -14,7 +14,7 @@ func TestStopDarwinAgent_CallsBootout(t *testing.T) {
 	execRunner = mr
 	t.Cleanup(func() { execRunner = orig })
 
-	if err := stopDarwin("hoop-agent"); err != nil {
+	if err := stopDarwin("lyric-iam-agent"); err != nil {
 		t.Fatalf("stopDarwin error: %v", err)
 	}
 
@@ -23,7 +23,7 @@ func TestStopDarwinAgent_CallsBootout(t *testing.T) {
 	}
 	guiTarget := currentGuiTarget()
 	got := mr.callsRun[0]
-	want := fmt.Sprintf("launchctl bootout %s/hoop-agent", guiTarget)
+	want := fmt.Sprintf("launchctl bootout %s/lyric-iam-agent", guiTarget)
 	if got != string(want) {
 		t.Fatalf("bootout call = %v; want %v", got, want)
 	}
@@ -86,8 +86,8 @@ func TestLogsDarwinAgent_TailsFixedPathsAndEnsuresFiles(t *testing.T) {
 	restore, fakeHome := withTempHome(t)
 	defer restore()
 
-	stdOut := filepath.Join(fakeHome, "Library", "Logs", "hoop-agent.out.log")
-	stdErr := filepath.Join(fakeHome, "Library", "Logs", "hoop-agent.err.log")
+	stdOut := filepath.Join(fakeHome, "Library", "Logs", "lyric-iam-agent.out.log")
+	stdErr := filepath.Join(fakeHome, "Library", "Logs", "lyric-iam-agent.err.log")
 
 	mr := &mockRunner{}
 	orig := execRunner
@@ -123,7 +123,7 @@ func TestRemoveDarwinAgent_StopsAndRemovesPlist(t *testing.T) {
 	restore, _ := withTempHome(t)
 	defer restore()
 
-	opts := Options{ServiceName: "hoop-agent"}
+	opts := Options{ServiceName: "lyric-iam-agent"}
 	plistPath, err := userLaunchAgentPath(opts)
 	if err != nil {
 		t.Fatalf("userLaunchAgentPath: %v", err)
@@ -140,7 +140,7 @@ func TestRemoveDarwinAgent_StopsAndRemovesPlist(t *testing.T) {
 	execRunner = mr
 	t.Cleanup(func() { execRunner = orig })
 
-	if err := removeDarwin("hoop-agent"); err != nil {
+	if err := removeDarwin("lyric-iam-agent"); err != nil {
 		t.Fatalf("removeDarwin error: %v", err)
 	}
 

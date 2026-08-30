@@ -32,14 +32,14 @@ func init() {
 
 var MainCmd = &cobra.Command{
 	Use:          "config",
-	Short:        "Manage the hoop configuration file",
+	Short:        "Manage the lyric-iam configuration file",
 	Hidden:       false,
 	SilenceUsage: false,
 }
 
 var createCmd = &cobra.Command{
 	Use:          "create",
-	Short:        "Creates or override a client hoop configuration file",
+	Short:        "Creates or override a client lyric-iam configuration file",
 	SilenceUsage: false,
 	Run: func(cmd *cobra.Command, args []string) {
 		if grpcURLFlag != "" {
@@ -60,7 +60,7 @@ var createCmd = &cobra.Command{
 			}
 			tlsCA = string(data)
 		}
-		token := os.Getenv("HOOP_TOKEN")
+		token := os.Getenv("LYRIC_IAM_TOKEN")
 		if apiKeyFlag != "" {
 			if !strings.HasPrefix(apiKeyFlag, "hpk_") {
 				styles.PrintErrorAndExit("--api-key value must have 'hpk_' prefix")
@@ -114,7 +114,7 @@ var viewCmd = &cobra.Command{
 
 var clearCmd = &cobra.Command{
 	Use:          "clear",
-	Short:        "Delete the client hoop configuration file if exists",
+	Short:        "Delete the client lyric-iam configuration file if exists",
 	SilenceUsage: false,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := clientconfig.Remove(); err != nil {

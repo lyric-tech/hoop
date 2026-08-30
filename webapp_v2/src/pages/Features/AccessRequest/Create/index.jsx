@@ -114,7 +114,7 @@ function RuleFormFields({ rule, isEdit }) {
 
   const isFreeLicense = useUserStore((s) => s.isFreeLicense)
 
-  // Rules that Hoop manages as part of a protection profile: the API accepts
+  // Rules that Lyric IAM manages as part of a protection profile: the API accepts
   // changes to approval settings and group lists only, and refuses to delete
   // them, so everything else is locked here.
   const managed = rule?.managed_by != null
@@ -402,7 +402,7 @@ function RuleFormFields({ rule, isEdit }) {
                 <AccessTypeCard
                   icon={CodeXml}
                   title="Command"
-                  description="For execution-based within Web Terminal or hoop exec command line"
+                  description="For execution-based within Web Terminal or lyric-iam exec command line"
                   checked={accessTypeIncludes(accessType, ACCESS_TYPE.COMMAND)}
                   disabled={managed}
                   onToggle={() => requestAccessTypeToggle(ACCESS_TYPE.COMMAND)}

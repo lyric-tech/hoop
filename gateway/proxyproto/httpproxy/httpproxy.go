@@ -323,7 +323,7 @@ func (s *HttpProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// The correlation ID is session-scoped: it is only honored on the request that
-	// creates the long-lived hoop session for this credential. Later requests reusing
+	// creates the long-lived lyric-iam session for this credential. Later requests reusing
 	// the session will have their X-Hoop-Correlation-Id header ignored.
 	correlationID := r.Header.Get("X-Hoop-Correlation-Id")
 	var correlationIDPtr *string
@@ -708,7 +708,7 @@ func (sess *httpProxySession) handleRequest(w http.ResponseWriter, r *http.Reque
 	}()
 
 	// Set server header for identification purposes
-	w.Header().Set("server", "httpproxy-hoopgateway")
+	w.Header().Set("server", "httpproxy-lyric-iam-gateway")
 	// Wait for send with timeout
 	select {
 	case err := <-sendErr:

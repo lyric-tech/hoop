@@ -15,7 +15,7 @@ var (
 
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start one of the Hoop component",
+	Short: "Start one of the Lyric IAM component",
 }
 
 var startAgentCmd = &cobra.Command{
@@ -56,10 +56,10 @@ var startAgentCmd = &cobra.Command{
 		//TODO for now we will start the rust agent if hoop_rs binary is found
 		// if something goes wrong we will fallback we will skill but alwys run the go agent
 		// check if gateway env is set
-		if os.Getenv("HOOP_GATEWAY_URL") != "" {
+		if os.Getenv("LYRIC_IAM_GATEWAY_URL") != "" {
 			RunAgentrs()
 		} else {
-			log.Info("HOOP_GATEWAY_URL not set, skipping hoop_rs agent startup")
+			log.Info("LYRIC_IAM_GATEWAY_URL not set, skipping hoop_rs agent startup")
 		}
 		agent.Run()
 	},

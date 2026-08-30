@@ -25,7 +25,7 @@ import (
 //
 // tells the resolver that every query for a name ending in `.hoop` goes
 // to fd3f:61df:3c04::1:53. Every other query keeps using the system's
-// normal DNS path, exactly like the `~hoop` routing-only domain we set on
+// normal DNS path, exactly like the `~lyric-iam` routing-only domain we set on
 // Linux.
 //
 // Why this maps onto the Linux-shaped Configurer interface

@@ -156,7 +156,7 @@ func Put(c *gin.Context) {
 		return
 	case nil:
 		if existing.ManagedBy != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Hoop and cannot be modified directly"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Lyric IAM and cannot be modified directly"})
 			return
 		}
 		if featureflag.IsEnabled(ctx.GetOrgID(), services.RulepackFlagName) && existing.RulepackID.Valid {
@@ -307,7 +307,7 @@ func Delete(c *gin.Context) {
 		return
 	case nil:
 		if existing.ManagedBy != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Hoop and cannot be deleted directly"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "this rule is managed by Lyric IAM and cannot be deleted directly"})
 			return
 		}
 		if featureflag.IsEnabled(ctx.GetOrgID(), services.RulepackFlagName) && existing.RulepackID.Valid {

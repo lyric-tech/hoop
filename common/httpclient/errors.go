@@ -26,9 +26,9 @@ func HumanizeNetError(apiURL string, err error) error {
 	switch {
 	case errors.Is(err, syscall.ECONNREFUSED):
 		return fmt.Errorf(
-			"cannot reach the hoop gateway at %s — the host is up but nothing is listening on that port.\n"+
+			"cannot reach the lyric-iam gateway at %s — the host is up but nothing is listening on that port.\n"+
 				"  - is the gateway process running?\n"+
-				"  - does `api_url` in `hoop config view` point at the right host:port?\n"+
+				"  - does `api_url` in `lyric-iam config view` point at the right host:port?\n"+
 				"  - try `127.0.0.1` instead of `localhost` if the gateway only binds IPv4",
 			apiURL,
 		)
@@ -36,25 +36,25 @@ func HumanizeNetError(apiURL string, err error) error {
 		return fmt.Errorf(
 			"cannot resolve the gateway host in %s — DNS lookup failed.\n"+
 				"  - check your network / DNS settings\n"+
-				"  - re-point with: hoop config create --api-url <url>",
+				"  - re-point with: lyric-iam config create --api-url <url>",
 			apiURL,
 		)
 	case isTimeout(err):
 		return fmt.Errorf(
-			"timed out reaching the hoop gateway at %s — the gateway is unreachable or too slow to respond.\n"+
+			"timed out reaching the lyric-iam gateway at %s — the gateway is unreachable or too slow to respond.\n"+
 				"  - check your network connectivity\n"+
 				"  - verify the gateway is healthy",
 			apiURL,
 		)
 	case isTLSError(err):
 		return fmt.Errorf(
-			"TLS handshake failed when reaching the hoop gateway at %s.\n"+
-				"  - if you trust this gateway, pass --skip-tls-verify or set HOOP_TLS_SKIP_VERIFY=true\n"+
-				"  - or provide a CA bundle with HOOP_TLSCA",
+			"TLS handshake failed when reaching the lyric-iam gateway at %s.\n"+
+				"  - if you trust this gateway, pass --skip-tls-verify or set LYRIC_IAM_TLS_SKIP_VERIFY=true\n"+
+				"  - or provide a CA bundle with LYRIC_IAM_TLSCA",
 			apiURL,
 		)
 	default:
-		return fmt.Errorf("cannot reach the hoop gateway at %s: %w", apiURL, err)
+		return fmt.Errorf("cannot reach the lyric-iam gateway at %s: %w", apiURL, err)
 	}
 }
 

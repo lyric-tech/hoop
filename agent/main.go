@@ -137,7 +137,7 @@ func runAgentController(conf *agentconfig.Config, cc grpc.ClientConfig, req *pb.
 			default:
 			}
 			if err := conf.Refresh(); err != nil {
-				log.With("version", vi.Version).Warnf("failed refreshing HOOP_SPIFFE_KEY_FILE, using stale token: %v", err)
+				log.With("version", vi.Version).Warnf("failed refreshing LYRIC_IAM_SPIFFE_KEY_FILE, using stale token: %v", err)
 			}
 			cc.Token = conf.Token
 			resp, err := grpc.PreConnectRPC(cc, req)
@@ -210,7 +210,7 @@ func runDefaultMode(config *agentconfig.Config) error {
 		// current value; the gateway will reject if it's too stale.
 		if err := config.Refresh(); err != nil {
 			log.With("version", vi.Version, "backoff", v.String()).
-				Warnf("failed refreshing HOOP_SPIFFE_KEY_FILE, using stale token: %v", err)
+				Warnf("failed refreshing LYRIC_IAM_SPIFFE_KEY_FILE, using stale token: %v", err)
 		}
 		clientConfig.Token = config.Token
 		log.With("version", vi.Version, "backoff", v.String()).

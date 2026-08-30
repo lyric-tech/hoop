@@ -59,9 +59,12 @@
     exit 1
   fi
   tar --extract --file hoop_\${VERSION}.tar.gz -C /usr/local/bin && rm -f hoop_\${VERSION}.tar.gz
+  # The release tarball still carries the binary under its old name; install
+  # it under the CLI's own name.
+  mv -f /usr/local/bin/hoop /usr/local/bin/lyric-iam
 SCRIPT
   # test the CLI
-  LOCATION=/usr/local/bin/hoop
-  echo "hoop installed to $LOCATION"
-  /usr/local/bin/hoop version
+  LOCATION=/usr/local/bin/lyric-iam
+  echo "lyric-iam installed to $LOCATION"
+  /usr/local/bin/lyric-iam version
 }

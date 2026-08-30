@@ -16,6 +16,6 @@
                  :class "w-full"}]]
          [:div {:class "px-large py-large text-center"}
           [:div {:class "text-gray-700 text-sm font-bold"}
-           "You have registered successfully your user with slack hoop.dev app."]
+           "You have registered successfully your user with slack Lyric IAM app."]
           [:div {:class "text-gray-500 text-xs mb-large"}
            "Now enjoy your super powers on Slack 🚀"]]]))))

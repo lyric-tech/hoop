@@ -174,7 +174,7 @@ func GetOrgProtectionProfile(c *gin.Context) {
 // UpdateOrgProtectionProfile
 //
 //	@Summary		Update Organization Protection Profile
-//	@Description	Select the organization's default protection profile. The backend materializes the profile's managed rules and attribute and tags every connection. Passing a null profile switches to manual configuration and deletes all Hoop-managed protection rules.
+//	@Description	Select the organization's default protection profile. The backend materializes the profile's managed rules and attribute and tags every connection. Passing a null profile switches to manual configuration and deletes all Lyric IAM-managed protection rules.
 //	@Tags			Server Management
 //	@Accept			json
 //	@Produce		json
@@ -196,7 +196,7 @@ func UpdateOrgProtectionProfile(c *gin.Context) {
 	if req.Profile != nil &&
 		services.IsEnterpriseProtectionProfile(*req.Profile) &&
 		getLicenseType(ctx) != license.EnterpriseType {
-		c.JSON(http.StatusForbidden, gin.H{"message": "this protection profile requires an enterprise license, contact our support at https://help.hoop.dev"})
+		c.JSON(http.StatusForbidden, gin.H{"message": "this protection profile requires an enterprise license, contact our support at https://docs.lyric.tech/access"})
 		return
 	}
 	orgID, err := uuid.Parse(ctx.OrgID)

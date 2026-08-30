@@ -59,7 +59,7 @@ const (
 	mcpStdioQueueSize = 64
 )
 
-// MCPStdio owns the MCP server child processes for one hoop session.
+// MCPStdio owns the MCP server child processes for one lyric-iam session.
 //
 // One child per backend id: a user who restarts their MCP client gets a fresh
 // MCP session and therefore a fresh child, while the old one is reaped by the
@@ -95,7 +95,7 @@ type mcpBackend struct {
 	// refused. Without that, a straggler spawns a REPLACEMENT MCP server on
 	// the user's machine whose reaping packet has already been spent, so it
 	// keeps running — holding the connection's credentials — until the whole
-	// hoop session ends.
+	// lyric-iam session ends.
 	reaped bool
 }
 
@@ -361,7 +361,7 @@ func trimTrailingNewline(b []byte) []byte {
 }
 
 // PacketCloseClient reaps the child named in the packet. Sent by the agent
-// when its backend shuts down while the hoop session stays open.
+// when its backend shuts down while the lyric-iam session stays open.
 func (m *MCPStdio) PacketCloseClient(pkt *pb.Packet) {
 	m.reapBackend(string(pkt.Spec[pb.SpecMCPStdioBackendKey]))
 }

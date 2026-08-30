@@ -23,15 +23,15 @@ function ctrl_c() {
 
 LIBHOOP="${LIBHOOP:-_libhoop}"
 
-mkdir -p $HOME/.hoop/dev
+mkdir -p $HOME/.lyric-iam/dev
 
 # remove symbolic link
 rm libhoop || true 2>/dev/null
 if [[ $LIBHOOP == "git@"* ]]; then
-  rm -rf $HOME/.hoop/dev/libhoop
-  git clone $LIBHOOP $HOME/.hoop/dev/libhoop
-  rm -rf $HOME/.hoop/dev/libhoop/.git
-  ln -s $HOME/.hoop/dev/libhoop libhoop
+  rm -rf $HOME/.lyric-iam/dev/libhoop
+  git clone $LIBHOOP $HOME/.lyric-iam/dev/libhoop
+  rm -rf $HOME/.lyric-iam/dev/libhoop/.git
+  ln -s $HOME/.lyric-iam/dev/libhoop libhoop
 else
   ln -s $LIBHOOP libhoop
 fi
@@ -49,14 +49,14 @@ mkdir -p ./dist/dev/bin
 cp ./scripts/dev/entrypoint.sh ./dist/dev/bin/entrypoint.sh
 
 # Build Rust agent for development
-HOOP_RS_BUILD="${HOOP_RS_BUILD:-1}"
-if [[ $HOOP_RS_BUILD == "1" ]]; then
+LYRIC_IAM_RS_BUILD="${LYRIC_IAM_RS_BUILD:-1}"
+if [[ $LYRIC_IAM_RS_BUILD == "1" ]]; then
   echo "Building Rust agent..."
   echo ""
   echo "You need to have Rust installed to build the Rust agent."
   echo "You need to have Cross installed to build the Rust agent for multiple architectures."
   make build-dev-rust
-  cp $HOME/.hoop/bin/hoop_rs ./dist/dev/bin/hoop_rs
+  cp $HOME/.lyric-iam/bin/lyric-iam_rs ./dist/dev/bin/hoop_rs
 fi
 
 
@@ -74,7 +74,7 @@ fi
 #
 # Read-only because the agent only reads it, and alcatraz checks every file
 # against the manifest's sha256 on load.
-ALCATRAZ_MODELS_DIR="${ALCATRAZ_MODELS_DIR:-$HOME/.hoop/dev/alcatraz-models}"
+ALCATRAZ_MODELS_DIR="${ALCATRAZ_MODELS_DIR:-$HOME/.lyric-iam/dev/alcatraz-models}"
 if [[ -z ${ALCATRAZ_MODELS_DOWNLOAD:-} ]]; then
   if grep -qE '^[[:space:]]*DLP_PROVIDER=alcatraz[[:space:]]*$' .env; then
     ALCATRAZ_MODELS_DOWNLOAD=1

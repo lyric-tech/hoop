@@ -61,37 +61,37 @@ var sessionsListCmd = &cobra.Command{
 	Short: "List sessions",
 	Long:  "List sessions you have access to, with optional filters for connection, type, review status, and date range.",
 	Example: `  # List sessions (default fields: id, user, role, type, start_date, status)
-  hoop sessions list
+  lyric-iam sessions list
 
   # Show only specific fields
-  hoop sessions list --fields id,user,role,type
+  lyric-iam sessions list --fields id,user,role,type
 
   # Filter by role
-  hoop sessions list --role my-db
+  lyric-iam sessions list --role my-db
 
   # Pretty-printed JSON (human readable)
-  hoop sessions list --json
+  lyric-iam sessions list --json
 
   # Raw compact JSON (for scripting)
-  hoop sessions list --quiet
+  lyric-iam sessions list --quiet
 
   # Filter by type and date range (RFC3339)
-  hoop sessions list --type postgres --start-date 2024-01-01T00:00:00Z --end-date 2024-01-31T23:59:59Z
+  lyric-iam sessions list --type postgres --start-date 2024-01-01T00:00:00Z --end-date 2024-01-31T23:59:59Z
 
   # Paginate results
-  hoop sessions list --limit 20 --offset 40
+  lyric-iam sessions list --limit 20 --offset 40
 
   # Find sessions for a specific role and pipe to jq
-  hoop sessions list --role prod-db --quiet | jq '.data[].id'
+  lyric-iam sessions list --role prod-db --quiet | jq '.data[].id'
 
   # List sessions with a review pending approval
-  hoop sessions list --review-status pending
+  lyric-iam sessions list --review-status pending
 
   # Get the precise total instead of the default capped one
-  hoop sessions list --count exact
+  lyric-iam sessions list --count exact
 
   # Skip the count entirely — fastest option when you only want the rows
-  hoop sessions list --count none --quiet | jq '.data[].id'`,
+  lyric-iam sessions list --count none --quiet | jq '.data[].id'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runSessions()
 	},
@@ -309,11 +309,11 @@ func displaySessions(resp *sessionsResponse) {
 	}
 
 	fmt.Fprintln(os.Stderr, "\nTry also:")
-	fmt.Fprintln(os.Stderr, "  hoop sessions get <id>                               # inspect a specific session")
-	fmt.Fprintln(os.Stderr, "  hoop sessions get <id> --json                        # full detail as JSON")
-	fmt.Fprintln(os.Stderr, "  hoop sessions list --role <name>                     # filter by role")
-	fmt.Fprintln(os.Stderr, "  hoop sessions list --review-status pending           # sessions pending approval")
-	fmt.Fprintln(os.Stderr, "  hoop sessions list --quiet | jq '.data[].id'         # pipe IDs to jq")
+	fmt.Fprintln(os.Stderr, "  lyric-iam sessions get <id>                               # inspect a specific session")
+	fmt.Fprintln(os.Stderr, "  lyric-iam sessions get <id> --json                        # full detail as JSON")
+	fmt.Fprintln(os.Stderr, "  lyric-iam sessions list --role <name>                     # filter by role")
+	fmt.Fprintln(os.Stderr, "  lyric-iam sessions list --review-status pending           # sessions pending approval")
+	fmt.Fprintln(os.Stderr, "  lyric-iam sessions list --quiet | jq '.data[].id'         # pipe IDs to jq")
 }
 
 // formatSessionTotal renders the total for the pagination hint. A capped total

@@ -68,10 +68,10 @@ func TestEmptyResultMessage(t *testing.T) {
 }
 
 func TestSessionDatabaseFromScript(t *testing.T) {
-	// Webapp postgres prefix: \set QUIET on\n\c hoop\n\set QUIET off\n<query>
-	got := SessionDatabaseFromScript("postgres", "\\set QUIET on\n\\c hoop\n\\set QUIET off\nSELECT * FROM private.sessions;")
-	if got != "hoop" {
-		t.Errorf("postgres extraction = %q, want hoop", got)
+	// Webapp postgres prefix: \set QUIET on\n\c lyric-iam\n\set QUIET off\n<query>
+	got := SessionDatabaseFromScript("postgres", "\\set QUIET on\n\\c lyric-iam\n\\set QUIET off\nSELECT * FROM private.sessions;")
+	if got != "lyric-iam" {
+		t.Errorf("postgres extraction = %q, want lyric-iam", got)
 	}
 	// Webapp mysql prefix: use shop;\n<query>
 	if got := SessionDatabaseFromScript("mysql", "use shop;\nSELECT 1;"); got != "shop" {
@@ -88,8 +88,8 @@ func TestSessionDatabaseFromScript(t *testing.T) {
 }
 
 func TestPrependDatabaseDirective(t *testing.T) {
-	out := prependDatabaseDirective("postgres", "hoop", "EXPLAIN SELECT 1;")
-	if !strings.HasPrefix(out, "\\set QUIET on\n\\c hoop\n\\set QUIET off\n") {
+	out := prependDatabaseDirective("postgres", "lyric-iam", "EXPLAIN SELECT 1;")
+	if !strings.HasPrefix(out, "\\set QUIET on\n\\c lyric-iam\n\\set QUIET off\n") {
 		t.Errorf("postgres directive missing:\n%s", out)
 	}
 	if out := prependDatabaseDirective("mysql", "shop", "EXPLAIN SELECT 1;"); !strings.HasPrefix(out, "use shop;\n") {

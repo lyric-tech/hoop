@@ -74,7 +74,7 @@
                (when is-onboarding?
                  [:figure
                   [:img {:src "/images/hoop-branding/PNG/hoop-symbol_black@4x.png"
-                         :alt "Hoop Logo"
+                         :alt "Lyric IAM Logo"
                          :class "w-16"}]])
                [:> Box
                 [:> Heading {:as "h2" :size "6" :weight "bold" :class "mb-3 text-[--gray-12]"}

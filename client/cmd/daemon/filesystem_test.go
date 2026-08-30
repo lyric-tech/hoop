@@ -63,7 +63,7 @@ func TestEnvFileExist(t *testing.T) {
 		err = os.MkdirAll(configDir, 0755)
 		require.NoError(t, err)
 
-		envFile := filepath.Join(configDir, "hoop.conf")
+		envFile := filepath.Join(configDir, "lyric-iam.conf")
 		err = os.WriteFile(envFile, []byte("test=value"), 0644)
 		require.NoError(t, err)
 
@@ -199,7 +199,7 @@ func TestCreateEnvFileIfNotExists(t *testing.T) {
 		path, err := createEnvFileIfNotExists(env)
 		require.NoError(t, err)
 
-		expectedPath := filepath.Join(tmpHome, ".config", "hoop.conf")
+		expectedPath := filepath.Join(tmpHome, ".config", "lyric-iam.conf")
 		assert.Equal(t, expectedPath, path)
 
 		content, err := os.ReadFile(path)
@@ -305,8 +305,8 @@ func TestConfigEnvironmentVariables(t *testing.T) {
 		err = os.MkdirAll(configDir, 0755)
 		require.NoError(t, err)
 
-		envFile := filepath.Join(configDir, "hoop.conf")
-		envContent := `HOOP_KEY=test_token
+		envFile := filepath.Join(configDir, "lyric-iam.conf")
+		envContent := `LYRIC_IAM_KEY=test_token
 CUSTOM_VAR=custom_value
 `
 		err = os.WriteFile(envFile, []byte(envContent), 0644)
@@ -316,15 +316,15 @@ CUSTOM_VAR=custom_value
 		os.Setenv("HOME", tmpHome)
 		defer os.Setenv("HOME", originalHome)
 
-		originalHoopKey := os.Getenv("HOOP_KEY")
-		os.Setenv("HOOP_KEY", "https://test-agent:test-secret@example.com:443?mode=standard")
-		defer os.Setenv("HOOP_KEY", originalHoopKey)
+		originalHoopKey := os.Getenv("LYRIC_IAM_KEY")
+		os.Setenv("LYRIC_IAM_KEY", "https://test-agent:test-secret@example.com:443?mode=standard")
+		defer os.Setenv("LYRIC_IAM_KEY", originalHoopKey)
 
 		env, err := configEnvironmentVariables()
 		require.NoError(t, err)
 
 		expected := map[string]string{
-			"HOOP_KEY":   "test_token",
+			"LYRIC_IAM_KEY":   "test_token",
 			"CUSTOM_VAR": "custom_value",
 		}
 
@@ -340,9 +340,9 @@ CUSTOM_VAR=custom_value
 		os.Setenv("HOME", tmpHome)
 		defer os.Setenv("HOME", originalHome)
 
-		originalHoopKey := os.Getenv("HOOP_KEY")
-		os.Setenv("HOOP_KEY", "https://test-agent:test-secret@example.com:443?mode=standard")
-		defer os.Setenv("HOOP_KEY", originalHoopKey)
+		originalHoopKey := os.Getenv("LYRIC_IAM_KEY")
+		os.Setenv("LYRIC_IAM_KEY", "https://test-agent:test-secret@example.com:443?mode=standard")
+		defer os.Setenv("LYRIC_IAM_KEY", originalHoopKey)
 
 		// Mock os.Getenv for PATH
 		originalPath := os.Getenv("PATH")
@@ -353,13 +353,13 @@ CUSTOM_VAR=custom_value
 		require.NoError(t, err)
 
 		expected := map[string]string{
-			"HOOP_KEY": "https://test-agent:test-secret@example.com:443?mode=standard",
+			"LYRIC_IAM_KEY": "https://test-agent:test-secret@example.com:443?mode=standard",
 			"PATH":     "/usr/bin:/bin",
 		}
 
 		assert.Equal(t, expected, env)
 
-		envFile := filepath.Join(tmpHome, ".config", "hoop.conf")
+		envFile := filepath.Join(tmpHome, ".config", "lyric-iam.conf")
 		_, err = os.Stat(envFile)
 		require.NoError(t, err)
 	})
@@ -375,10 +375,10 @@ CUSTOM_VAR=custom_value
 		os.Setenv("HOME", tmpHome)
 		defer os.Setenv("HOME", originalHome)
 
-		// Remove HOOP_KEY to make agentconfig.Load fail
-		originalHoopKey := os.Getenv("HOOP_KEY")
-		os.Unsetenv("HOOP_KEY")
-		defer os.Setenv("HOOP_KEY", originalHoopKey)
+		// Remove LYRIC_IAM_KEY to make agentconfig.Load fail
+		originalHoopKey := os.Getenv("LYRIC_IAM_KEY")
+		os.Unsetenv("LYRIC_IAM_KEY")
+		defer os.Setenv("LYRIC_IAM_KEY", originalHoopKey)
 
 		env, err := configEnvironmentVariables()
 		assert.Error(t, err)
@@ -394,9 +394,9 @@ CUSTOM_VAR=custom_value
 		os.Setenv("HOME", tmpHome)
 		defer os.Setenv("HOME", originalHome)
 
-		originalHoopKey := os.Getenv("HOOP_KEY")
-		os.Setenv("HOOP_KEY", "https://test-agent:test-secret@example.com:443?mode=standard")
-		defer os.Setenv("HOOP_KEY", originalHoopKey)
+		originalHoopKey := os.Getenv("LYRIC_IAM_KEY")
+		os.Setenv("LYRIC_IAM_KEY", "https://test-agent:test-secret@example.com:443?mode=standard")
+		defer os.Setenv("LYRIC_IAM_KEY", originalHoopKey)
 
 		configDir := filepath.Join(tmpHome, ".config")
 		err = os.WriteFile(configDir, []byte("blocking file"), 0644)

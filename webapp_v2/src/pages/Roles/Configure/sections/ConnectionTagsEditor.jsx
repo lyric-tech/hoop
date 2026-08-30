@@ -19,10 +19,10 @@ const KEY_PATTERN = /^[a-zA-Z0-9-]+$/
 // system prefix from a tag key so the user sees `environment` instead
 // of `hoop.dev/infrastructure.environment`. Keys that don't match the
 // system pattern (free-form user tags) pass through untouched.
-const HOOP_LABEL_RE = /^hoop\.dev\/[^.]+\.([^.]+)$/
+const LYRIC_IAM_LABEL_RE = /^lyric-iam\.dev\/[^.]+\.([^.]+)$/
 function labelForTag(key) {
   if (!key) return ''
-  const m = key.match(HOOP_LABEL_RE)
+  const m = key.match(LYRIC_IAM_LABEL_RE)
   return m ? m[1] : key
 }
 

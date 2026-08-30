@@ -22,7 +22,7 @@
 (def api (get-api-url))
 
 (def webapp-url env/webapp-url)
-(def hoop-app-url env/hoop-app-url)
+(def lyric-iam-app-url env/hoop-app-url)
 
 
 (def segment-write-key env/segment-write-key)
@@ -31,51 +31,51 @@
 (def sentry-dsn env/sentry-dsn)
 
 (def docs-url
-  {:concepts {:agents "https://hoop.dev/docs/concepts/agents"
-              :connections "https://hoop.dev/docs/concepts/connections"}
-   :features {:runbooks "https://hoop.dev/docs/learn/features/runbooks"
-              :session-recording "https://hoop.dev/docs/learn/features/session-recording"
-              :ai-datamasking "https://hoop.dev/docs/learn/features/ai-data-masking"
-              :ai-session-analyzer "https://hoop.dev/docs/learn/features/ai-session-analyzer"
-              :attributes "https://hoop.dev/docs/learn/features/attributes"
-              :access-control "https://hoop.dev/docs/learn/features/access-control"
-              :reviews "https://hoop.dev/docs/learn/features/reviews/overview"
-              :jit-reviews "https://hoop.dev/docs/learn/features/reviews/jit-reviews"
-              :command-reviews "https://hoop.dev/docs/learn/features/reviews/command-reviews"
-              :guardrails "https://hoop.dev/docs/learn/features/guardrails"}
-   :introduction {:getting-started "https://hoop.dev/docs/introduction/getting-started"}
-   :quickstart {:databases "https://hoop.dev/docs/quickstart/databases"
-                :cloud-services "https://hoop.dev/docs/quickstart/cloud-services"
-                :web-applications "https://hoop.dev/docs/quickstart/web-applications"
-                :development-environments "https://hoop.dev/docs/quickstart/development-environments"
-                :ssh "https://hoop.dev/docs/quickstart/ssh"}
-   :setup {:architecture "https://hoop.dev/docs/setup/architecture"
-           :deployment {:overview "https://hoop.dev/docs/setup/deployment"
-                        :kubernetes "https://hoop.dev/docs/setup/deployment/kubernetes"
-                        :docker "https://hoop.dev/docs/setup/deployment/docker-compose"
-                        :aws "https://hoop.dev/docs/setup/deployment/AWS"
-                        :on-premises "https://hoop.dev/docs/setup/deployment/on-premises"}
-           :configuration {:overview "https://hoop.dev/docs/setup/configuration"
-                           :environment-variables "https://hoop.dev/docs/setup/configuration/environment-variables"
-                           :reverse-proxy "https://hoop.dev/docs/setup/configuration/reverse-proxy"
-                           :identity-providers "https://hoop.dev/docs/setup/configuration/idp/get-started"
-                           :secrets-manager "https://hoop.dev/docs/setup/configuration/secrets-manager-configuration"
-                           :ai-data-masking "https://hoop.dev/docs/setup/configuration/ai-data-masking"
-                           :rds-iam-auth "https://hoop.dev/docs/setup/configuration/rds-iam-auth"}
-           :apis {:api-keys "https://hoop.dev/docs/setup/apis/api-key#api-key"
-                  :overview "https://hoop.dev/docs/setup/apis"}
-           :license-management "https://hoop.dev/docs/setup/license-management"}
-   :clients {:web-app {:overview "https://hoop.dev/docs/clients/webapp/overview"
-                       :creating-connection "https://hoop.dev/docs/clients/webapp/creating-connection"
-                       :managing-accesss "https://hoop.dev/docs/clients/webapp/managing-accesss"
-                       :monitoring-sessions "https://hoop.dev/docs/clients/webapp/monitoring-sessions"}
-             :command-line {:overview "https://hoop.dev/docs/clients/cli"
-                            :windows "https://hoop.dev/docs/clients/cli#windows"
-                            :macos "https://hoop.dev/docs/clients/cli#mac-os"
-                            :linux "https://hoop.dev/docs/clients/cli#linux"
-                            :managing-configuration "https://hoop.dev/docs/clients/cli#managing-configuration"}}
-   :integrations {:slack "https://hoop.dev/docs/integrations/slack"
-                  :teams "https://hoop.dev/docs/integrations/teams"
-                  :jira "https://hoop.dev/docs/integrations/jira"
-                  :svix "https://hoop.dev/docs/integrations/svix"
-                  :aws-connect "https://hoop.dev/docs/integrations/aws"}})
+  {:concepts {:agents "https://docs.lyric.tech/access/concepts/agents"
+              :connections "https://docs.lyric.tech/access/concepts/connections"}
+   :features {:runbooks "https://docs.lyric.tech/access/learn/features/runbooks"
+              :session-recording "https://docs.lyric.tech/access/learn/features/session-recording"
+              :ai-datamasking "https://docs.lyric.tech/access/learn/features/ai-data-masking"
+              :ai-session-analyzer "https://docs.lyric.tech/access/learn/features/ai-session-analyzer"
+              :attributes "https://docs.lyric.tech/access/learn/features/attributes"
+              :access-control "https://docs.lyric.tech/access/learn/features/access-control"
+              :reviews "https://docs.lyric.tech/access/learn/features/reviews/overview"
+              :jit-reviews "https://docs.lyric.tech/access/learn/features/reviews/jit-reviews"
+              :command-reviews "https://docs.lyric.tech/access/learn/features/reviews/command-reviews"
+              :guardrails "https://docs.lyric.tech/access/learn/features/guardrails"}
+   :introduction {:getting-started "https://docs.lyric.tech/access/introduction/getting-started"}
+   :quickstart {:databases "https://docs.lyric.tech/access/quickstart/databases"
+                :cloud-services "https://docs.lyric.tech/access/quickstart/cloud-services"
+                :web-applications "https://docs.lyric.tech/access/quickstart/web-applications"
+                :development-environments "https://docs.lyric.tech/access/quickstart/development-environments"
+                :ssh "https://docs.lyric.tech/access/quickstart/ssh"}
+   :setup {:architecture "https://docs.lyric.tech/access/setup/architecture"
+           :deployment {:overview "https://docs.lyric.tech/access/setup/deployment"
+                        :kubernetes "https://docs.lyric.tech/access/setup/deployment/kubernetes"
+                        :docker "https://docs.lyric.tech/access/setup/deployment/docker-compose"
+                        :aws "https://docs.lyric.tech/access/setup/deployment/AWS"
+                        :on-premises "https://docs.lyric.tech/access/setup/deployment/on-premises"}
+           :configuration {:overview "https://docs.lyric.tech/access/setup/configuration"
+                           :environment-variables "https://docs.lyric.tech/access/setup/configuration/environment-variables"
+                           :reverse-proxy "https://docs.lyric.tech/access/setup/configuration/reverse-proxy"
+                           :identity-providers "https://docs.lyric.tech/access/setup/configuration/idp/get-started"
+                           :secrets-manager "https://docs.lyric.tech/access/setup/configuration/secrets-manager-configuration"
+                           :ai-data-masking "https://docs.lyric.tech/access/setup/configuration/ai-data-masking"
+                           :rds-iam-auth "https://docs.lyric.tech/access/setup/configuration/rds-iam-auth"}
+           :apis {:api-keys "https://docs.lyric.tech/access/setup/apis/api-key#api-key"
+                  :overview "https://docs.lyric.tech/access/setup/apis"}
+           :license-management "https://docs.lyric.tech/access/setup/license-management"}
+   :clients {:web-app {:overview "https://docs.lyric.tech/access/clients/webapp/overview"
+                       :creating-connection "https://docs.lyric.tech/access/clients/webapp/creating-connection"
+                       :managing-accesss "https://docs.lyric.tech/access/clients/webapp/managing-accesss"
+                       :monitoring-sessions "https://docs.lyric.tech/access/clients/webapp/monitoring-sessions"}
+             :command-line {:overview "https://docs.lyric.tech/access/clients/cli"
+                            :windows "https://docs.lyric.tech/access/clients/cli#windows"
+                            :macos "https://docs.lyric.tech/access/clients/cli#mac-os"
+                            :linux "https://docs.lyric.tech/access/clients/cli#linux"
+                            :managing-configuration "https://docs.lyric.tech/access/clients/cli#managing-configuration"}}
+   :integrations {:slack "https://docs.lyric.tech/access/integrations/slack"
+                  :teams "https://docs.lyric.tech/access/integrations/teams"
+                  :jira "https://docs.lyric.tech/access/integrations/jira"
+                  :svix "https://docs.lyric.tech/access/integrations/svix"
+                  :aws-connect "https://docs.lyric.tech/access/integrations/aws"}})

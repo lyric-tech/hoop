@@ -73,18 +73,18 @@ var resourcesPlanCmd = &cobra.Command{
 	Short: "Plan resource provisioning",
 	Long:  "Validates provisioning plans for one or more resources. Outputs results to stdout and optionally writes them to a file for use with 'apply'.",
 	Example: `  # Single resource
-  hoop resources plan my-postgres --role ro --scopes mydb --privileges SELECT
+  lyric-iam resources plan my-postgres --role ro --scopes mydb --privileges SELECT
 
   # Multiple scopes and privileges
-  hoop resources plan my-postgres --role ro \
+  lyric-iam resources plan my-postgres --role ro \
     --scopes mydb --scopes otherdb \
     --privileges SELECT --privileges INSERT
 
   # Batch via file
-  hoop resources plan -f plan.yaml
+  lyric-iam resources plan -f plan.yaml
 
   # Save plan results for later apply
-  hoop resources plan -f plan.yaml -o plan-result.yaml`,
+  lyric-iam resources plan -f plan.yaml -o plan-result.yaml`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var resourceName string
@@ -100,10 +100,10 @@ var resourcesApplyCmd = &cobra.Command{
 	Short: "Apply a resource provisioning plan",
 	Long:  "Applies a previously created provisioning plan. Accepts a plan result file (from 'plan -o') or a resource name with --sid.",
 	Example: `  # Apply using plan result file
-  hoop resources apply -f plan-result.yaml
+  lyric-iam resources apply -f plan-result.yaml
 
   # Apply a single plan by SID
-  hoop resources apply my-postgres --sid 5701046A-7B7A-4A78-ABB0-A24C95E6FE54`,
+  lyric-iam resources apply my-postgres --sid 5701046A-7B7A-4A78-ABB0-A24C95E6FE54`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var resourceName string
@@ -119,7 +119,7 @@ var resourcesPlanStatusCmd = &cobra.Command{
 	Short:   "Show the output of a plan session",
 	Long:    "Fetches the session identified by the given SID and prints its output contents.",
 	Args:    cobra.ExactArgs(1),
-	Example: `  hoop resources plan status 5701046A-7B7A-4A78-ABB0-A24C95E6FE54`,
+	Example: `  lyric-iam resources plan status 5701046A-7B7A-4A78-ABB0-A24C95E6FE54`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config := clientconfig.GetClientConfigOrDie()
 		output, err := fetchSessionOutput(config, args[0])

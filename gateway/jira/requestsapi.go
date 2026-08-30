@@ -18,7 +18,7 @@ func CreateCustomerRequest(tmpl *models.JiraIssueTemplate, config *models.JiraIn
 	}
 
 	if _, hasSummary := fields["summary"]; !hasSummary {
-		fields["summary"] = "Hoop Session"
+		fields["summary"] = "Lyric IAM Session"
 	}
 	issue := IssueFields[CustomFields]{
 		ServiceDeskID:    serviceDeskID,

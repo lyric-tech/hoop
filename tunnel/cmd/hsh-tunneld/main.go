@@ -1,11 +1,11 @@
-// Command hsh-tunneld is the Hoop Tunnel daemon. It brings up a userspace
+// Command hsh-tunneld is the Lyric IAM Tunnel daemon. It brings up a userspace
 // netstack + TUN device on the host, then routes every TCP connection to
-// a *.hoop address through the existing hoop gateway as if it were a
-// normal `hoop connect <name>` session.
+// a *.hoop address through the existing lyric-iam gateway as if it were a
+// normal `lyric-iam connect <name>` session.
 //
 // hsh-tunneld uses NO custom gateway protocol: each accepted TCP flow
 // opens its own gRPC bidirectional stream to the gateway (the same one
-// the `hoop` CLI uses). The gateway sees these as regular client
+// the `lyric-iam` CLI uses). The gateway sees these as regular client
 // sessions; auth, review, audit, DLP, access control, webhooks, and
 // slack integrations all apply automatically.
 //
@@ -19,11 +19,11 @@
 //	# Build
 //	go build ./tunnel/cmd/hsh-tunneld
 //
-//	# Configure (same envs as `hoop` CLI)
-//	export HOOP_APIURL=http://127.0.0.1:8009
-//	export HOOP_TOKEN=<your bearer token>
-//	# HOOP_GRPCURL is optional: when omitted the gRPC address is fetched
-//	# from GET /api/serverinfo automatically (same mechanism as hoop login).
+//	# Configure (same envs as `lyric-iam` CLI)
+//	export LYRIC_IAM_APIURL=http://127.0.0.1:8009
+//	export LYRIC_IAM_TOKEN=<your bearer token>
+//	# LYRIC_IAM_GRPCURL is optional: when omitted the gRPC address is fetched
+//	# from GET /api/serverinfo automatically (same mechanism as lyric-iam login).
 //
 //	# Run (requires CAP_NET_ADMIN; sudo is easiest for dev)
 //	sudo -E ./hsh-tunneld
@@ -208,7 +208,7 @@ func run(logger *log.Logger, opts runOptions) error {
 	// Load the daemon-managed TOML config first. A missing file is the
 	// "fresh install" case — Load returns the zero Config and we
 	// proceed without a token. Env vars overlay any explicit values so
-	// dev/integration runs can still drive everything via HOOP_*.
+	// dev/integration runs can still drive everything via LYRIC_IAM_*.
 	fileCfg, err := daemonconfig.Load(opts.configFile)
 	if err != nil {
 		return fmt.Errorf("load config %q: %w", opts.configFile, err)
@@ -239,8 +239,8 @@ func run(logger *log.Logger, opts runOptions) error {
 		SessionSeed:   opts.sessionSeed,
 		TLD:           opts.tld,
 		DeviceName:    opts.devName,
-		TLSSkipVerify: os.Getenv("HOOP_TLS_SKIP_VERIFY") == "true",
-		TLSServerName: os.Getenv("HOOP_TLSSERVERNAME"),
+		TLSSkipVerify: os.Getenv("LYRIC_IAM_TLS_SKIP_VERIFY") == "true",
+		TLSServerName: os.Getenv("LYRIC_IAM_TLSSERVERNAME"),
 		UserAgent:     userAgent(),
 		TokenSource:   tokens,
 	})
@@ -316,20 +316,20 @@ func run(logger *log.Logger, opts runOptions) error {
 	return nil
 }
 
-// mergeConfigWithEnv overlays HOOP_* env vars on top of the file-loaded
+// mergeConfigWithEnv overlays LYRIC_IAM_* env vars on top of the file-loaded
 // config. Env wins so dev/integration runs can drive the daemon without
 // touching the persisted config. We do NOT write the env-supplied
-// values back to disk — the operator who set HOOP_TOKEN= in their
+// values back to disk — the operator who set LYRIC_IAM_TOKEN= in their
 // shell did so deliberately; persisting would be a surprise.
 func mergeConfigWithEnv(file daemonconfig.Config) daemonconfig.Config {
 	out := file
-	if v := os.Getenv("HOOP_APIURL"); v != "" {
+	if v := os.Getenv("LYRIC_IAM_APIURL"); v != "" {
 		out.APIURL = strings.TrimRight(v, "/")
 	}
-	if v := os.Getenv("HOOP_TOKEN"); v != "" {
+	if v := os.Getenv("LYRIC_IAM_TOKEN"); v != "" {
 		out.Token = v
 	}
-	if v := os.Getenv("HOOP_GRPCURL"); v != "" {
+	if v := os.Getenv("LYRIC_IAM_GRPCURL"); v != "" {
 		out.GrpcURL = v
 	}
 	return out

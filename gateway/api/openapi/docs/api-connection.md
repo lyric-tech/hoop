@@ -16,7 +16,7 @@ Each type/subtype may represent a distinct implementation:
 - `custom` - Any custom shell application
 - `database/<subtype>` - Allow connecting to databases through multiple clients (Webapp, cli, IDE's)
 
-Each `<subtype>` has distinct environment variables that are allowed to be configured, refer to our [documentation](https://hoop.dev/docs) for more information.
+Each `<subtype>` has distinct environment variables that are allowed to be configured, refer to our [documentation](https://docs.lyric.tech/access) for more information.
 
 ### Tags
 

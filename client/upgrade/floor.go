@@ -8,9 +8,9 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-// MinInstallableMinor is the lowest MAJOR.MINOR a hoop release must
+// MinInstallableMinor is the lowest MAJOR.MINOR a lyric-iam release must
 // carry for the version manager to manage it. Versions below this floor
-// don't ship the `hoop versions` command group, so installing them
+// don't ship the `lyric-iam versions` command group, so installing them
 // would orphan the user on a CLI that can't manage itself.
 //
 // The prefix "v" matches what golang.org/x/mod/semver expects. Update
@@ -19,9 +19,9 @@ const MinInstallableMinor = "v1.74"
 
 // MinInstallableVersionWindows is the lowest full release the version
 // manager will install on Windows. Windows support landed later than the
-// general floor: earlier Windows builds ship a `hoop versions` that can't
-// manage itself (the release tarball carries hoop.exe but the extractor
-// looked for "hoop", and activation was symlink-only). Installing one of
+// general floor: earlier Windows builds ship a `lyric-iam versions` that can't
+// manage itself (the release tarball carries lyric-iam.exe but the extractor
+// looked for "lyric-iam", and activation was symlink-only). Installing one of
 // those would strand a Windows user on a CLI that can't self-update.
 //
 // Unlike MinInstallableMinor this is a full MAJOR.MINOR.PATCH because the
@@ -30,7 +30,7 @@ const MinInstallableMinor = "v1.74"
 const MinInstallableVersionWindows = "v1.86.1"
 
 // Sentinel errors returned by ValidateInstallableVersion. Callers
-// (`hoop versions sync` and `hoop versions upgrade` in particular)
+// (`lyric-iam versions sync` and `lyric-iam versions upgrade` in particular)
 // use errors.Is to detect the specific case and render a tailored
 // message.
 var (
@@ -47,12 +47,12 @@ var (
 
 	// ErrBelowFloor means the version is a real semver but predates the
 	// release line in which the version manager shipped.
-	ErrBelowFloor = errors.New("version predates the hoop version manager")
+	ErrBelowFloor = errors.New("version predates the lyric-iam version manager")
 
 	// ErrBelowWindowsFloor means the version is a real semver but predates
 	// the release in which the version manager gained Windows support
 	// (MinInstallableVersionWindows). It is only ever returned on Windows.
-	ErrBelowWindowsFloor = errors.New("version predates Windows support for the hoop version manager")
+	ErrBelowWindowsFloor = errors.New("version predates Windows support for the lyric-iam version manager")
 )
 
 // ValidateInstallableVersion returns an error if target cannot be

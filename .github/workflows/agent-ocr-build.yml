@@ -46,7 +46,7 @@ jobs:
           sbom: false
           push: false
           build-args: |
-            HOOP_IMAGE=hoophq/hoop:latest
+            LYRIC_IAM_IMAGE=hoophq/hoop:latest
       # Multiarch builds cannot be --load'ed; rebuild amd64 from the warm
       # buildx cache to run the runtime-privilege assertion below.
       - name: Build (CPU, amd64, load for runtime check)
@@ -61,7 +61,7 @@ jobs:
           load: true
           tags: hoop-agent-ocr:pr-smoke
           build-args: |
-            HOOP_IMAGE=hoophq/hoop:latest
+            LYRIC_IAM_IMAGE=hoophq/hoop:latest
       # The base image runs as the unprivileged 'hoop' user (uid 10001) and
       # the OCR Dockerfiles escalate to root for setup — assert the runtime
       # user was restored so a missing 'USER hoop' can never ship.
@@ -90,4 +90,4 @@ jobs:
           sbom: false
           push: false
           build-args: |
-            HOOP_IMAGE=hoophq/hoop:latest
+            LYRIC_IAM_IMAGE=hoophq/hoop:latest

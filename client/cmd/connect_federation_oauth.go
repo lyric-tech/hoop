@@ -26,7 +26,7 @@ func printFederationOAuthConsentAndExit(apiURL, token, tlsCA string, jsonMode bo
 		// never swallow the original cause: show it alongside a manual path.
 		log.Debugf("failed fetching federation consent url for %q: %v", connectionName, err)
 		fatalErr(jsonMode,
-			"%s\n\nTo connect your Google account for this connection, run 'hoop login' to refresh your "+
+			"%s\n\nTo connect your Google account for this connection, run 'lyric-iam login' to refresh your "+
 				"session and try again.",
 			rawErr.Error())
 		return

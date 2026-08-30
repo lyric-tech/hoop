@@ -61,13 +61,13 @@ jobs:
       - name: Resolve paired libhoop revision
         id: resolve
         env:
-          HOOP_HEAD_REF: ${{ github.head_ref }}
+          LYRIC_IAM_HEAD_REF: ${{ github.head_ref }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           set -euo pipefail
           base="$(gh api repos/hoophq/libhoop --jq .default_branch)"
           set +e
-          paired_ref="$(git ls-remote --exit-code --heads origin "refs/heads/${HOOP_HEAD_REF}")"
+          paired_ref="$(git ls-remote --exit-code --heads origin "refs/heads/${LYRIC_IAM_HEAD_REF}")"
           status=$?
           set -e
 
@@ -100,7 +100,7 @@ jobs:
       - name: Require paired libhoop revision to be merged
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          HOOP_HEAD_REF: ${{ github.head_ref }}
+          LYRIC_IAM_HEAD_REF: ${{ github.head_ref }}
           LIBHOOP_PAIRED: ${{ needs.resolve-libhoop.outputs.paired }}
           LIBHOOP_SHA: ${{ needs.resolve-libhoop.outputs.sha }}
           LIBHOOP_BASE: ${{ needs.resolve-libhoop.outputs.base }}
@@ -133,7 +133,7 @@ jobs:
               '[.[] | select(.base.ref == $base) | .html_url][0] // empty' \
               <<<"${pulls}"
           )"
-          dependency_target="${dependency_pr_url:-https://github.com/hoophq/libhoop/tree/${HOOP_HEAD_REF}}"
+          dependency_target="${dependency_pr_url:-https://github.com/hoophq/libhoop/tree/${LYRIC_IAM_HEAD_REF}}"
           echo "::error title=Unmerged libhoop dependency::Merge ${dependency_target} before this Hoop pull request."
           exit 1
 

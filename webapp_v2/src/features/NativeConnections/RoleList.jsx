@@ -7,7 +7,7 @@ import DocsBtnCallOut from '@/components/DocsBtnCallOut'
 import { RoleRow } from './RoleRow'
 import classes from './NativeConnections.module.css'
 
-const NATIVE_ACCESS_DOCS_URL = 'https://hoop.dev/docs/learn/connections'
+const NATIVE_ACCESS_DOCS_URL = 'https://docs.lyric.tech/access/learn/connections'
 
 // Six collapsed-row silhouettes. PageLoader is a full-screen brand loader and
 // EmptyState renders a 320px illustration at 50vh — both dwarf a 600px drawer.

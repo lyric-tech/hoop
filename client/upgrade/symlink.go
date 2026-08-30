@@ -40,7 +40,7 @@ func safeReplaceSymlink(l Layout, target string) error {
 }
 
 // assertOwnedSymlink returns nil iff binLink doesn't exist, or exists and
-// is a symlink that points inside $HOME/.hoop/versions/. Otherwise returns
+// is a symlink that points inside $HOME/.lyric-iam/versions/. Otherwise returns
 // ErrBinLinkConflict.
 //
 // Both sides of the prefix comparison are resolved through
@@ -61,12 +61,12 @@ func assertOwnedSymlink(l Layout, binLink string) error {
 
 The most common cause is an older `+"`make build-dev-client`"+` run that
 wrote the dev binary at this exact path. The dev binary now lives at
-$HOME/.hoop/dev/hoop, and $HOME/.hoop/bin/hoop is reserved as the
-symlink updated by `+"`hoop versions sync` / `hoop versions upgrade`"+`.
+$HOME/.lyric-iam/dev/lyric-iam, and $HOME/.lyric-iam/bin/lyric-iam is reserved as the
+symlink updated by `+"`lyric-iam versions sync` / `lyric-iam versions upgrade`"+`.
 
-To recover, do one of the following and re-run the same hoop versions
+To recover, do one of the following and re-run the same lyric-iam versions
 command:
-  - keep the dev build: mv "%s" "$HOME/.hoop/dev/hoop"
+  - keep the dev build: mv "%s" "$HOME/.lyric-iam/dev/lyric-iam"
   - discard it:         rm "%s"`,
 			ErrBinLinkConflict, binLink, binLink, binLink)
 	}

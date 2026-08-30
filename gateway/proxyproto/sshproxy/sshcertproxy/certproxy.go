@@ -151,7 +151,7 @@ func sendErrorToClient(sshConn *ssh.ServerConn, clientNewCh <-chan ssh.NewChanne
 			return
 		}
 		if newCh.ChannelType() != "session" {
-			_ = newCh.Reject(ssh.Prohibited, "hoop: "+msg)
+			_ = newCh.Reject(ssh.Prohibited, "lyric-iam: "+msg)
 			return
 		}
 		ch, reqs, err := newCh.Accept()
@@ -159,7 +159,7 @@ func sendErrorToClient(sshConn *ssh.ServerConn, clientNewCh <-chan ssh.NewChanne
 			return
 		}
 		go ssh.DiscardRequests(reqs)
-		_, _ = io.WriteString(ch.Stderr(), "hoop: "+msg+"\r\n")
+		_, _ = io.WriteString(ch.Stderr(), "lyric-iam: "+msg+"\r\n")
 		exitPayload := ssh.Marshal(struct{ ExitStatus uint32 }{1})
 		_, _ = ch.SendRequest("exit-status", false, exitPayload)
 		_ = ch.Close()
@@ -335,7 +335,7 @@ func (c *certConnection) validateChannel(newCh ssh.NewChannel, channelID uint16)
 		if !c.certSession.allowPTY() {
 			log.With("conn", c.id, "sid", c.sid, "ch", channelID).
 				Infof("rejected session channel: cert lacks permit-pty (matched=%s)", c.certSession.matchedValue)
-			return ssh.Prohibited, fmt.Errorf("hoop: cert does not permit pty/exec sessions")
+			return ssh.Prohibited, fmt.Errorf("lyric-iam: cert does not permit pty/exec sessions")
 		}
 		return 0, nil
 	case "direct-tcpip":
@@ -343,13 +343,13 @@ func (c *certConnection) validateChannel(newCh ssh.NewChannel, channelID uint16)
 		log.With("conn", c.id, "sid", c.sid, "ch", channelID).
 			Infof("rejected %q channel: not supported by cert auth (matched=%s)",
 				newCh.ChannelType(), c.certSession.matchedValue)
-		return ssh.Prohibited, fmt.Errorf("hoop: channel type %q is not supported", newCh.ChannelType())
+		return ssh.Prohibited, fmt.Errorf("lyric-iam: channel type %q is not supported", newCh.ChannelType())
 	}
 
 	if !c.certSession.allowPortForwarding() {
 		log.With("conn", c.id, "sid", c.sid, "ch", channelID).
 			Infof("denied direct-tcpip: cert lacks permit-port-forwarding (matched=%s)", c.certSession.matchedValue)
-		return ssh.Prohibited, fmt.Errorf("hoop: cert does not permit port forwarding")
+		return ssh.Prohibited, fmt.Errorf("lyric-iam: cert does not permit port forwarding")
 	}
 
 	var dest struct {
@@ -359,7 +359,7 @@ func (c *certConnection) validateChannel(newCh ssh.NewChannel, channelID uint16)
 		OriginatorPort uint32
 	}
 	if err := ssh.Unmarshal(newCh.ExtraData(), &dest); err != nil || dest.ConnectedHost == "" {
-		return ssh.ConnectionFailed, fmt.Errorf("hoop: invalid or missing port-forward destination")
+		return ssh.ConnectionFailed, fmt.Errorf("lyric-iam: invalid or missing port-forward destination")
 	}
 	connectionName := dest.ConnectedHost
 
@@ -369,11 +369,11 @@ func (c *certConnection) validateChannel(newCh ssh.NewChannel, channelID uint16)
 			log.With("conn", c.id, "sid", c.sid, "ch", channelID).
 				Infof("cert port-forward: connection %q not found (org=%s matched=%s)",
 					connectionName, c.certSession.orgID, c.certSession.matchedValue)
-			return ssh.ConnectionFailed, fmt.Errorf("hoop: connection %q not found", connectionName)
+			return ssh.ConnectionFailed, fmt.Errorf("lyric-iam: connection %q not found", connectionName)
 		}
 		log.With("conn", c.id, "sid", c.sid, "ch", channelID).
 			Warnf("cert port-forward: failed looking up connection %q: %v", connectionName, err)
-		return ssh.ConnectionFailed, fmt.Errorf("hoop: failed looking up connection %q", connectionName)
+		return ssh.ConnectionFailed, fmt.Errorf("lyric-iam: failed looking up connection %q", connectionName)
 	}
 
 	connType := pb.ToConnectionType(dbConn.Type, dbConn.SubType.String)
@@ -427,7 +427,7 @@ func (c *certConnection) validateChannel(newCh ssh.NewChannel, channelID uint16)
 	select {
 	case <-c.ctx.Done():
 		return ssh.ConnectionFailed,
-			fmt.Errorf("hoop: connection %q not found or not accessible", connectionName)
+			fmt.Errorf("lyric-iam: connection %q not found or not accessible", connectionName)
 	default:
 	}
 
@@ -489,7 +489,7 @@ loop:
 				if req.WantReply {
 					_ = req.Reply(true, nil)
 				}
-				_, _ = io.WriteString(clientCh.Stderr(), "hoop: "+msg+"\r\n")
+				_, _ = io.WriteString(clientCh.Stderr(), "lyric-iam: "+msg+"\r\n")
 				exitPayload := ssh.Marshal(struct{ ExitStatus uint32 }{1})
 				_, _ = clientCh.SendRequest("exit-status", false, exitPayload)
 				_ = clientCh.Close()
@@ -518,14 +518,14 @@ loop:
 		if execReq.WantReply {
 			_ = execReq.Reply(true, nil)
 		}
-		_, _ = io.WriteString(clientCh.Stderr(), "hoop: "+msg+"\r\n")
+		_, _ = io.WriteString(clientCh.Stderr(), "lyric-iam: "+msg+"\r\n")
 		exitPayload := ssh.Marshal(struct{ ExitStatus uint32 }{1})
 		_, _ = clientCh.SendRequest("exit-status", false, exitPayload)
 		_ = clientCh.Close()
 	}
 
 	// Parse the exec payload (SSH wire-encoded string). The format is:
-	// "<connection-name> [command...]" — the first token is the Hoop connection
+	// "<connection-name> [command...]" — the first token is the Lyric IAM connection
 	// name used for routing; everything after the first space is the optional
 	// command to execute on the upstream SSH server.
 	var execCmd struct{ Command string }

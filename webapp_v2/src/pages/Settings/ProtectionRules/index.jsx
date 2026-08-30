@@ -62,7 +62,7 @@ function SettingsProtectionRules() {
         <Stack gap="xs">
           <Title order={1}>Protection rules</Title>
           <Text size="lg" c="dimmed">
-            Pick how Hoop should guard everything you connect.
+            Pick how Lyric IAM should guard everything you connect.
           </Text>
         </Stack>
         <Button loading={saving} disabled={selected === currentProfile} onClick={handleSave}>

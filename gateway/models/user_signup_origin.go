@@ -5,7 +5,7 @@ import (
 )
 
 // originSurveyWindowDays bounds for how long the onboarding "How did you hear
-// about Hoop?" survey keeps being offered, counted from the moment the user
+// about Lyric IAM?" survey keeps being offered, counted from the moment the user
 // record was created.
 const originSurveyWindowDays = 7
 

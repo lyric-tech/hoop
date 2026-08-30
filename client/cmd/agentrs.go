@@ -30,17 +30,17 @@ func checkHoopKeyExists() bool {
 // and if hoop_rs exist we will try to run if fails we will run the go agent anyway
 func RunAgentrs() {
 	if !checkHoopKeyExists() {
-		// hoop key not found, skipping hoop_rs startup
-		log.Info("Hoop key not found, skipping hoop_rs startup")
+		// lyric-iam key not found, skipping hoop_rs startup
+		log.Info("Lyric IAM key not found, skipping hoop_rs startup")
 		return
 	}
 
-	// inside the bundle builded by the ci the app/bin/hoop_rs is placed alonside hoop binary
+	// inside the bundle builded by the ci the app/bin/hoop_rs is placed alonside lyric-iam binary
 	// and the PATH is set to app/bin so we can just look for hoop_rs in PATH
 	defaultPath := "hoop_rs"
-	// if the user has set HOOP_RS_BIN_PATH we will use that instead this is useful for development
+	// if the user has set LYRIC_IAM_RS_BIN_PATH we will use that instead this is useful for development
 	// and testing and make run-dev
-	path := os.Getenv("HOOP_RS_BIN_PATH")
+	path := os.Getenv("LYRIC_IAM_RS_BIN_PATH")
 	log.Infof("Checking hoop_rs binary at path: %s\n", path)
 	binaryPath := defaultPath
 

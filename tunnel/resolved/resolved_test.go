@@ -104,7 +104,7 @@ func TestConfigure_HappyPath(t *testing.T) {
 	err := c.Configure(Config{
 		Device:       "tun0",
 		DNSAddress:   "fd00::1",
-		SearchDomain: "hoop",
+		SearchDomain: "lyric-iam",
 	})
 	if err != nil {
 		t.Fatalf("Configure: %v", err)
@@ -115,7 +115,7 @@ func TestConfigure_HappyPath(t *testing.T) {
 	}
 	want := []string{
 		"dns tun0 fd00::1",
-		"domain tun0 ~hoop",
+		"domain tun0 ~lyric-iam",
 	}
 	for i, w := range want {
 		if calls[i] != w {
@@ -133,7 +133,7 @@ func TestConfigure_NoResolved(t *testing.T) {
 	withResolvectl(t, bin)
 
 	c := New()
-	err := c.Configure(Config{Device: "tun0", DNSAddress: "::1", SearchDomain: "hoop"})
+	err := c.Configure(Config{Device: "tun0", DNSAddress: "::1", SearchDomain: "lyric-iam"})
 	if !errors.Is(err, ErrUnsupported) {
 		t.Fatalf("expected ErrUnsupported, got %v", err)
 	}
@@ -153,7 +153,7 @@ func TestConfigure_DNSFailureSkipsDomain(t *testing.T) {
 	withResolvectl(t, bin)
 
 	c := New()
-	err := c.Configure(Config{Device: "tun0", DNSAddress: "::1", SearchDomain: "hoop"})
+	err := c.Configure(Config{Device: "tun0", DNSAddress: "::1", SearchDomain: "lyric-iam"})
 	if err == nil {
 		t.Fatal("expected error from failing resolvectl, got nil")
 	}
@@ -177,8 +177,8 @@ func TestConfigure_ValidationRejectsEmpty(t *testing.T) {
 
 	c := New()
 	cases := []Config{
-		{Device: "", DNSAddress: "::1", SearchDomain: "hoop"},
-		{Device: "tun0", DNSAddress: "", SearchDomain: "hoop"},
+		{Device: "", DNSAddress: "::1", SearchDomain: "lyric-iam"},
+		{Device: "tun0", DNSAddress: "", SearchDomain: "lyric-iam"},
 		{Device: "tun0", DNSAddress: "::1", SearchDomain: ""},
 	}
 	for i, cfg := range cases {

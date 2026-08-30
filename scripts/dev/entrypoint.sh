@@ -49,13 +49,13 @@ export PATH="/app/bin:$PATH"
 echo "--> STARTING AGENT ..."
 # get digest of the agent secret key
 # echo -n xagt-zKQQA9PAjCVJ4O8VlE2QZScNEbfmFisg_OerkI21NEg |sha256sum
-# export HOOP_TLS_HOOP_TLS_SKIP_VERIFY=true
+# export LYRIC_IAM_TLS_SKIP_VERIFY=true
 GRPC_SCHEME=grpc
 if [[ "$API_URL" == "https"* ]]; then
   GRPC_SCHEME=grpcs
 fi
-export HOOP_TLS_SKIP_VERIFY=true
-HOOP_KEY="${GRPC_SCHEME}://default:xagt-zKQQA9PAjCVJ4O8VlE2QZScNEbfmFisg_OerkI21NEg@127.0.0.1:8010?mode=standard" /app/bin/hooplinux start agent &
+export LYRIC_IAM_TLS_SKIP_VERIFY=true
+LYRIC_IAM_KEY="${GRPC_SCHEME}://default:xagt-zKQQA9PAjCVJ4O8VlE2QZScNEbfmFisg_OerkI21NEg@127.0.0.1:8010?mode=standard" /app/bin/hooplinux start agent &
 
 echo "--> STARTING SSHD SERVER ..."
 

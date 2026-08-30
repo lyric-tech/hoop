@@ -75,7 +75,7 @@ func init() {
 
 var createConnectionBatchExamplesDesc = `
   # Create multiple postgres connections from a YAML file
-  hoop admin create connections --from-file connections.yaml
+  lyric-iam admin create connections --from-file connections.yaml
 
   # Example YAML file (connections.yaml):
   #

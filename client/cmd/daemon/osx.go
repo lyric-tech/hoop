@@ -18,7 +18,7 @@ func StartDarwinAgent() error {
 	}
 
 	opts := Options{
-		ServiceName: "hoop-agent",
+		ServiceName: "lyric-iam-agent",
 		ExecArgs:    " start agent",
 		Env:         envKeys,
 	}
@@ -163,8 +163,8 @@ func xmlEscape(s string) string {
 }
 
 func StopDarwinAgent() error {
-	if err := stopDarwin("hoop-agent"); err != nil {
-		return fmt.Errorf("failed to stop hoop-agent: %w", err)
+	if err := stopDarwin("lyric-iam-agent"); err != nil {
+		return fmt.Errorf("failed to stop lyric-iam-agent: %w", err)
 	}
 	return nil
 }
@@ -178,7 +178,7 @@ func stopDarwin(serviceName string) error {
 }
 
 func RemoveDarwinAgent() error {
-	if err := removeDarwin("hoop-agent"); err != nil {
+	if err := removeDarwin("lyric-iam-agent"); err != nil {
 		return err
 	}
 	return nil
@@ -205,7 +205,7 @@ func removeDarwin(serviceName string) error {
 }
 
 func LogsDarwinAgent() error {
-	return logsAgentDarwin("hoop-agent")
+	return logsAgentDarwin("lyric-iam-agent")
 }
 
 func logsAgentDarwin(serviceName string) error {

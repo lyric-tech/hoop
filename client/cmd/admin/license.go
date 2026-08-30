@@ -36,7 +36,7 @@ func init() {
 
 var licenseCmd = &cobra.Command{
 	Use:    "license NAME",
-	Short:  "Manage license in a hoop gateway instance",
+	Short:  "Manage license in a lyric-iam gateway instance",
 	Hidden: false,
 }
 
@@ -76,7 +76,7 @@ var licenseSignCmd = &cobra.Command{
 
 var licenseInstallCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install a license to a hoop gateway instance",
+	Short: "Install a license to a lyric-iam gateway instance",
 	Run: func(cmd *cobra.Command, args []string) {
 		if licenseFileFlag == "" {
 			styles.PrintErrorAndExit("missing --file flag")

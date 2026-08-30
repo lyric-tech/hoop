@@ -97,7 +97,7 @@ type Config struct {
 	DNSAddress string
 
 	// SearchDomain is the routing-only domain the tunnel owns
-	// (typically "hoop"). resolvectl receives it prefixed with `~`
+	// (typically "lyric-iam"). resolvectl receives it prefixed with `~`
 	// (the routing-only marker) so resolved only forwards queries
 	// for names ending in this suffix to our resolver — every other
 	// query keeps going to the user's existing DNS path.

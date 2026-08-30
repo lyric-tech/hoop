@@ -12,9 +12,9 @@ bad()  { printf '  \033[31mFAIL\033[0m  %s\n' "$*"; }
 die()  { printf '\n\033[31m%s\033[0m\n' "$*" >&2; exit 1; }
 
 # One provider config for every script, so a change is made once.
-export HOOP_PROJECT="${HOOP_PROJECT:-}"
-export HOOP_REGION="${HOOP_REGION:-global}"
-export HOOP_MODEL="${HOOP_MODEL:-claude-sonnet-4-5@20250929}"
+export LYRIC_IAM_PROJECT="${LYRIC_IAM_PROJECT:-}"
+export LYRIC_IAM_REGION="${LYRIC_IAM_REGION:-global}"
+export LYRIC_IAM_MODEL="${LYRIC_IAM_MODEL:-claude-sonnet-4-5@20250929}"
 
 # Ports. Deliberately not 5432/8080: a laptop usually has something there, and
 # a test that silently talks to your real database is worse than one that

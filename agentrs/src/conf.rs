@@ -35,7 +35,7 @@ fn get_path() -> Utf8PathBuf {
 impl ConfigHandleManager {
     pub fn auto_gen_conf() -> anyhow::Result<Self> {
         info!("Auto-generating TLS certificate for gateway...");
-        let hoop_key = get_token().context("HOOP_KEY environment variable is not set")?;
+        let hoop_key = get_token().context("LYRIC_IAM_KEY environment variable is not set")?;
 
         let ip_addresses = vec!["127.0.0.1".parse::<IpAddr>()?, "::1".parse::<IpAddr>()?];
         let cert_key_pair = crate::x509::generate_gateway_cert(ip_addresses);
@@ -67,7 +67,7 @@ impl ConfigHandleManager {
     }
 
     pub fn init() -> anyhow::Result<Self> {
-        let hoop_auto_gencert = std::env::var("HOOP_CERT")
+        let hoop_auto_gencert = std::env::var("LYRIC_IAM_CERT")
             .unwrap_or_else(|_| "true".to_string())
             .parse::<bool>()
             .unwrap_or(true);
@@ -82,7 +82,7 @@ impl ConfigHandleManager {
         let hoop_key = get_token();
         if hoop_key.is_none() {
             Err(anyhow::anyhow!(
-                "HOOP_KEY environment variable is not set. This may lead to insecure configurations."
+                "LYRIC_IAM_KEY environment variable is not set. This may lead to insecure configurations."
             ))?;
         }
         let path = get_path();
@@ -90,7 +90,7 @@ impl ConfigHandleManager {
             .unwrap_or_else(|e| panic!("failed to load config file at {path}: {e}"));
 
         let conf_file = conf.ok_or_else(|| {
-            anyhow::anyhow!("No config file found at {path}. Please create a configuration file or set HOOP_CERT=true to auto-generate certificates.")
+            anyhow::anyhow!("No config file found at {path}. Please create a configuration file or set LYRIC_IAM_CERT=true to auto-generate certificates.")
         })?;
 
         let conf = Conf::from_conf_file(&conf_file).context("invalid configuration file")?;
@@ -104,7 +104,7 @@ impl ConfigHandleManager {
 
 fn get_token() -> Option<String> {
     // format: <scheme>://<agent-name>:<secret-key>@<host>:<port>?mode=<agent-mode>
-    let hoop_key = std::env::var("HOOP_KEY").ok();
+    let hoop_key = std::env::var("LYRIC_IAM_KEY").ok();
     return hoop_key;
 }
 
@@ -234,7 +234,7 @@ fn normalize_data_path(path: &Utf8Path, data_dir: &Utf8Path) -> Utf8PathBuf {
 
 fn get_data_dir() -> Utf8PathBuf {
     let home_dir = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-    let default_path = Utf8PathBuf::from(home_dir).join(".hoop");
+    let default_path = Utf8PathBuf::from(home_dir).join(".lyric-iam");
     if default_path.exists() {
         return default_path;
     }

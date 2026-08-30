@@ -21,10 +21,10 @@ func TestNew_ValidatesRequiredFields(t *testing.T) {
 		name string
 		opts Options
 	}{
-		{"missing Logger", Options{SessionSeed: "s", TLD: "hoop", UserAgent: "ua"}},
-		{"missing SessionSeed", Options{Logger: silentLogger(), TLD: "hoop", UserAgent: "ua"}},
+		{"missing Logger", Options{SessionSeed: "s", TLD: "lyric-iam", UserAgent: "ua"}},
+		{"missing SessionSeed", Options{Logger: silentLogger(), TLD: "lyric-iam", UserAgent: "ua"}},
 		{"missing TLD", Options{Logger: silentLogger(), SessionSeed: "s", UserAgent: "ua"}},
-		{"missing UserAgent", Options{Logger: silentLogger(), SessionSeed: "s", TLD: "hoop"}},
+		{"missing UserAgent", Options{Logger: silentLogger(), SessionSeed: "s", TLD: "lyric-iam"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -39,7 +39,7 @@ func TestNew_HappyPath(t *testing.T) {
 	m, err := New(Options{
 		Logger:      silentLogger(),
 		SessionSeed: "test",
-		TLD:         "hoop",
+		TLD:         "lyric-iam",
 		UserAgent:   "test/1.0",
 	})
 	if err != nil {
@@ -170,7 +170,7 @@ func newTestManager(t *testing.T) *Manager {
 	m, err := New(Options{
 		Logger:      silentLogger(),
 		SessionSeed: "unit-test",
-		TLD:         "hoop",
+		TLD:         "lyric-iam",
 		UserAgent:   "tunnelmgr-test/1.0",
 	})
 	if err != nil {
@@ -183,7 +183,7 @@ func newTestManager(t *testing.T) *Manager {
 // forget a required option. Keeping these strings stable lets us
 // pattern-match in upstream tests / logs without churn.
 func TestNew_ErrorMessagesAreUseful(t *testing.T) {
-	_, err := New(Options{SessionSeed: "s", TLD: "hoop", UserAgent: "ua"})
+	_, err := New(Options{SessionSeed: "s", TLD: "lyric-iam", UserAgent: "ua"})
 	if err == nil || !strings.Contains(err.Error(), "Logger is required") {
 		t.Errorf("missing Logger error = %v, want substring 'Logger is required'", err)
 	}

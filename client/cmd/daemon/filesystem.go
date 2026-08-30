@@ -38,7 +38,7 @@ func getEnvFilePath() (string, string, error) {
 		return "", "", err
 	}
 	envDir := filepath.Join(home, ".config")
-	envPath := filepath.Join(envDir, "hoop.conf")
+	envPath := filepath.Join(envDir, "lyric-iam.conf")
 	return envPath, envDir, nil
 }
 
@@ -155,7 +155,7 @@ func configEnvironmentVariables() (map[string]string, error) {
 	}
 
 	envKeys := map[string]string{
-		"HOOP_KEY": cfg.Token,
+		"LYRIC_IAM_KEY": cfg.Token,
 		"PATH":     os.Getenv("PATH"),
 	}
 

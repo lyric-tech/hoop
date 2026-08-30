@@ -50,7 +50,7 @@ func (f *fakeConnectServer) Recv() (*pb.Packet, error) {
 // produced it — so it carries a live SpecClientConnectionID and routes like a
 // real response. Every client proxy reads from this one forward path, so a
 // filter installed in only one of them (the gateway's httpproxy listener) let
-// `hoop connect` write audit JSON straight into an MCP client's keep-alive
+// `lyric-iam connect` write audit JSON straight into an MCP client's keep-alive
 // body and wreck its HTTP framing.
 //
 // The drop therefore has to happen here, at the single fan-out point.

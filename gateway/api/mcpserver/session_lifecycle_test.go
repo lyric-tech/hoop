@@ -19,7 +19,7 @@ import (
 //   - The MCP client does NOT keep a standalone GET SSE stream open
 //     (StreamableClientTransport.DisableStandaloneSSE = true). Devin/Cursor
 //     behave this way; the go-sdk's own client does not, which is why
-//     `hoop admin mcp` never reproduced the bug.
+//     `lyric-iam admin mcp` never reproduced the bug.
 //   - The server pings on a timer (ServerOptions.KeepAlive). With no standalone
 //     stream to carry it, every ping fails and the SDK closes the whole
 //     session, so the next tool call returns 404 ErrSessionMissing.
@@ -33,7 +33,7 @@ type pingArgs struct{}
 func newTestMCP(t *testing.T, serverOpts *mcp.ServerOptions, handlerOpts *mcp.StreamableHTTPOptions) *mcp.ClientSession {
 	t.Helper()
 
-	server := mcp.NewServer(&mcp.Implementation{Name: "hoop-test", Version: "test"}, serverOpts)
+	server := mcp.NewServer(&mcp.Implementation{Name: "lyric-iam-test", Version: "test"}, serverOpts)
 	mcp.AddTool(server, &mcp.Tool{Name: "ping", Description: "returns pong"},
 		func(ctx context.Context, _ *mcp.CallToolRequest, _ pingArgs) (*mcp.CallToolResult, any, error) {
 			return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: "pong"}}}, nil, nil

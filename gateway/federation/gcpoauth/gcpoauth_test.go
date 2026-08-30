@@ -72,14 +72,14 @@ func TestResolve_HappyPath(t *testing.T) {
 	if ex.gotRefreshToken != "1//refresh-token" {
 		t.Errorf("exchanger received refresh token %q, want 1//refresh-token", ex.gotRefreshToken)
 	}
-	if got := res.EnvVars["HOOP_GCP_ACCESS_TOKEN"]; got != "ya29.user-token" {
-		t.Errorf("HOOP_GCP_ACCESS_TOKEN=%q, want ya29.user-token", got)
+	if got := res.EnvVars["LYRIC_IAM_GCP_ACCESS_TOKEN"]; got != "ya29.user-token" {
+		t.Errorf("LYRIC_IAM_GCP_ACCESS_TOKEN=%q, want ya29.user-token", got)
 	}
 	if got := res.EnvVars["CLOUDSDK_CORE_PROJECT"]; got != "my-proj" {
 		t.Errorf("CLOUDSDK_CORE_PROJECT=%q, want my-proj", got)
 	}
-	if got := res.EnvVars["HOOP_FEDERATED_PRINCIPAL"]; got != "alice@acme.com" {
-		t.Errorf("HOOP_FEDERATED_PRINCIPAL=%q, want alice@acme.com", got)
+	if got := res.EnvVars["LYRIC_IAM_FEDERATED_PRINCIPAL"]; got != "alice@acme.com" {
+		t.Errorf("LYRIC_IAM_FEDERATED_PRINCIPAL=%q, want alice@acme.com", got)
 	}
 	if !res.TokenExpiresAt.Equal(expiry) {
 		t.Errorf("TokenExpiresAt=%v, want %v", res.TokenExpiresAt, expiry)

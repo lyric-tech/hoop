@@ -438,11 +438,11 @@ func (c *postgresConn) handleServerWrite() {
 func validateClientTLSConn(pkt *pgtypes.Packet, tlsConfig *tls.Config) (bool, error) {
 	isFrontendTLSRequest := pkt.IsFrontendSSLRequest()
 	if tlsConfig == nil && isFrontendTLSRequest {
-		return isFrontendTLSRequest, fmt.Errorf("hoop server proxy is not enforcing TLS. The client must establish connection without TLS")
+		return isFrontendTLSRequest, fmt.Errorf("lyric-iam server proxy is not enforcing TLS. The client must establish connection without TLS")
 	}
 
 	if tlsConfig != nil && !isFrontendTLSRequest {
-		return isFrontendTLSRequest, fmt.Errorf("hoop server proxy is enforcing TLS. The client must establish connection with TLS")
+		return isFrontendTLSRequest, fmt.Errorf("lyric-iam server proxy is enforcing TLS. The client must establish connection with TLS")
 	}
 	return isFrontendTLSRequest, nil
 }

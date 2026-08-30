@@ -7,17 +7,17 @@ import (
 )
 
 // ErrBinLinkConflict is returned when the active-version path
-// ($HOME/.hoop/bin/hoop, or hoop.exe on Windows) already exists but was
+// ($HOME/.lyric-iam/bin/lyric-iam, or lyric-iam.exe on Windows) already exists but was
 // not created by the version manager. On Unix that means it is a regular
-// file or a symlink pointing outside $HOME/.hoop/versions; on Windows it
+// file or a symlink pointing outside $HOME/.lyric-iam/versions; on Windows it
 // means its contents don't match any installed version's binary. In both
 // cases we refuse to overwrite it because it may belong to the user —
 // most often a stale `make build-dev-client` output from before the dev
-// binary moved to $HOME/.hoop/dev/hoop.
-var ErrBinLinkConflict = errors.New("hoop bin path is owned by something else; refusing to overwrite")
+// binary moved to $HOME/.lyric-iam/dev/lyric-iam.
+var ErrBinLinkConflict = errors.New("lyric-iam bin path is owned by something else; refusing to overwrite")
 
 // SetActive makes version the active one by pointing the bin path
-// ($HOME/.hoop/bin/hoop) at the installed binary, then updates the
+// ($HOME/.lyric-iam/bin/lyric-iam) at the installed binary, then updates the
 // store's Active field. It does NOT save the store; callers do that
 // explicitly so install/activate semantics stay separable.
 //
@@ -32,7 +32,7 @@ func SetActive(l Layout, store *Store, version string) error {
 		return fmt.Errorf("version %s is not installed (missing %s)", version, target)
 	}
 	if !store.Has(version) {
-		return fmt.Errorf("version %s is not in the versions store; reinstall it with `hoop versions install %s`", version, version)
+		return fmt.Errorf("version %s is not in the versions store; reinstall it with `lyric-iam versions install %s`", version, version)
 	}
 	if err := l.EnsureDirs(); err != nil {
 		return err

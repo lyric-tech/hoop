@@ -140,7 +140,7 @@ function loadScript(src) {
  * updates the active panel and Reagent reconciles into the existing DOM.
  *
  * Requires the shadow-cljs dev server running on port 8280 (or VITE_CLJS_URL).
- * Start it with: cd webapp && npm run shadow:watch:hoop-ui
+ * Start it with: cd webapp && npm run shadow:watch:lyric-iam-ui
  */
 function ClojureApp() {
   const location = useLocation()
@@ -254,7 +254,7 @@ function ClojureApp() {
             </Text>
             <Code block>
               cd webapp{'\\n'}
-              npm run shadow:watch:hoop-ui{'\\n'}
+              npm run shadow:watch:lyric-iam-ui{'\\n'}
               npm run postcss:watch
             </Code>
           </Alert>

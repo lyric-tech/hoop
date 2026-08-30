@@ -49,8 +49,8 @@ func init() {
 }
 
 var createConnExamplesDesc = `
-hoop admin create connection hello-hoop -a default -- bash -c 'echo hello hoop'
-hoop admin create connection tcpsvc -a default -t application/tcp -e HOST=127.0.0.1 -e PORT=3000
+lyric-iam admin create connection hello-hoop -a default -- bash -c 'echo hello lyric-iam'
+lyric-iam admin create connection tcpsvc -a default -t application/tcp -e HOST=127.0.0.1 -e PORT=3000
 `
 var createConnectionCmd = &cobra.Command{
 	Use:     "connection NAME [-- COMMAND]",

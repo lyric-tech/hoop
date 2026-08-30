@@ -139,7 +139,7 @@
                                                           @selected-installation-method)})]]))]]]
                             [deployment/main
                              {:installation-method @selected-installation-method
-                              :hoop-key (-> @agent-key :data :token)}]]}}]]
+                              :lyric-iam-key (-> @agent-key :data :token)}]]}}]]
 
         (finally
           (remove-watch agent-key :agent-key-watcher))))))

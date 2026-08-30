@@ -22,17 +22,17 @@ Open-source. Used by NYSE-listed companies. 5,000+ databases protected.
 <p align="center">
 <a href="#quick-start">Quick start</a> ·
 <a href="#how-it-works">How it works</a> ·
-<a href="https://hoop.dev/docs/quickstart/overview">Connectors</a> ·
+<a href="https://docs.lyric.tech/access/quickstart/overview">Connectors</a> ·
 <a href="#vs-alternatives">vs alternatives</a> ·
 <a href="#whats-new">What's new</a> ·
-<a href="https://hoop.dev/docs">Docs</a>
+<a href="https://docs.lyric.tech/access">Docs</a>
 </p>
 
 ---
  
-## What is hoop?
+## What is lyric-iam?
  
-hoop is an open-source layer 7 gateway that sits between users (engineers, AI agents, service accounts)
+lyric-iam is an open-source layer 7 gateway that sits between users (engineers, AI agents, service accounts)
 and infrastructure (databases, Kubernetes clusters, servers, APIs). Every query and command
 passes through at the wire protocol level, where the gateway can:
  
@@ -44,9 +44,9 @@ No agents on endpoints. No schema discovery. No code changes. Deploy the gateway
  
 ---
  
-## Who is hoop for?
+## Who is lyric-iam for?
  
-Teams where engineers or AI agents access production infrastructure. If your developers run queries against databases with customer PII, execute commands on production Kubernetes clusters, or use AI coding assistants against real systems, hoop gives you visibility and control over what happens inside those sessions and what data is allowed to leave them.
+Teams where engineers or AI agents access production infrastructure. If your developers run queries against databases with customer PII, execute commands on production Kubernetes clusters, or use AI coding assistants against real systems, lyric-iam gives you visibility and control over what happens inside those sessions and what data is allowed to leave them.
  
 ---
  
@@ -54,7 +54,7 @@ Teams where engineers or AI agents access production infrastructure. If your dev
  
 An engineer pulls recent payments to investigate a customer report:
  
-**❌ Without hoop**
+**❌ Without lyric-iam**
  
 ```sql
 SELECT * FROM payments LIMIT 10;
@@ -73,7 +73,7 @@ SELECT * FROM payments LIMIT 10;
  
 10 rows of real card numbers and emails. Now in `psql` history, in the screenshot the engineer pasted into Slack, and in the CSV they exported to debug locally.
  
-**✅ With hoop**
+**✅ With lyric-iam**
  
 ```sql
 SELECT * FROM payments LIMIT 10;
@@ -96,7 +96,7 @@ Engineers can still debug using amounts, statuses, and timestamps. PII never lea
  
 An AI agent fixing a bug at 3AM:
  
-**❌ Without hoop**
+**❌ Without lyric-iam**
  
 <pre>
 > claude-code: DROP TABLE orders;
@@ -104,7 +104,7 @@ Query OK
 47,291,834 rows affected 💀
 </pre>
  
-**✅ With hoop**
+**✅ With lyric-iam**
  
 <pre>
 > claude-code: DROP TABLE orders;
@@ -123,13 +123,13 @@ The command never reached the database.
 echo "JWT_SECRET_KEY=$(openssl rand -hex 32)" >> .env
  
 # download and run
-curl -sL https://hoop.dev/docker-compose.yml > docker-compose.yml && \
+curl -sL https://lyric.tech/docker-compose.yml > docker-compose.yml && \
   docker compose up
 ```
  
 Gateway running on `:8009`. OIDC connected. Masking and guardrails active.
  
-[Full installation options →](https://hoop.dev/docs/introduction/getting-started)
+[Full installation options →](https://docs.lyric.tech/access/introduction/getting-started)
  
 ---
  
@@ -140,7 +140,7 @@ Engineers / AI Agents / Service Accounts
               │
               ▼
      ┌────────────────┐
-     │   hoop Gateway │  ← Parses wire protocols in real time
+     │   lyric-iam Gateway │  ← Parses wire protocols in real time
      │                │
      │  • Masks PII   │  (ML-powered, <5ms latency)
      │  • Blocks cmds │  (DROP, DELETE, rm -rf)
@@ -162,7 +162,7 @@ The gateway parses wire protocols natively: PostgreSQL, MySQL, MSSQL, MongoDB, K
  
 ### Inline controls
  
-What hoop does in real-time on every connection — for engineers, AI agents, and service accounts equally.
+What lyric-iam does in real-time on every connection — for engineers, AI agents, and service accounts equally.
  
 **Data masking**
  
@@ -185,10 +185,10 @@ Same policy engine, agent-aware semantics. No parallel stack, no sandbox.
 - Claude Code, Cursor, and autonomous agents connect to your infrastructure through the gateway. Agents read freely (with masked responses). Agents write with approval. Destructive operations are blocked outright. Every agent action is logged, risk-scored, and replayable.
 **MCP gateway**
  
-- Not just a proxy. hoop inspects MCP payloads, masks PII in JSON responses before they reach the agent, blocks dangerous operations, and federates identity so developers never touch real credentials. Auto-generates a sensitive data catalog from MCP traffic.
+- Not just a proxy. lyric-iam inspects MCP payloads, masks PII in JSON responses before they reach the agent, blocks dangerous operations, and federates identity so developers never touch real credentials. Auto-generates a sensitive data catalog from MCP traffic.
 ### Audit & operations
  
-What you stop building yourself once hoop is in place.
+What you stop building yourself once lyric-iam is in place.
  
 **Session recording**
  
@@ -200,23 +200,23 @@ What you stop building yourself once hoop is in place.
  
 ## vs Alternatives
  
-hoop gets compared to three different categories of tools. Here's where it overlaps and where it doesn't.
+lyric-iam gets compared to three different categories of tools. Here's where it overlaps and where it doesn't.
  
 ### vs PAM (Privileged Access Management)
  
-PAM tools route the connection, broker credentials, and log the session. hoop does that too — and then parses the wire protocol on top. Once a user is connected, PAM is done; hoop is just starting. We mask sensitive fields in database responses, block destructive commands by content (`DROP TABLE`, `rm -rf`), and require approval on risky writes — all inline, before the action reaches the target system.
+PAM tools route the connection, broker credentials, and log the session. lyric-iam does that too — and then parses the wire protocol on top. Once a user is connected, PAM is done; lyric-iam is just starting. We mask sensitive fields in database responses, block destructive commands by content (`DROP TABLE`, `rm -rf`), and require approval on risky writes — all inline, before the action reaches the target system.
  
-If your concern is *who connected*, PAM is enough. If your concern is *what data left the session and what commands ran*, you need both — or you need hoop.
+If your concern is *who connected*, PAM is enough. If your concern is *what data left the session and what commands ran*, you need both — or you need lyric-iam.
  
 ### vs DLP (Data Loss Prevention)
  
-DLP inspects data in motion at the network or endpoint layer — usually after a developer has already pulled it onto their laptop, into a Slack message, or into an email. hoop inspects data in motion at the wire-protocol layer — before it reaches the developer at all. Sensitive fields never leave the gateway in the first place.
+DLP inspects data in motion at the network or endpoint layer — usually after a developer has already pulled it onto their laptop, into a Slack message, or into an email. lyric-iam inspects data in motion at the wire-protocol layer — before it reaches the developer at all. Sensitive fields never leave the gateway in the first place.
  
-DLP catches leaks. hoop prevents them.
+DLP catches leaks. lyric-iam prevents them.
  
 ### vs AI Security (LLM guardrails, prompt firewalls)
  
-AI security tools sit in front of the LLM. They inspect prompts going in and outputs coming out, looking for jailbreaks, prompt injection, and policy violations at the application layer. hoop sits in front of the infrastructure. We inspect what data the agent is allowed to read, what commands it's allowed to run, and what gets returned — at the database, Kubernetes, and MCP layers.
+AI security tools sit in front of the LLM. They inspect prompts going in and outputs coming out, looking for jailbreaks, prompt injection, and policy violations at the application layer. lyric-iam sits in front of the infrastructure. We inspect what data the agent is allowed to read, what commands it's allowed to run, and what gets returned — at the database, Kubernetes, and MCP layers.
  
 Different problem. Different layer. Most regulated AI deployments end up with both — application-layer controls on the prompt, infrastructure-layer controls on the data.
  
@@ -228,15 +228,15 @@ Different problem. Different layer. Most regulated AI deployments end up with bo
  
 ```bash
 touch .env && \
-curl -sL https://hoop.dev/docker-compose.yml > docker-compose.yml && \
+curl -sL https://lyric.tech/docker-compose.yml > docker-compose.yml && \
 docker compose up
 ```
  
-[See Docker Compose documentation →](https://hoop.dev/docs/setup/deployment/docker-compose)
+[See Docker Compose documentation →](https://docs.lyric.tech/access/setup/deployment/docker-compose)
  
-[See Kubernetes deployment documentation →](https://hoop.dev/docs/setup/deployment/kubernetes)
+[See Kubernetes deployment documentation →](https://docs.lyric.tech/access/setup/deployment/kubernetes)
  
-[See AWS deploy & host documentation →](https://hoop.dev/docs/setup/deployment/AWS)
+[See AWS deploy & host documentation →](https://docs.lyric.tech/access/setup/deployment/AWS)
  
 ---
  
@@ -257,19 +257,19 @@ docker compose up
  
 ### June 1, 2026 — Agent in the loop
  
-When an agent acts on production, hoop uses agents to evaluate the risk of the action in real time. You describe what counts as sensitive, what context matters, and what should escalate. The Session Analyzer reads that prompt and analyzes the live stream of commands flowing through the gateway.
+When an agent acts on production, lyric-iam uses agents to evaluate the risk of the action in real time. You describe what counts as sensitive, what context matters, and what should escalate. The Session Analyzer reads that prompt and analyzes the live stream of commands flowing through the gateway.
 
 It evaluates each session as it happens, against the actual command. When the analyzer deems an action warrants review, it flags it for a human, blocks it, or lets it run.
 
 The dev team's agent and the security team's agent operate at the same speed, on the same model class. No static rule has to anticipate what the dev agent will try next.
  
-[Read the full breakdown →](https://hoop.dev/blog/this-is-what-agent-on-agent-governance-looks-like)
+[Read the full breakdown →](https://lyric.tech/blog/this-is-what-agent-on-agent-governance-looks-like)
  
 ---
  
 ## Contributing
  
-We welcome contributions. Protocol parsers, masking patterns, guardrail rules, runbook templates, integrations, and documentation improvements. Check out our [Development Documentation](https://hoop.dev/docs) to get started.
+We welcome contributions. Protocol parsers, masking patterns, guardrail rules, runbook templates, integrations, and documentation improvements. Check out our [Development Documentation](https://docs.lyric.tech/access) to get started.
  
 ---
  
@@ -281,10 +281,10 @@ Join our [Discussions](https://github.com/hoophq/hoop/discussions) to ask questi
 
 ## Star the Repository
 
-If hoop solves a problem for you, give us a star. It helps other teams find the project and tells us what to invest in next.
+If lyric-iam solves a problem for you, give us a star. It helps other teams find the project and tells us what to invest in next.
 
 <p >
-<a href="https://github.com/hoophq/hoop"><img src="https://img.shields.io/github/stars/hoophq/hoop?style=social" alt="Star hoop on GitHub"></a>
+<a href="https://github.com/hoophq/hoop"><img src="https://img.shields.io/github/stars/hoophq/hoop?style=social" alt="Star lyric-iam on GitHub"></a>
 </p>
  
 ---
@@ -296,5 +296,5 @@ MIT. The code that touches your data is code you can read.
 ---
  
 <p align="center">
-<a href="https://hoop.dev">hoop.dev</a> · Data security in transit. One gateway, every protocol.
+<a href="https://lyric.tech">hoop.dev</a> · Data security in transit. One gateway, every protocol.
 </p>

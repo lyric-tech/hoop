@@ -86,7 +86,7 @@ func (a *Agent) processOracleProtocol(pkt *pb.Packet) {
 		"port":     connenv.port,
 		"username": connenv.user,
 		"password": connenv.pass,
-		// The hoop client always presents the local Oracle proxy with the fixed
+		// The lyric-iam client always presents the local Oracle proxy with the fixed
 		// placeholder noop/noop (see client/cmd/connect.go). Oracle auth is
 		// mutual, so the proxy needs the placeholder password to re-key the
 		// handshake and keep the server's response verifiable by real OCI

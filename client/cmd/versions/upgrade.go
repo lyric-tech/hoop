@@ -9,12 +9,12 @@ import (
 
 var upgradeCmd = &cobra.Command{
 	Use:   "upgrade",
-	Short: "Install the latest hoop CLI release",
-	Long: `Fetch the latest published hoop release version from
+	Short: "Install the latest lyric-iam CLI release",
+	Long: `Fetch the latest published lyric-iam release version from
 ` + upgrade.LatestVersionURL + ` and install it.
 
-Unlike ` + "`hoop versions sync`" + `, this command does not consult
-the gateway and does not require ` + "`hoop login`" + ` — it always
+Unlike ` + "`lyric-iam versions sync`" + `, this command does not consult
+the gateway and does not require ` + "`lyric-iam login`" + ` — it always
 tracks whatever the public releases server advertises as the latest
 version.`,
 	SilenceUsage: true,
@@ -35,6 +35,6 @@ func runUpgradeToLatest() error {
 		return err
 	}
 
-	fmt.Printf("Latest released hoop version is %s (from %s)\n", target, upgrade.LatestVersionURL)
+	fmt.Printf("Latest released lyric-iam version is %s (from %s)\n", target, upgrade.LatestVersionURL)
 	return installAndActivate(target)
 }

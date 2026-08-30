@@ -108,7 +108,7 @@ func (a *Agent) handleHttpProxyWrite(pkt *pb.Packet) {
 			}
 			// If we have and multiple websocket connection open and we kill one of them
 			// then we should not close the entire session, just this connection only.
-			// the proxy session will be closed when the hoop connect <role> is closed.
+			// the proxy session will be closed when the lyric-iam connect <role> is closed.
 			a.sendClientTCPConnectionClose(sessionID, clientConnectionID)
 		}
 		return
@@ -254,8 +254,8 @@ func isGuardrailsError(err error) bool {
 	}
 	errStr := err.Error()
 	// Check for the standard guardrails error message format from mspresidio/client.go:
-	// "Blocked by the following Hoop Guardrails Rules: <rule_names>"
-	return strings.Contains(errStr, "Blocked by the following Hoop Guardrails Rules")
+	// "Blocked by the following Lyric IAM Guardrails Rules: <rule_names>"
+	return strings.Contains(errStr, "Blocked by the following Lyric IAM Guardrails Rules")
 }
 
 // isWebSocketModeError checks if the error is the special ErrWebSocketMode

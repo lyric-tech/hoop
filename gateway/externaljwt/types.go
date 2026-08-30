@@ -4,7 +4,7 @@
 //
 // The package exposes a Provider interface and a singleton manager used by
 // the auth interceptors. Validation returns a ValidatedIdentity which the
-// caller is expected to map onto a Hoop identity (e.g. via the
+// caller is expected to map onto a Lyric IAM identity (e.g. via the
 // agent_spiffe_mappings table for SPIFFE tokens).
 package externaljwt
 
@@ -24,7 +24,7 @@ const (
 
 // ValidatedIdentity is the normalized result of a successful token
 // validation. It carries enough metadata for audit logs and for downstream
-// identity resolution. The caller decides how to map it onto a Hoop agent
+// identity resolution. The caller decides how to map it onto a Lyric IAM agent
 // or user.
 type ValidatedIdentity struct {
 	// IssuerType identifies which provider validated this token.

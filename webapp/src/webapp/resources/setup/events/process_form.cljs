@@ -106,7 +106,7 @@
        "insecure" insecure})))
 
 (defn mcpproxy-stdio?
-  "True when this role's credentials configure an MCP server hoop spawns as a
+  "True when this role's credentials configure an MCP server lyric-iam spawns as a
   child process rather than reaches at a URL.
 
   Both stdio transports answer yes: they differ only in WHICH machine runs the

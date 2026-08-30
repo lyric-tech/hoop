@@ -164,9 +164,9 @@ func (h *handler) LoginCallback(c *gin.Context) {
 	}
 	uinfo.Subject = subject
 	// get the user by its email to get the actual subject of that user. This is necessary
-	// due to the user subject when it's created inside hoop is changed after that user
+	// due to the user subject when it's created inside lyric-iam is changed after that user
 	// logs in with the IDP. The email should always come from the IDP as a design of how
-	// we handle users in hoop.
+	// we handle users in lyric-iam.
 	dbUser, err := models.GetUserByEmail(uinfo.Email)
 	if err != nil {
 		login.Outcome = fmt.Sprintf("failed fetching user by email=%s, reason=%v", uinfo.Email, err)

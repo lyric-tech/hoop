@@ -86,7 +86,7 @@ export default function ApiKeys() {
       {keys.length === 0 ? (
         <EmptyState
           title="No API keys yet"
-          description="Create an API key to authenticate programmatic access to Hoop."
+          description="Create an API key to authenticate programmatic access to Lyric IAM."
           action={{ label: 'Create new API key', onClick: () => navigate('/settings/api-keys/new') }}
         />
       ) : (

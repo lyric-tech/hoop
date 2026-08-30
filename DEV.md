@@ -50,17 +50,17 @@ make build-dev-webapp
 By default versioned clients are builded to strict connect via TLS. In order to build a client that permits connecting to remote hosts without TLS, execute the instruction below:
 
 ```sh
-# generate binary at $HOME/.hoop/dev/hoop
+# generate binary at $HOME/.lyric-iam/dev/lyric-iam
 make build-dev-client
 ```
 
-> Append `$HOME/.hoop/dev` to your `$PATH` in your profile to find commands when typing in your shell.
+> Append `$HOME/.lyric-iam/dev` to your `$PATH` in your profile to find commands when typing in your shell.
 >
-> Note: `$HOME/.hoop/bin/hoop` is reserved as the active symlink managed by `hoop versions`; the dev binary lives in `$HOME/.hoop/dev/hoop` so the two workflows don't collide. Put `$HOME/.hoop/dev` first on `PATH` if you want your dev build to take precedence; put `$HOME/.hoop/bin` first if you want whatever `hoop versions sync` / `hoop versions upgrade` last installed.
+> Note: `$HOME/.lyric-iam/bin/lyric-iam` is reserved as the active symlink managed by `lyric-iam versions`; the dev binary lives in `$HOME/.lyric-iam/dev/lyric-iam` so the two workflows don't collide. Put `$HOME/.lyric-iam/dev` first on `PATH` if you want your dev build to take precedence; put `$HOME/.lyric-iam/bin` first if you want whatever `lyric-iam versions sync` / `lyric-iam versions upgrade` last installed.
 
 ### Data Masking Setup
 
-We use Presidio as the provider to redact sensitive data on Hoop. To run the Presidio server, you need to have Docker installed and running.
+We use Presidio as the provider to redact sensitive data on Lyric IAM. To run the Presidio server, you need to have Docker installed and running.
 
 ```sh
 make run-dev-presidio
@@ -68,9 +68,9 @@ make run-dev-presidio
 
 ### SPIFFE Agent Setup
 
-Hoop can authenticate agents with SPIFFE JWT-SVIDs instead of DSN tokens. For local development we ship a minter that generates a trust bundle, signing key, and a short-lived JWT on your workstation — no SPIRE server required. See [`documentation/setup/deployment/spiffe.mdx`](../documentation/setup/deployment/spiffe.mdx) for the full feature docs.
+Lyric IAM can authenticate agents with SPIFFE JWT-SVIDs instead of DSN tokens. For local development we ship a minter that generates a trust bundle, signing key, and a short-lived JWT on your workstation — no SPIRE server required. See [`documentation/setup/deployment/spiffe.mdx`](../documentation/setup/deployment/spiffe.mdx) for the full feature docs.
 
-1. Mint the SPIFFE artifacts and patch `.env` with `HOOP_SPIFFE_*` vars:
+1. Mint the SPIFFE artifacts and patch `.env` with `LYRIC_IAM_SPIFFE_*` vars:
 
 ```sh
 make run-dev-spiffe-prep
@@ -79,22 +79,22 @@ make run-dev-spiffe-prep
 This writes a managed block into `.env`:
 
 ```sh
-# <<<HOOP_SPIFFE_DEV>>>
-HOOP_SPIFFE_MODE=enforce
-HOOP_SPIFFE_TRUST_DOMAIN=local.test
-HOOP_SPIFFE_BUNDLE_JWKS=<base64-encoded JWKS>
-HOOP_SPIFFE_AUDIENCE=http://127.0.0.1:8009
-HOOP_SPIFFE_REFRESH_PERIOD=30s
-# <<</HOOP_SPIFFE_DEV>>>
+# <<<LYRIC_IAM_SPIFFE_DEV>>>
+LYRIC_IAM_SPIFFE_MODE=enforce
+LYRIC_IAM_SPIFFE_TRUST_DOMAIN=local.test
+LYRIC_IAM_SPIFFE_BUNDLE_JWKS=<base64-encoded JWKS>
+LYRIC_IAM_SPIFFE_AUDIENCE=http://127.0.0.1:8009
+LYRIC_IAM_SPIFFE_REFRESH_PERIOD=30s
+# <<</LYRIC_IAM_SPIFFE_DEV>>>
 ```
 
 and emits three files under `dist/dev/spiffe/`:
 
 - `priv.pem` — RSA signing key (reused across runs, so the bundle stays stable)
-- `bundle.jwks` — JWKS trust bundle; its contents are base64-encoded into `HOOP_SPIFFE_BUNDLE_JWKS` in `.env`, so no file mount is needed in the gateway container
+- `bundle.jwks` — JWKS trust bundle; its contents are base64-encoded into `LYRIC_IAM_SPIFFE_BUNDLE_JWKS` in `.env`, so no file mount is needed in the gateway container
 - `agent.jwt` — JWT-SVID for `spiffe://local.test/agent/local-dev`, 24h TTL (re-minted every run)
 
-2. Start (or restart) the gateway so it picks up the new `HOOP_SPIFFE_*` vars:
+2. Start (or restart) the gateway so it picks up the new `LYRIC_IAM_SPIFFE_*` vars:
 
 ```sh
 make run-dev
@@ -110,13 +110,13 @@ make run-dev-spiffe-agent
 
 This script:
 
-- rebuilds `$HOME/.hoop/dev/hoop` if source files under `agent/` or `common/clientconfig/` are newer than the binary
+- rebuilds `$HOME/.lyric-iam/dev/lyric-iam` if source files under `agent/` or `common/clientconfig/` are newer than the binary
 - reads `POSTGRES_DB_URI` from `hoopdev`'s env and seeds two rows in `hoopdevpg` (idempotent):
   - `private.agents` → a `spiffe-agent` row
   - `private.agent_spiffe_mappings` → maps `spiffe://local.test/agent/local-dev` to that agent
-- launches the agent on your host with `HOOP_SPIFFE_KEY_FILE=dist/dev/spiffe/agent.jwt`, `HOOP_GRPCURL=127.0.0.1:8010`
+- launches the agent on your host with `LYRIC_IAM_SPIFFE_KEY_FILE=dist/dev/spiffe/agent.jwt`, `LYRIC_IAM_GRPCURL=127.0.0.1:8010`
 
-The trust bundle is delivered to the gateway via `HOOP_SPIFFE_BUNDLE_JWKS` in `.env` (set by `run-dev-spiffe-prep`), so this script does not touch the gateway container's filesystem.
+The trust bundle is delivered to the gateway via `LYRIC_IAM_SPIFFE_BUNDLE_JWKS` in `.env` (set by `run-dev-spiffe-prep`), so this script does not touch the gateway container's filesystem.
 
 `Ctrl-C` stops only the agent; `run-dev` keeps running.
 
@@ -124,10 +124,10 @@ The trust bundle is delivered to the gateway via `HOOP_SPIFFE_BUNDLE_JWKS` in `.
 
 | Variable | Default | Where it's used |
 |---|---|---|
-| `HOOP_SPIFFE_TRUST_DOMAIN` | `local.test` | Embedded in the minted JWT and the gateway config |
-| `HOOP_SPIFFE_ID` | `spiffe://local.test/agent/local-dev` | Subject of the minted JWT and the DB mapping |
-| `HOOP_SPIFFE_AUDIENCE` | `http://127.0.0.1:8009` | `aud` claim the gateway enforces |
-| `HOOP_SPIFFE_TTL` | `24h` | Lifetime of the minted JWT |
+| `LYRIC_IAM_SPIFFE_TRUST_DOMAIN` | `local.test` | Embedded in the minted JWT and the gateway config |
+| `LYRIC_IAM_SPIFFE_ID` | `spiffe://local.test/agent/local-dev` | Subject of the minted JWT and the DB mapping |
+| `LYRIC_IAM_SPIFFE_AUDIENCE` | `http://127.0.0.1:8009` | `aud` claim the gateway enforces |
+| `LYRIC_IAM_SPIFFE_TTL` | `24h` | Lifetime of the minted JWT |
 | `HOOPDEV_APP_CONTAINER` | `hoopdev` | Gateway container (`POSTGRES_DB_URI` source) |
 | `HOOPDEV_DB_CONTAINER` | `hoopdevpg` | Postgres container where `psql` runs |
 
@@ -144,7 +144,7 @@ To rotate the signing key too, delete `dist/dev/spiffe/priv.pem` before running 
 
 #### Disabling SPIFFE
 
-Edit `.env` and change `HOOP_SPIFFE_MODE=enforce` to `HOOP_SPIFFE_MODE=disabled` (or remove the managed block entirely), then restart `run-dev`. `enforce` is the only "on" value — the gateway always rejects invalid SVIDs and never falls back to DSN on a JWT-shaped token.
+Edit `.env` and change `LYRIC_IAM_SPIFFE_MODE=enforce` to `LYRIC_IAM_SPIFFE_MODE=disabled` (or remove the managed block entirely), then restart `run-dev`. `enforce` is the only "on" value — the gateway always rejects invalid SVIDs and never falls back to DSN on a JWT-shaped token.
 
 ## Running Tests
 
@@ -167,7 +167,7 @@ End-to-end tests under `agent/integration/` that drive the real `controller.Agen
 Requirements:
 
 - **Docker daemon** running on the host — [testcontainers-go](https://golang.testcontainers.org/) manages the upstream container lifecycle.
-- **Enterprise `libhoop`** checked out as a sibling directory (`../libhoop`, matching the `replace libhoop => ../libhoop` directive in `agent/go.mod` and `gateway/go.mod`). The OSS stub at `_libhoop/libhoop.go` returns "missing protocol hoop library for X" and integration tests will fail at handshake. CI clones `hoophq/libhoop` into `./libhoop` via `secrets.GH_TOKEN` (same as the build jobs).
+- **Enterprise `libhoop`** checked out as a sibling directory (`../libhoop`, matching the `replace libhoop => ../libhoop` directive in `agent/go.mod` and `gateway/go.mod`). The OSS stub at `_libhoop/libhoop.go` returns "missing protocol lyric-iam library for X" and integration tests will fail at handshake. CI clones `hoophq/libhoop` into `./libhoop` via `secrets.GH_TOKEN` (same as the build jobs).
 
 CI runs integration tests on every PR via the `Integration Test` job in `.github/workflows/pullrequest.yml`.
 
@@ -265,7 +265,7 @@ build arg:
 - **clean** (`INCLUDE_LEGACY_MONGO=false`) — drops the SSPL shell and relies on
   `mongosh` (Apache-2.0). Published with a `-clean` tag suffix and consumed by
   the clean image line (`hoophq/hoop-ng` / `hoophq/hoopdev-ng`, see the helm
-  `hoop-ng` / `hoopagent-ng` charts).
+  `lyric-iam-ng` / `hoopagent-ng` charts).
 
 The CI license gate is two-layered: Trivy scans the apt/language layer, and
 `scripts/ci/check-manual-binaries.py` covers hand-installed (curl/tarball/zip)

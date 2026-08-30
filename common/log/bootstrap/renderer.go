@@ -74,7 +74,7 @@ func (r *ttyRenderer) header(version, platform, commit string) {
 		short = short[:7]
 	}
 	triangle := r.paint(ansiCyan+ansiBold, r.glyph("▲", ">"))
-	name := r.paint(ansiBold, "hoop")
+	name := r.paint(ansiBold, "lyric-iam")
 	dot := r.paint(ansiGray, "·")
 	fmt.Fprintln(r.w)
 	fmt.Fprintf(r.w, "  %s %s  gateway v%s %s %s %s commit %s\n",

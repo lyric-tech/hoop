@@ -22,7 +22,7 @@ import (
 var ErrUnauthorized = errors.New("gateway rejected the access token (401 unauthorized)")
 
 // newAccessTokenHeader is the rotation header emitted by the gateway's
-// auth middleware and consumed by every hoop client (webapp, hsh CLI,
+// auth middleware and consumed by every lyric-iam client (webapp, hsh CLI,
 // and this daemon).
 const newAccessTokenHeader = "X-New-Access-Token"
 

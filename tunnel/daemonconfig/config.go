@@ -3,7 +3,7 @@
 //
 // What goes in here:
 //
-//   - The hoop API URL (so the daemon knows which gateway to talk to
+//   - The lyric-iam API URL (so the daemon knows which gateway to talk to
 //     across restarts).
 //   - An optional explicit gRPC URL (otherwise auto-discovered from
 //     /api/serverinfo at runtime).
@@ -69,7 +69,7 @@ func DefaultConfigPathPlatform() string {
 // so operators editing the file by hand do not have to mentally
 // translate.
 type Config struct {
-	// APIURL is the hoop gateway's HTTPS API base, e.g.
+	// APIURL is the lyric-iam gateway's HTTPS API base, e.g.
 	// "https://hoop.example.com". Required for the daemon to do
 	// anything; without it `hsh-tunneld` fails fast at startup.
 	APIURL string `toml:"api_url"`

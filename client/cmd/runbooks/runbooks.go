@@ -59,9 +59,9 @@ var MainCmd = &cobra.Command{
 
 // ---- lint ----
 
-var exampleDesc = `hoop runbooks lint ./runbooks/myfile.runbook.py
-hoop runbooks lint /root/another-file.runbook.py
-hoop runbooks lint -p account_id=123 <<< '{{ .account_id | description "Account ID" }}'
+var exampleDesc = `lyric-iam runbooks lint ./runbooks/myfile.runbook.py
+lyric-iam runbooks lint /root/another-file.runbook.py
+lyric-iam runbooks lint -p account_id=123 <<< '{{ .account_id | description "Account ID" }}'
 `
 
 var lintCmd = &cobra.Command{
@@ -141,13 +141,13 @@ var runbooksListCmd = &cobra.Command{
 	Short: "List runbooks",
 	Long:  "List all runbooks available across configured git repositories.",
 	Example: `  # List all runbooks
-  hoop runbooks list
+  lyric-iam runbooks list
 
   # Filter by role name
-  hoop runbooks list --role my-db
+  lyric-iam runbooks list --role my-db
 
   # Output as JSON
-  hoop runbooks list --json`,
+  lyric-iam runbooks list --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runRunbooksList()
 	},
@@ -160,22 +160,22 @@ var runbooksCreateCmd = &cobra.Command{
 	Short: "Create a runbook file",
 	Long:  "Commit a new runbook file to the configured git repository.",
 	Example: `  # From a local file
-  hoop runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh
+  lyric-iam runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh
 
   # From stdin
-  hoop runbooks create --path ops/restart.runbook.sh < ./restart.sh
+  lyric-iam runbooks create --path ops/restart.runbook.sh < ./restart.sh
 
   # Inline content
-  hoop runbooks create --path ops/restart.runbook.sh --content "#!/bin/bash\necho restarting..."
+  lyric-iam runbooks create --path ops/restart.runbook.sh --content "#!/bin/bash\necho restarting..."
 
   # Specify the repository when multiple are configured
-  hoop runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh --repo https://github.com/myorg/myrepo
+  lyric-iam runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh --repo https://github.com/myorg/myrepo
 
   # Overwrite an existing file
-  hoop runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh --overwrite
+  lyric-iam runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh --overwrite
 
   # Custom commit message
-  hoop runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh --commit-message "feat: add restart runbook"`,
+  lyric-iam runbooks create --path ops/restart.runbook.sh --content-file ./restart.sh --commit-message "feat: add restart runbook"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runRunbooksCreate()
 	},
@@ -427,7 +427,7 @@ func resolveRunbookConfigID(config *clientconfig.Config) (string, error) {
 	}
 
 	if httpResp.StatusCode == 404 {
-		return "", fmt.Errorf("no runbook configuration found — set one up in the hoop dashboard first")
+		return "", fmt.Errorf("no runbook configuration found — set one up in the lyric-iam dashboard first")
 	}
 	if httpResp.StatusCode != 200 {
 		return "", fmt.Errorf("failed fetching runbook configurations, status=%v, body=%v", httpResp.StatusCode, string(body))

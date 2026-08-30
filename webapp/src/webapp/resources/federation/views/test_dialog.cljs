@@ -83,7 +83,7 @@
            [:> Heading {:size "5" :weight "bold" :class "text-[--gray-12]"}
             "Test as user"]
            [:> Text {:size "2" :class "text-[--gray-11]"}
-            "Run the federation hook as a specific Hoop user and inspect what the session would receive."]]
+            "Run the federation hook as a specific Lyric IAM user and inspect what the session would receive."]]
           [:> Box {:class "cursor-pointer text-[--gray-10] hover:text-[--gray-12] flex-shrink-0"
                    :role "button"
                    :aria-label "Close"
@@ -95,7 +95,7 @@
 
            [:<>
             [forms/input
-             {:label "Hoop user"
+             {:label "Lyric IAM user"
               :placeholder "user@example.com"
               :type "email"
               :required true

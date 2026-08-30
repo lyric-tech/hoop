@@ -161,9 +161,9 @@ func Load() error {
 		}
 	}
 
-	grpcClientTLSCa, err := envloader.GetEnv("HOOP_TLSCA")
+	grpcClientTLSCa, err := envloader.GetEnv("LYRIC_IAM_TLSCA")
 	if err != nil {
-		return fmt.Errorf("failed loading env HOOP_TLSCA, reason=%v", err)
+		return fmt.Errorf("failed loading env LYRIC_IAM_TLSCA, reason=%v", err)
 	}
 	gatewayTLSKey, err := envloader.GetEnv("TLS_KEY")
 	if err != nil {
@@ -207,7 +207,7 @@ func Load() error {
 	allowPlainText := os.Getenv("GATEWAY_ALLOW_PLAINTEXT") != "false" // Defaults to true
 	// For backwards compatibility, we also allow plaintext if no TLS envs are set
 	gatewayUseTLS := os.Getenv("USE_TLS") == "true" || grpcClientTLSCa != "" || gatewayTLSKey != "" || gatewayTLSCert != ""
-	gatewaySkipTLSVerify := os.Getenv("HOOP_TLS_SKIP_VERIFY") == "true"
+	gatewaySkipTLSVerify := os.Getenv("LYRIC_IAM_TLS_SKIP_VERIFY") == "true"
 
 	// RDP PII analysis defaults (overridable via env)
 	rdpPIISnapshotInterval := 0.25 // 250ms
@@ -532,7 +532,7 @@ func isEnvSet(key string) bool {
 //	disabled: no SPIFFE validation at all (default).
 //	enforce:  validate JWT-SVIDs presented. Reject on failure. Static-token agents
 //	          continue to work in parallel (identified by token shape, not by policy).
-//	          Bad HOOP_SPIFFE_* env values fail startup; a failed initial bundle
+//	          Bad LYRIC_IAM_SPIFFE_* env values fail startup; a failed initial bundle
 //	          fetch logs a warning and is retried by the background refresh loop
 //	          so an unreachable bundle does not take DSN agents offline.
 const (
@@ -543,26 +543,26 @@ const (
 // loadSPIFFEConfig reads and validates SPIFFE-related env vars. All fields are
 // optional; when mode is "disabled" the other fields are ignored.
 //
-//	HOOP_SPIFFE_MODE             disabled|enforce (default: disabled)
-//	HOOP_SPIFFE_BUNDLE_URL       HTTPS URL to fetch the SPIFFE trust bundle (JWKS-shaped)
-//	HOOP_SPIFFE_BUNDLE_FILE      path to a static trust bundle file (JWKS JSON)
-//	HOOP_SPIFFE_BUNDLE_JWKS      inline SPIFFE trust bundle as JWKS JSON. Accepts
+//	LYRIC_IAM_SPIFFE_MODE             disabled|enforce (default: disabled)
+//	LYRIC_IAM_SPIFFE_BUNDLE_URL       HTTPS URL to fetch the SPIFFE trust bundle (JWKS-shaped)
+//	LYRIC_IAM_SPIFFE_BUNDLE_FILE      path to a static trust bundle file (JWKS JSON)
+//	LYRIC_IAM_SPIFFE_BUNDLE_JWKS      inline SPIFFE trust bundle as JWKS JSON. Accepts
 //	                             either raw JSON (auto-detected by a leading '{')
 //	                             or standard-encoded base64 of the JWKS JSON.
 //	                             Intended for cases where mounting a file is
 //	                             inconvenient (e.g. pure env-based deployments).
-//	HOOP_SPIFFE_TRUST_DOMAIN     trust domain name, e.g. "customer.com"
-//	HOOP_SPIFFE_AUDIENCE         required audience claim on JWT-SVIDs (default: "hoop-gateway")
-//	HOOP_SPIFFE_REFRESH_PERIOD   go duration for trust bundle refresh (default: 30s)
+//	LYRIC_IAM_SPIFFE_TRUST_DOMAIN     trust domain name, e.g. "customer.com"
+//	LYRIC_IAM_SPIFFE_AUDIENCE         required audience claim on JWT-SVIDs (default: "hoop-gateway")
+//	LYRIC_IAM_SPIFFE_REFRESH_PERIOD   go duration for trust bundle refresh (default: 30s)
 func loadSPIFFEConfig() (mode, bundleURL, bundleFile, bundleJWKS, trustDomain, audience string, refresh time.Duration, err error) {
-	mode = os.Getenv("HOOP_SPIFFE_MODE")
+	mode = os.Getenv("LYRIC_IAM_SPIFFE_MODE")
 	if mode == "" {
 		mode = SPIFFEModeDisabled
 	}
 	switch mode {
 	case SPIFFEModeDisabled, SPIFFEModeEnforce:
 	default:
-		err = fmt.Errorf("invalid HOOP_SPIFFE_MODE, got=%q, expected disabled|enforce", mode)
+		err = fmt.Errorf("invalid LYRIC_IAM_SPIFFE_MODE, got=%q, expected disabled|enforce", mode)
 		return
 	}
 
@@ -570,16 +570,16 @@ func loadSPIFFEConfig() (mode, bundleURL, bundleFile, bundleJWKS, trustDomain, a
 		return
 	}
 
-	bundleURL = os.Getenv("HOOP_SPIFFE_BUNDLE_URL")
-	bundleFile = os.Getenv("HOOP_SPIFFE_BUNDLE_FILE")
-	rawJWKS := strings.TrimSpace(os.Getenv("HOOP_SPIFFE_BUNDLE_JWKS"))
-	trustDomain = os.Getenv("HOOP_SPIFFE_TRUST_DOMAIN")
-	audience = os.Getenv("HOOP_SPIFFE_AUDIENCE")
+	bundleURL = os.Getenv("LYRIC_IAM_SPIFFE_BUNDLE_URL")
+	bundleFile = os.Getenv("LYRIC_IAM_SPIFFE_BUNDLE_FILE")
+	rawJWKS := strings.TrimSpace(os.Getenv("LYRIC_IAM_SPIFFE_BUNDLE_JWKS"))
+	trustDomain = os.Getenv("LYRIC_IAM_SPIFFE_TRUST_DOMAIN")
+	audience = os.Getenv("LYRIC_IAM_SPIFFE_AUDIENCE")
 	if audience == "" {
 		audience = "hoop-gateway"
 	}
 
-	// HOOP_SPIFFE_BUNDLE_JWKS accepts either raw JWKS JSON or base64-encoded
+	// LYRIC_IAM_SPIFFE_BUNDLE_JWKS accepts either raw JWKS JSON or base64-encoded
 	// JWKS JSON. Raw JSON is detected by a leading '{'. Anything else is
 	// assumed to be base64 and decoded here so downstream code only deals
 	// with JSON bytes. We validate the shape (must start with '{' after
@@ -591,12 +591,12 @@ func loadSPIFFEConfig() (mode, bundleURL, bundleFile, bundleJWKS, trustDomain, a
 		} else {
 			decoded, decErr := base64.StdEncoding.DecodeString(rawJWKS)
 			if decErr != nil {
-				err = fmt.Errorf("failed decoding HOOP_SPIFFE_BUNDLE_JWKS as base64: %v", decErr)
+				err = fmt.Errorf("failed decoding LYRIC_IAM_SPIFFE_BUNDLE_JWKS as base64: %v", decErr)
 				return
 			}
 			trimmed := strings.TrimSpace(string(decoded))
 			if !strings.HasPrefix(trimmed, "{") {
-				err = fmt.Errorf("HOOP_SPIFFE_BUNDLE_JWKS did not decode to a JSON object")
+				err = fmt.Errorf("LYRIC_IAM_SPIFFE_BUNDLE_JWKS did not decode to a JSON object")
 				return
 			}
 			bundleJWKS = trimmed
@@ -615,23 +615,23 @@ func loadSPIFFEConfig() (mode, bundleURL, bundleFile, bundleJWKS, trustDomain, a
 		sourcesSet++
 	}
 	if sourcesSet != 1 {
-		err = fmt.Errorf("SPIFFE mode %q requires exactly one of HOOP_SPIFFE_BUNDLE_URL, HOOP_SPIFFE_BUNDLE_FILE, or HOOP_SPIFFE_BUNDLE_JWKS to be set", mode)
+		err = fmt.Errorf("SPIFFE mode %q requires exactly one of LYRIC_IAM_SPIFFE_BUNDLE_URL, LYRIC_IAM_SPIFFE_BUNDLE_FILE, or LYRIC_IAM_SPIFFE_BUNDLE_JWKS to be set", mode)
 		return
 	}
 	if trustDomain == "" {
-		err = fmt.Errorf("SPIFFE mode %q requires HOOP_SPIFFE_TRUST_DOMAIN to be set", mode)
+		err = fmt.Errorf("SPIFFE mode %q requires LYRIC_IAM_SPIFFE_TRUST_DOMAIN to be set", mode)
 		return
 	}
 
 	refresh = 30 * time.Second
-	if v := os.Getenv("HOOP_SPIFFE_REFRESH_PERIOD"); v != "" {
+	if v := os.Getenv("LYRIC_IAM_SPIFFE_REFRESH_PERIOD"); v != "" {
 		refresh, err = time.ParseDuration(v)
 		if err != nil {
-			err = fmt.Errorf("failed parsing HOOP_SPIFFE_REFRESH_PERIOD, reason=%v", err)
+			err = fmt.Errorf("failed parsing LYRIC_IAM_SPIFFE_REFRESH_PERIOD, reason=%v", err)
 			return
 		}
 		if refresh < time.Second {
-			err = fmt.Errorf("HOOP_SPIFFE_REFRESH_PERIOD must be at least 1s, got=%v", refresh)
+			err = fmt.Errorf("LYRIC_IAM_SPIFFE_REFRESH_PERIOD must be at least 1s, got=%v", refresh)
 			return
 		}
 	}

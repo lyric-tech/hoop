@@ -366,7 +366,7 @@ func (s *Segment) TrackSessionUsageData(eventName string, orgID string, userID s
 	s.Track(userID, eventName, sessionUsageProperties(data))
 }
 
-// CreateConnectionEvent is the canonical input for the hoop-create-connection
+// CreateConnectionEvent is the canonical input for the lyric-iam-create-connection
 // analytics event. Different connection-creation paths fill different subsets of
 // these fields — empty/zero fields are omitted from the emitted properties.
 type CreateConnectionEvent struct {
@@ -393,7 +393,7 @@ type CreateConnectionEvent struct {
 	APIHostname   string
 }
 
-// TrackCreateConnection emits hoop-create-connection with a consistent property
+// TrackCreateConnection emits lyric-iam-create-connection with a consistent property
 // shape across every connection-creation path. If evt.UserID is empty the event
 // is emitted as a system event (UserId="Gateway") so dashboards can distinguish
 // user-initiated from background-job creations via the "source" property.

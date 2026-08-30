@@ -1,5 +1,5 @@
 // Package spiffemappings implements the HTTP admin API for managing
-// SPIFFE-ID to Hoop-agent mappings. These mappings are consumed at
+// SPIFFE-ID to Lyric IAM-agent mappings. These mappings are consumed at
 // authentication time when an agent presents a SPIFFE JWT-SVID.
 package spiffemappings
 
@@ -43,7 +43,7 @@ func List(c *gin.Context) {
 // Create
 //
 //	@Summary		Create SPIFFE Mapping
-//	@Description	Map a SPIFFE identity (exact URI or URI prefix) onto a Hoop agent.
+//	@Description	Map a SPIFFE identity (exact URI or URI prefix) onto a Lyric IAM agent.
 //	@Tags			SPIFFE
 //	@Accept			json
 //	@Produce		json

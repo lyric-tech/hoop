@@ -143,7 +143,7 @@ type Options struct {
 	// restarts.
 	SessionSeed string
 
-	// TLD is the apex domain the daemon owns ("hoop" by default).
+	// TLD is the apex domain the daemon owns ("lyric-iam" by default).
 	// Connection names live at "<conn>.<TLD>".
 	TLD string
 
@@ -152,8 +152,8 @@ type Options struct {
 	DeviceName string
 
 	// HSHTLSSkipVerify and HSHTLSServerName plumb through to the
-	// gRPC client config. They mirror the HOOP_TLS_SKIP_VERIFY /
-	// HOOP_TLSSERVERNAME env vars the CLI honours.
+	// gRPC client config. They mirror the LYRIC_IAM_TLS_SKIP_VERIFY /
+	// LYRIC_IAM_TLSSERVERNAME env vars the CLI honours.
 	TLSSkipVerify bool
 	TLSServerName string
 

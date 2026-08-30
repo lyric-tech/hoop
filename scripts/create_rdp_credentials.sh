@@ -5,7 +5,7 @@
 # You should run hoop login before running this script
 
 # Default values
-HOOP_API_URL="${HOOP_API_URL:-http://localhost:8009}"
+LYRIC_IAM_API_URL="${LYRIC_IAM_API_URL:-http://localhost:8009}"
 CONNECTION_NAME="${CONNECTION_NAME:-}"
 ACCESS_DURATION="${ACCESS_DURATION:-3600}"  # 1 hour default
 
@@ -32,7 +32,7 @@ usage() {
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -u|--url) HOOP_API_URL="$2"; shift 2 ;;
+        -u|--url) LYRIC_IAM_API_URL="$2"; shift 2 ;;
         -n|--name) CONNECTION_NAME="$2"; shift 2 ;;
         -d|--duration) ACCESS_DURATION="$2"; shift 2 ;;
         --help) usage; exit 0 ;;
@@ -71,7 +71,7 @@ RESPONSE=$(curl --http1.1 -ks -w "\n%{http_code}" \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TOKEN" \
     -d "{\"access_duration_seconds\": $ACCESS_DURATION}" \
-    "$HOOP_API_URL/api/connections/$CONNECTION_NAME/credentials")
+    "$LYRIC_IAM_API_URL/api/connections/$CONNECTION_NAME/credentials")
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')

@@ -8,7 +8,7 @@ import (
 	"github.com/hoophq/hoop/gateway/storagev2/types"
 )
 
-const roleContextKey string = "hoop-roles"
+const roleContextKey string = "lyric-iam-roles"
 
 func rolesFromContext(c *gin.Context) []openapi.RoleType {
 	obj, ok := c.Get(roleContextKey)

@@ -93,7 +93,7 @@ type Result struct {
 	// the connection's secret map before propagating to the agent so
 	// federated and legacy credentials cannot coexist at runtime.
 	//
-	// Example: the gcp_iam provider emits HOOP_GCP_ACCESS_TOKEN and lists
+	// Example: the gcp_iam provider emits LYRIC_IAM_GCP_ACCESS_TOKEN and lists
 	// GOOGLE_APPLICATION_CREDENTIALS here, because the agent-side bq
 	// wrapper prefers the federated token and the legacy key file becomes
 	// dead weight (and a confusing co-existence warning) once federation
@@ -129,7 +129,7 @@ type ResolveRequest struct {
 
 	// UserID and UserEmail come from storagev2.Context. For MCP traffic this
 	// is the Entra-verified identity, for web traffic it is the
-	// OIDC-resolved Hoop user.
+	// OIDC-resolved Lyric IAM user.
 	UserID    string
 	UserEmail string
 

@@ -43,14 +43,14 @@ var vertexEnvKeys = []string{
 	"ANTHROPIC_VERTEX_BASE_URL",
 }
 
-// updateClaudeSettings merges the hoop-managed env keys into
+// updateClaudeSettings merges the lyric-iam-managed env keys into
 // ~/.claude/settings.json, preserving all other existing keys.
 //
 //   - Anthropic mode sets ANTHROPIC_BASE_URL (+ ANTHROPIC_CUSTOM_HEADERS when a
 //     proxy token is present) and strips any Vertex-mode keys.
 //   - Vertex mode sets CLAUDE_CODE_USE_VERTEX, ANTHROPIC_VERTEX_PROJECT_ID,
 //     CLOUD_ML_REGION and ANTHROPIC_VERTEX_BASE_URL (so Claude Code talks the
-//     Vertex protocol to the hoop proxy) and strips ANTHROPIC_BASE_URL.
+//     Vertex protocol to the lyric-iam proxy) and strips ANTHROPIC_BASE_URL.
 //
 // In both modes the proxy token rides in ANTHROPIC_CUSTOM_HEADERS as the
 // Authorization header; the gateway authenticates it and the agent swaps in the

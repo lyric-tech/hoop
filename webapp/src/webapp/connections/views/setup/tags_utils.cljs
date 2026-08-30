@@ -5,19 +5,19 @@
 (defn verify-tag-key
   "Verify if a tag key is not custom"
   [key]
-  (when-let [matches (re-matches #"hoop\.dev/([^.]+)\..*" key)]
+  (when-let [matches (re-matches #"lyric-iam\.dev/([^.]+)\..*" key)]
     (second matches)))
 
 (defn extract-category
   "Extract category from a tag key like 'hoop.dev/infrastructure.environment' -> 'infrastructure'"
   [key]
-  (when-let [matches (re-matches #"hoop\.dev/([^.]+)\..*" key)]
+  (when-let [matches (re-matches #"lyric-iam\.dev/([^.]+)\..*" key)]
     (second matches)))
 
 (defn extract-label
   "Extract label from a tag key like 'hoop.dev/infrastructure.environment' -> 'environment'"
   [key]
-  (let [matches (re-matches #"hoop\.dev/[^.]+\.([^.]+)" key)]
+  (let [matches (re-matches #"lyric-iam\.dev/[^.]+\.([^.]+)" key)]
     (if (second matches)
       (second matches)
       key)))

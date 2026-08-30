@@ -25,7 +25,7 @@
        [:> Heading {:as "h3" :size "4" :weight "bold" :class "text-[--gray-12]"}
         "Admin Role Name"]
        [:> Text {:size "3" :class "text-[--gray-11]"}
-        "The group name that grants full administrative access to Hoop."]]
+        "The group name that grants full administrative access to Lyric IAM."]]
 
       [:> Box {:class "space-y-radix-7" :grid-column "span 5 / span 5"}
        [forms/input

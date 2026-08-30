@@ -23,7 +23,7 @@ type Config struct {
 	tlsCA     string
 
 	// keyFilePath is set when the agent was loaded in ModeSVID via
-	// HOOP_SPIFFE_KEY_FILE. It is used by Refresh() to re-read the file
+	// LYRIC_IAM_SPIFFE_KEY_FILE. It is used by Refresh() to re-read the file
 	// when a new gRPC connection is established, so rotated JWT-SVIDs
 	// are picked up without restarting the agent.
 	keyFilePath string
@@ -32,29 +32,29 @@ type Config struct {
 // Load the configuration based on environment variables.
 //
 // Resolution order:
-//  1. HOOP_KEY / HOOP_DSN: DSN-encoded token. The default, historical
+//  1. LYRIC_IAM_KEY / LYRIC_IAM_DSN: DSN-encoded token. The default, historical
 //     production flow with a static, long-lived secret. When set,
-//     HOOP_KEY always wins; SPIFFE/legacy modes are ignored. To use
-//     SPIFFE, leave HOOP_KEY unset.
-//  2. HOOP_SPIFFE_KEY_FILE: path to a file containing a bare JWT-SVID.
-//     Requires HOOP_GRPCURL. This path is used by SPIFFE integrations
+//     LYRIC_IAM_KEY always wins; SPIFFE/legacy modes are ignored. To use
+//     SPIFFE, leave LYRIC_IAM_KEY unset.
+//  2. LYRIC_IAM_SPIFFE_KEY_FILE: path to a file containing a bare JWT-SVID.
+//     Requires LYRIC_IAM_GRPCURL. This path is used by SPIFFE integrations
 //     where an external sidecar (e.g. spiffe-helper) writes the SVID
 //     to disk and rotates it.
-//  3. HOOP_TOKEN + HOOP_GRPCURL: deprecated legacy env format.
+//  3. LYRIC_IAM_TOKEN + LYRIC_IAM_GRPCURL: deprecated legacy env format.
 func Load() (*Config, error) {
 	isLegacy, key := getEnvCredentials()
 	dsn, err := dsnkeys.Parse(key)
 	if err != nil && err != dsnkeys.ErrEmpty {
 		if isLegacy {
-			return nil, fmt.Errorf("HOOP_DSN (deprecated) is in wrong format, reason=%v", err)
+			return nil, fmt.Errorf("LYRIC_IAM_DSN (deprecated) is in wrong format, reason=%v", err)
 		}
-		return nil, fmt.Errorf("HOOP_KEY is in wrong format, reason=%v", err)
+		return nil, fmt.Errorf("LYRIC_IAM_KEY is in wrong format, reason=%v", err)
 	}
 	if dsn != nil {
 		if isLegacy {
-			log.Warnf("HOOP_DSN environment variable is deprecated, use HOOP_KEY instead")
+			log.Warnf("LYRIC_IAM_DSN environment variable is deprecated, use LYRIC_IAM_KEY instead")
 		}
-		tlsCA, err := envloader.GetEnv("HOOP_TLSCA")
+		tlsCA, err := envloader.GetEnv("LYRIC_IAM_TLSCA")
 		if err != nil {
 			return nil, err
 		}
@@ -70,20 +70,20 @@ func Load() (*Config, error) {
 		}, nil
 	}
 
-	// HOOP_SPIFFE_KEY_FILE is emitted unconditionally by the helm chart, so the
+	// LYRIC_IAM_SPIFFE_KEY_FILE is emitted unconditionally by the helm chart, so the
 	// env var is set on every pod. Only treat it as a real SPIFFE credential
 	// when the file actually exists on disk (i.e., a spiffe-helper sidecar has
 	// mounted the SVID volume and written to it). Otherwise fall through to the
-	// "missing HOOP_KEY" error below, which is the right diagnostic for a pod
+	// "missing LYRIC_IAM_KEY" error below, which is the right diagnostic for a pod
 	// that was deployed without either credential.
-	if path := os.Getenv("HOOP_SPIFFE_KEY_FILE"); path != "" {
+	if path := os.Getenv("LYRIC_IAM_SPIFFE_KEY_FILE"); path != "" {
 		return loadFromSVIDFile(path)
 	}
 
 	legacyToken := getLegacyHoopTokenCredentials()
-	grpcURL := os.Getenv("HOOP_GRPCURL")
+	grpcURL := os.Getenv("LYRIC_IAM_GRPCURL")
 	if legacyToken != "" && grpcURL != "" {
-		log.Warnf("HOOP_TOKEN and HOOP_GRPCURL environment variables are deprecated, create a new token to use the new format")
+		log.Warnf("LYRIC_IAM_TOKEN and LYRIC_IAM_GRPCURL environment variables are deprecated, create a new token to use the new format")
 		return &Config{
 			Type:      clientconfig.ModeEnv,
 			AgentMode: proto.AgentModeStandardType,
@@ -91,34 +91,34 @@ func Load() (*Config, error) {
 			URL:       grpcURL,
 			insecure:  grpcURL == grpc.LocalhostAddr}, nil
 	}
-	return nil, fmt.Errorf("missing HOOP_KEY environment variable")
+	return nil, fmt.Errorf("missing LYRIC_IAM_KEY environment variable")
 }
 
 // loadFromSVIDFile builds a Config backed by a JWT-SVID file. The file must
 // contain a single JWT (three dot-separated segments); leading/trailing
-// whitespace is trimmed. HOOP_GRPCURL is required because there is no DSN
-// to carry the server address. HOOP_SPIFFE_NAME provides the agent display
+// whitespace is trimmed. LYRIC_IAM_GRPCURL is required because there is no DSN
+// to carry the server address. LYRIC_IAM_SPIFFE_NAME provides the agent display
 // name; it is optional because the gateway resolves identity from the
 // SPIFFE mapping, not from this field.
 func loadFromSVIDFile(path string) (*Config, error) {
-	grpcURL := os.Getenv("HOOP_GRPCURL")
+	grpcURL := os.Getenv("LYRIC_IAM_GRPCURL")
 	if grpcURL == "" {
-		return nil, fmt.Errorf("HOOP_SPIFFE_KEY_FILE requires HOOP_GRPCURL to be set")
+		return nil, fmt.Errorf("LYRIC_IAM_SPIFFE_KEY_FILE requires LYRIC_IAM_GRPCURL to be set")
 	}
 	token, err := readTokenFile(path)
 	if err != nil {
 		return nil, err
 	}
-	tlsCA, err := envloader.GetEnv("HOOP_TLSCA")
+	tlsCA, err := envloader.GetEnv("LYRIC_IAM_TLSCA")
 	if err != nil {
 		return nil, err
 	}
-	// HOOP_GRPC_INSECURE=true forces plaintext gRPC for non-loopback URLs.
+	// LYRIC_IAM_GRPC_INSECURE=true forces plaintext gRPC for non-loopback URLs.
 	// Intended for local development against a gateway that doesn't terminate
 	// TLS on its gRPC port; production deployments should always run TLS.
-	insecure := grpcURL == grpc.LocalhostAddr || os.Getenv("HOOP_GRPC_INSECURE") == "true"
+	insecure := grpcURL == grpc.LocalhostAddr || os.Getenv("LYRIC_IAM_GRPC_INSECURE") == "true"
 	return &Config{
-		Name:        os.Getenv("HOOP_SPIFFE_NAME"),
+		Name:        os.Getenv("LYRIC_IAM_SPIFFE_NAME"),
 		Type:        clientconfig.ModeSVID,
 		AgentMode:   proto.AgentModeStandardType,
 		Token:       token,
@@ -129,7 +129,7 @@ func loadFromSVIDFile(path string) (*Config, error) {
 	}, nil
 }
 
-// Refresh re-reads the token from HOOP_SPIFFE_KEY_FILE when the config was
+// Refresh re-reads the token from LYRIC_IAM_SPIFFE_KEY_FILE when the config was
 // loaded in ModeSVID. It is a no-op for all other modes. Callers should
 // invoke Refresh before each reconnect attempt so a freshly-rotated
 // JWT-SVID is picked up. A read error is returned but callers should
@@ -150,15 +150,15 @@ func (c *Config) Refresh() error {
 func readTokenFile(path string) (string, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("failed reading HOOP_SPIFFE_KEY_FILE %q: %v", path, err)
+		return "", fmt.Errorf("failed reading LYRIC_IAM_SPIFFE_KEY_FILE %q: %v", path, err)
 	}
 	token := strings.TrimSpace(string(b))
 	if token == "" {
-		return "", fmt.Errorf("HOOP_SPIFFE_KEY_FILE %q is empty", path)
+		return "", fmt.Errorf("LYRIC_IAM_SPIFFE_KEY_FILE %q is empty", path)
 	}
 	// cheap sanity check; the gateway will do the real validation
 	if strings.Count(token, ".") != 2 {
-		return "", fmt.Errorf("HOOP_SPIFFE_KEY_FILE %q does not look like a JWT (expected three dot-separated segments)", path)
+		return "", fmt.Errorf("LYRIC_IAM_SPIFFE_KEY_FILE %q does not look like a JWT (expected three dot-separated segments)", path)
 	}
 	return token, nil
 }
@@ -169,9 +169,9 @@ func (c *Config) GrpcClientConfig() (grpc.ClientConfig, error) {
 		ServerAddress: srvAddr,
 		Token:         c.Token,
 		Insecure:      c.IsInsecure(),
-		TLSServerName: os.Getenv("HOOP_TLSSERVERNAME"),
+		TLSServerName: os.Getenv("LYRIC_IAM_TLSSERVERNAME"),
 		TLSCA:         c.tlsCA,
-		TLSSkipVerify: os.Getenv("HOOP_TLS_SKIP_VERIFY") == "true",
+		TLSSkipVerify: os.Getenv("LYRIC_IAM_TLS_SKIP_VERIFY") == "true",
 	}, err
 }
 
@@ -179,13 +179,13 @@ func (c *Config) HasTlsCA() bool   { return c.tlsCA != "" }
 func (c *Config) IsInsecure() bool { return c.insecure }
 func (c *Config) IsValid() bool    { return c.Token != "" && c.URL != "" }
 
-// getEnvToken backwards compatible with HOOP_DSN env
+// getEnvToken backwards compatible with LYRIC_IAM_DSN env
 func getEnvCredentials() (legacy bool, v string) {
-	v = os.Getenv("HOOP_KEY")
+	v = os.Getenv("LYRIC_IAM_KEY")
 	if v != "" {
 		return
 	}
-	return true, os.Getenv("HOOP_DSN")
+	return true, os.Getenv("LYRIC_IAM_DSN")
 }
 
 func getLegacyHoopTokenCredentials() string {
@@ -193,5 +193,5 @@ func getLegacyHoopTokenCredentials() string {
 	if token != "" {
 		return token
 	}
-	return os.Getenv("HOOP_TOKEN")
+	return os.Getenv("LYRIC_IAM_TOKEN")
 }

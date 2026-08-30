@@ -13,12 +13,12 @@
 # first and downloads only what is missing or corrupt. ~250MB on a cold cache,
 # a few checksums on a warm one.
 #
-# Usage: alcatraz-models.sh [dest]     (default $HOME/.hoop/dev/alcatraz-models)
+# Usage: alcatraz-models.sh [dest]     (default $HOME/.lyric-iam/dev/alcatraz-models)
 
 set -euo pipefail
 
 ORIGIN="${ALCATRAZ_MODEL_ORIGIN:-https://hoopartifacts.s3.us-east-1.amazonaws.com/alcatraz/current}"
-DEST="${1:-$HOME/.hoop/dev/alcatraz-models}"
+DEST="${1:-$HOME/.lyric-iam/dev/alcatraz-models}"
 
 # macOS ships shasum, Linux ships sha256sum, and neither ships the other.
 if command -v sha256sum >/dev/null 2>&1; then

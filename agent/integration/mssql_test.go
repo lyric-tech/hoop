@@ -214,7 +214,7 @@ func TestMSSQL_LargePayloadFragmentation(t *testing.T) {
 
 	// 64 KiB of data: well beyond the 4096-byte default TDS packet, so both
 	// the INSERT request and the SELECT reply must fragment.
-	large := strings.Repeat("hoop-fragmentation-test-0123456789", 2000)
+	large := strings.Repeat("lyric-iam-fragmentation-test-0123456789", 2000)
 	if len(large) <= 4096 {
 		t.Fatalf("test payload too small to force fragmentation: %d bytes", len(large))
 	}
@@ -358,7 +358,7 @@ func TestMSSQL_BadCredentials(t *testing.T) {
 // "secret_table" via an input deny-word rule. This is the exact JSON shape the
 // gateway ships to the agent (see gateway encodeGuardRailRules): a single object
 // with top-level input_rules/output_rules, not an array of {id,name,...}.
-const mssqlGuardRailRules = `{"input_rules":[{"rules":[{"type":"deny_words_list","words":["secret_table"],"pattern_regex":"","message":"blocked by hoop guardrail: secret_table is off limits"}]}],"output_rules":[]}`
+const mssqlGuardRailRules = `{"input_rules":[{"rules":[{"type":"deny_words_list","words":["secret_table"],"pattern_regex":"","message":"blocked by lyric-iam guardrail: secret_table is off limits"}]}],"output_rules":[]}`
 
 // dialMSSQLWithGuardRails is dialMSSQL with guardrail rules attached to the
 // session's connection params.

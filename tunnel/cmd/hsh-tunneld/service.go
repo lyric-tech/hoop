@@ -335,7 +335,7 @@ func (s *daemonService) LoginStart(ctx context.Context) (ipc.LoginStartResponse,
 
 	if flow == nil {
 		return ipc.LoginStartResponse{}, errors.New(
-			"login flow unavailable: set api_url first via PUT /v1/config (or HOOP_APIURL env var)")
+			"login flow unavailable: set api_url first via PUT /v1/config (or LYRIC_IAM_APIURL env var)")
 	}
 
 	url, state, err := flow.Start(ctx)

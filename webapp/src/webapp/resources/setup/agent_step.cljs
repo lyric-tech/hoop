@@ -163,7 +163,7 @@
       [:> Heading {:as "h2" :size "6" :weight "bold" :class "text-gray-12"}
        "Setup your Organization Agents"]
       [:> Text {:as "p" :size "3" :class "text-gray-12"}
-       (str "The Agent serves as the component linking your private infrastructure to Hoop's "
+       (str "The Agent serves as the component linking your private infrastructure to Lyric IAM's "
             "services. It functions as a proxy, connecting to a central gateway and exposing "
             "services within its network scope. Select or create one to get started.")]
       [:> Text {:as "p" :size "2" :class "text-gray-11 flex items-center gap-1"}

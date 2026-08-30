@@ -63,16 +63,16 @@ func Remove() error {
 }
 
 // Load builds an client config file in the following order.
-// load the configuration based on environment variables  (HOOP_GRPCURL, HOOP_APIURL & HOOP_TOKEN)
-// load based in the configuration file $HOME/.hoop/client.toml.
+// load the configuration based on environment variables  (LYRIC_IAM_GRPCURL, LYRIC_IAM_APIURL & LYRIC_IAM_TOKEN)
+// load based in the configuration file $HOME/.lyric-iam/client.toml.
 // load a configuration file if localhost grpc port has connectivity.
 func Load() (*Config, error) {
 	// TODO: if env is set, use it
-	grpcURL := os.Getenv("HOOP_GRPCURL")
-	apiServer := os.Getenv("HOOP_APIURL")
-	accessToken := os.Getenv("HOOP_TOKEN")
-	skipTLSVerify := os.Getenv("HOOP_TLS_SKIP_VERIFY")
-	tlsCA, err := envloader.GetEnv("HOOP_TLSCA")
+	grpcURL := os.Getenv("LYRIC_IAM_GRPCURL")
+	apiServer := os.Getenv("LYRIC_IAM_APIURL")
+	accessToken := os.Getenv("LYRIC_IAM_TOKEN")
+	skipTLSVerify := os.Getenv("LYRIC_IAM_TLS_SKIP_VERIFY")
+	tlsCA, err := envloader.GetEnv("LYRIC_IAM_TLSCA")
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (c *Config) GrpcClientConfig() (grpc.ClientConfig, error) {
 		Token:         c.Token,
 		Insecure:      c.InsecureGRPC,
 		TLSSkipVerify: c.SkipTLSVerify,
-		TLSServerName: os.Getenv("HOOP_TLSSERVERNAME"),
+		TLSServerName: os.Getenv("LYRIC_IAM_TLSSERVERNAME"),
 		TLSCA:         c.TlsCA(),
 	}, err
 }

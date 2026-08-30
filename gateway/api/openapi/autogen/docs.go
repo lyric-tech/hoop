@@ -9,10 +9,10 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://hoop.dev/docs/legal/tos",
+        "termsOfService": "https://docs.lyric.tech/access/legal/tos",
         "contact": {
             "name": "Help",
-            "url": "https://help.hoop.dev",
+            "url": "https://docs.lyric.tech/access",
             "email": "help@hoop.dev"
         },
         "license": {
@@ -1930,7 +1930,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "The connection resource allows exposing internal services from your internal infra structure to users.\n\n### Types of Connections\n\nThe definition of this resource represent how clients will be able to interact with internal resources.\n\nEach type/subtype may represent a distinct implementation:\n\n- ` + "`" + `application/\u003csubtype\u003e` + "`" + ` - An alias to map distinct types of shell applications (e.g.: python, ruby, etc)\n- ` + "`" + `application/tcp` + "`" + ` - Forward TCP connections\n\n    This type requires the following environment variables:\n    - ` + "`" + `HOST` + "`" + `: ip or dns of the internal service\n    - ` + "`" + `PORT` + "`" + `: the port of the internal service\n\n- ` + "`" + `custom` + "`" + ` - Any custom shell application\n- ` + "`" + `database/\u003csubtype\u003e` + "`" + ` - Allow connecting to databases through multiple clients (Webapp, cli, IDE's)\n\nEach ` + "`" + `\u003csubtype\u003e` + "`" + ` has distinct environment variables that are allowed to be configured, refer to our [documentation](https://hoop.dev/docs) for more information.\n\n### Tags\n\nTags are key/value pairs that are attached to objects such as Connections. Tags are intended to be used to specify identifying attributes of objects that are meaningful and relevant to users, but do not directly imply semantics to the core system.\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"connection_tags\": {\n        \"environment\": \"production\",\n        \"component\": \"backend\"\n    }\n}\n` + "`" + `` + "`" + `` + "`" + `\n\nEquality- or inequality-based requirements allow filtering by tags keys and values. Matching objects must satisfy all of the specified tag constraints, though they may have additional tags as well. Three kinds of operators are admitted ` + "`" + `=` + "`" + `,` + "`" + `!=` + "`" + `. The first represent equality, while the last represents inequality. For example:\n\n` + "`" + `` + "`" + `` + "`" + `\nenvironment = production\ntier != frontend\n` + "`" + `` + "`" + `` + "`" + `\n\nThe former selects all resources with key equal to ` + "`" + `environment` + "`" + ` and value equal to ` + "`" + `production` + "`" + `. The latter selects all resources with key equal to ` + "`" + `tier` + "`" + ` and value distinct from ` + "`" + `frontend` + "`" + `. One could filter for resources in production excluding frontend using the comma operator: environment=production,tier!=frontend\n",
+                "description": "The connection resource allows exposing internal services from your internal infra structure to users.\n\n### Types of Connections\n\nThe definition of this resource represent how clients will be able to interact with internal resources.\n\nEach type/subtype may represent a distinct implementation:\n\n- ` + "`" + `application/\u003csubtype\u003e` + "`" + ` - An alias to map distinct types of shell applications (e.g.: python, ruby, etc)\n- ` + "`" + `application/tcp` + "`" + ` - Forward TCP connections\n\n    This type requires the following environment variables:\n    - ` + "`" + `HOST` + "`" + `: ip or dns of the internal service\n    - ` + "`" + `PORT` + "`" + `: the port of the internal service\n\n- ` + "`" + `custom` + "`" + ` - Any custom shell application\n- ` + "`" + `database/\u003csubtype\u003e` + "`" + ` - Allow connecting to databases through multiple clients (Webapp, cli, IDE's)\n\nEach ` + "`" + `\u003csubtype\u003e` + "`" + ` has distinct environment variables that are allowed to be configured, refer to our [documentation](https://docs.lyric.tech/access) for more information.\n\n### Tags\n\nTags are key/value pairs that are attached to objects such as Connections. Tags are intended to be used to specify identifying attributes of objects that are meaningful and relevant to users, but do not directly imply semantics to the core system.\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"connection_tags\": {\n        \"environment\": \"production\",\n        \"component\": \"backend\"\n    }\n}\n` + "`" + `` + "`" + `` + "`" + `\n\nEquality- or inequality-based requirements allow filtering by tags keys and values. Matching objects must satisfy all of the specified tag constraints, though they may have additional tags as well. Three kinds of operators are admitted ` + "`" + `=` + "`" + `,` + "`" + `!=` + "`" + `. The first represent equality, while the last represents inequality. For example:\n\n` + "`" + `` + "`" + `` + "`" + `\nenvironment = production\ntier != frontend\n` + "`" + `` + "`" + `` + "`" + `\n\nThe former selects all resources with key equal to ` + "`" + `environment` + "`" + ` and value equal to ` + "`" + `production` + "`" + `. The latter selects all resources with key equal to ` + "`" + `tier` + "`" + ` and value distinct from ` + "`" + `frontend` + "`" + `. One could filter for resources in production excluding frontend using the comma operator: environment=production,tier!=frontend\n",
                 "consumes": [
                     "application/json"
                 ],
@@ -5664,7 +5664,7 @@ const docTemplate = `{
         },
         "/orgs/keys": {
             "get": {
-                "description": "Get the organization key to run with ` + "`" + `hoop run` + "`" + ` command line",
+                "description": "Get the organization key to run with ` + "`" + `lyric-iam run` + "`" + ` command line",
                 "produces": [
                     "application/json"
                 ],
@@ -5694,7 +5694,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create the organization key to run with ` + "`" + `hoop run` + "`" + ` command line.",
+                "description": "Create the organization key to run with ` + "`" + `lyric-iam run` + "`" + ` command line.",
                 "produces": [
                     "application/json"
                 ],
@@ -5858,7 +5858,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Select the organization's default protection profile. The backend materializes the profile's managed rules and attribute and tags every connection. Passing a null profile switches to manual configuration and deletes all Hoop-managed protection rules.",
+                "description": "Select the organization's default protection profile. The backend materializes the profile's managed rules and attribute and tags every connection. Passing a null profile switches to manual configuration and deletes all Lyric IAM-managed protection rules.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8529,7 +8529,7 @@ const docTemplate = `{
         },
         "/serverconfig/mcp-auth": {
             "get": {
-                "description": "Returns the per-org MCP OAuth Resource Server settings. When disabled (default), /mcp accepts Hoop-issued bearer tokens only.",
+                "description": "Returns the per-org MCP OAuth Resource Server settings. When disabled (default), /mcp accepts Lyric IAM-issued bearer tokens only.",
                 "produces": [
                     "application/json"
                 ],
@@ -9948,7 +9948,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Map a SPIFFE identity (exact URI or URI prefix) onto a Hoop agent.",
+                "description": "Map a SPIFFE identity (exact URI or URI prefix) onto a Lyric IAM agent.",
                 "consumes": [
                     "application/json"
                 ],
@@ -10341,7 +10341,7 @@ const docTemplate = `{
         },
         "/users/self/signup-origin": {
             "post": {
-                "description": "Record how the authenticated user heard about Hoop. Each user may answer only once; a second attempt returns 409.",
+                "description": "Record how the authenticated user heard about Lyric IAM. Each user may answer only once; a second attempt returns 409.",
                 "consumes": [
                     "application/json"
                 ],
@@ -11110,10 +11110,10 @@ const docTemplate = `{
                     "example": "15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"
                 },
                 "managed_by": {
-                    "description": "Set to \"hoop\" when the rule is materialized and lifecycle-managed by a\nprotection profile; managed rules are read-only through this API",
+                    "description": "Set to \"lyric-iam\" when the rule is materialized and lifecycle-managed by a\nprotection profile; managed rules are read-only through this API",
                     "type": "string",
                     "readOnly": true,
-                    "example": "hoop"
+                    "example": "lyric-iam"
                 },
                 "name": {
                     "description": "Unique name for the rule",
@@ -11603,10 +11603,10 @@ const docTemplate = `{
                     "example": "15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"
                 },
                 "managed_by": {
-                    "description": "Set to \"hoop\" when the rule is materialized and lifecycle-managed by a\nprotection profile; only approval settings and group lists can be\nchanged on managed rules, and they cannot be deleted",
+                    "description": "Set to \"lyric-iam\" when the rule is materialized and lifecycle-managed by a\nprotection profile; only approval settings and group lists can be\nchanged on managed rules, and they cannot be deleted",
                     "type": "string",
                     "readOnly": true,
-                    "example": "hoop"
+                    "example": "lyric-iam"
                 },
                 "min_approvals": {
                     "description": "Minimum number of approvals required",
@@ -11880,12 +11880,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "agent_id": {
-                    "description": "ID of the Hoop agent this mapping resolves to (exact form). Mutually\nexclusive with AgentTemplate.",
+                    "description": "ID of the Lyric IAM agent this mapping resolves to (exact form). Mutually\nexclusive with AgentTemplate.",
                     "type": "string",
                     "format": "uuid"
                 },
                 "agent_template": {
-                    "description": "Go text/template that renders to a Hoop agent name. Used with\nSPIFFEPrefix. See the SPIFFE docs for template field details.\nMutually exclusive with AgentID.",
+                    "description": "Go text/template that renders to a Lyric IAM agent name. Used with\nSPIFFEPrefix. See the SPIFFE docs for template field details.\nMutually exclusive with AgentID.",
                     "type": "string"
                 },
                 "created_at": {
@@ -12094,10 +12094,10 @@ const docTemplate = `{
                     "example": "15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"
                 },
                 "managed_by": {
-                    "description": "Managed By is a read only field that indicates who manages this\nattribute. When set (e.g. \"hoop\" for protection profiles), the\nattribute cannot be modified or deleted directly.",
+                    "description": "Managed By is a read only field that indicates who manages this\nattribute. When set (e.g. \"lyric-iam\" for protection profiles), the\nattribute cannot be modified or deleted directly.",
                     "type": "string",
                     "readOnly": true,
-                    "example": "hoop"
+                    "example": "lyric-iam"
                 },
                 "name": {
                     "description": "The name of the attribute",
@@ -12194,7 +12194,7 @@ const docTemplate = `{
                     "example": "1837453e-01fc-46f3-9e4c-dcf22d395393"
                 },
                 "attributes": {
-                    "description": "Attributes associated with this connection. Includes Hoop-managed\nattributes (e.g. the active protection profile attribute); omitting a\nmanaged name on update detaches the connection from it.",
+                    "description": "Attributes associated with this connection. Includes Lyric IAM-managed\nattributes (e.g. the active protection profile attribute); omitting a\nmanaged name on update detaches the connection from it.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -12277,7 +12277,7 @@ const docTemplate = `{
                     "example": 1800
                 },
                 "managed_attributes": {
-                    "description": "Hoop-managed attributes associated with this connection (e.g. the\nactive protection profile attribute). Computed on reads; manage the\nassociation through the attributes field.",
+                    "description": "Lyric IAM-managed attributes associated with this connection (e.g. the\nactive protection profile attribute). Computed on reads; manage the\nassociation through the attributes field.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -12679,7 +12679,7 @@ const docTemplate = `{
                     "example": "15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"
                 },
                 "identity_source_attribute": {
-                    "description": "IdentitySourceAttribute is a JSONPath-like accessor into the Hoop user\n(defaults to $.user.email).",
+                    "description": "IdentitySourceAttribute is a JSONPath-like accessor into the Lyric IAM user\n(defaults to $.user.email).",
                     "type": "string",
                     "example": "$.user.email"
                 },
@@ -13411,10 +13411,10 @@ const docTemplate = `{
                     "example": "15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"
                 },
                 "managed_by": {
-                    "description": "Managed By is a read only field that indicates who manages this rule.\nWhen set (e.g. \"hoop\" for protection profiles), the rule cannot be\nmodified or deleted directly.",
+                    "description": "Managed By is a read only field that indicates who manages this rule.\nWhen set (e.g. \"lyric-iam\" for protection profiles), the rule cannot be\nmodified or deleted directly.",
                     "type": "string",
                     "readOnly": true,
-                    "example": "hoop"
+                    "example": "lyric-iam"
                 },
                 "name": {
                     "description": "The unique name of the data masking rule, it's immutable after creation",
@@ -13595,7 +13595,7 @@ const docTemplate = `{
                 "script": {
                     "description": "The input of the execution",
                     "type": "string",
-                    "example": "echo 'hello from hoop'"
+                    "example": "echo 'hello from lyric-iam'"
                 }
             }
         },
@@ -13853,7 +13853,7 @@ const docTemplate = `{
                 "admin_principal": {
                     "description": "AdminPrincipal is the impersonator identity (e.g. admin SA email).",
                     "type": "string",
-                    "example": "hoop-admin@proj.iam.gserviceaccount.com"
+                    "example": "lyric-iam-admin@proj.iam.gserviceaccount.com"
                 },
                 "env_var_keys": {
                     "description": "EnvVarKeys lists the env vars the resolver injected into the probe.\nValues are never returned.",
@@ -13862,8 +13862,8 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": [
-                        "HOOP_GCP_ACCESS_TOKEN",
-                        "HOOP_GCP_TOKEN_EXPIRES_AT"
+                        "LYRIC_IAM_GCP_ACCESS_TOKEN",
+                        "LYRIC_IAM_GCP_TOKEN_EXPIRES_AT"
                     ]
                 },
                 "error": {
@@ -14022,10 +14022,10 @@ const docTemplate = `{
                     "additionalProperties": {}
                 },
                 "managed_by": {
-                    "description": "Set to \"hoop\" when the rule is materialized and lifecycle-managed by a\nprotection profile; managed rules are read-only through this API",
+                    "description": "Set to \"lyric-iam\" when the rule is materialized and lifecycle-managed by a\nprotection profile; managed rules are read-only through this API",
                     "type": "string",
                     "readOnly": true,
-                    "example": "hoop"
+                    "example": "lyric-iam"
                 },
                 "name": {
                     "description": "Unique name for the rule",
@@ -14366,7 +14366,7 @@ const docTemplate = `{
                     "default": "done"
                 },
                 "mapping_types": {
-                    "description": "The automated fields that will be sent when creating the issue.\nThere're two types\n- preset: obtain the value from a list of available fields that could be propagated\nThe list of available preset values are:\n\n\t\t- session.id\n\t\t- session.user_email\n\t\t- session.user_id\n\t\t- session.user_name\n\t\t- session.type\n\t\t- session.connection_subtype\n\t\t- session.connection\n\t\t- session.connection_tags.[key1]\n\t\t- session.connection_tags.[key2]\n\t\t- session.status\n\t\t- session.script\n\t\t- session.start_date\n\n- custom: use a custom static value\n\n\t\t{\n\t\t  \"items\": [\n\t\t    {\n\t\t      \"description\": \"Hoop Connection Name\",\n\t\t      \"jira_field\": \"customfield_10050\",\n\t\t      \"type\": \"preset\",\n\t\t      \"value\": \"session.connection\"\n\t\t    }\n\t\t  ]\n\t\t}",
+                    "description": "The automated fields that will be sent when creating the issue.\nThere're two types\n- preset: obtain the value from a list of available fields that could be propagated\nThe list of available preset values are:\n\n\t\t- session.id\n\t\t- session.user_email\n\t\t- session.user_id\n\t\t- session.user_name\n\t\t- session.type\n\t\t- session.connection_subtype\n\t\t- session.connection\n\t\t- session.connection_tags.[key1]\n\t\t- session.connection_tags.[key2]\n\t\t- session.status\n\t\t- session.script\n\t\t- session.start_date\n\n- custom: use a custom static value\n\n\t\t{\n\t\t  \"items\": [\n\t\t    {\n\t\t      \"description\": \"Lyric IAM Connection Name\",\n\t\t      \"jira_field\": \"customfield_10050\",\n\t\t      \"type\": \"preset\",\n\t\t      \"value\": \"session.connection\"\n\t\t    }\n\t\t  ]\n\t\t}",
                     "type": "object",
                     "additionalProperties": {}
                 },
@@ -15098,7 +15098,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "attribute_name": {
-                    "description": "The Hoop-managed attribute that binds the profile's rules to\nconnections; null when no profile is active",
+                    "description": "The Lyric IAM-managed attribute that binds the profile's rules to\nconnections; null when no profile is active",
                     "type": "string",
                     "example": "hoop_protection_profile-protection_medium"
                 },
@@ -15829,7 +15829,7 @@ const docTemplate = `{
                     "example": "pg_read_all_data"
                 },
                 "type": {
-                    "description": "Role management mode. \"managed\" creates and fully owns the postgres role (password managed by hoop).\n\"external\" attaches the role as a member of an existing parent role specified by source_role.",
+                    "description": "Role management mode. \"managed\" creates and fully owns the postgres role (password managed by lyric-iam).\n\"external\" attaches the role as a member of an existing parent role specified by source_role.",
                     "type": "string",
                     "enum": [
                         "managed",
@@ -16461,7 +16461,7 @@ const docTemplate = `{
                     "example": "15B5A2FD-0706-4A47-B1CF-B93CCFC5B3D7"
                 },
                 "is_managed": {
-                    "description": "True for Hoop-managed rulepacks (read-only for users)",
+                    "description": "True for Lyric IAM-managed rulepacks (read-only for users)",
                     "type": "boolean",
                     "readOnly": true,
                     "example": false
@@ -17213,7 +17213,7 @@ const docTemplate = `{
                     ]
                 },
                 "user_mapping": {
-                    "description": "UserMapping is required when TrustedCAs is configured. It defines how\nthe certificate is matched against a Hoop user.",
+                    "description": "UserMapping is required when TrustedCAs is configured. It defines how\nthe certificate is matched against a Lyric IAM user.",
                     "allOf": [
                         {
                             "$ref": "#/definitions/openapi.SSHUserMapping"
@@ -17235,7 +17235,7 @@ const docTemplate = `{
                     "example": "principal"
                 },
                 "user_attr": {
-                    "description": "UserAttribute is the Hoop user table column matched against the cert value.",
+                    "description": "UserAttribute is the Lyric IAM user table column matched against the cert value.",
                     "type": "string",
                     "enum": [
                         "email",
@@ -17454,17 +17454,17 @@ const docTemplate = `{
                 "audience": {
                     "description": "Identity Provider Audience (Oauth2)",
                     "type": "string",
-                    "example": "hoop-audience"
+                    "example": "lyric-iam-audience"
                 },
                 "client_id": {
                     "description": "Oauth2 Client ID",
                     "type": "string",
-                    "example": "hoop-client-id"
+                    "example": "lyric-iam-client-id"
                 },
                 "client_secret": {
                     "description": "Oauth2 Client Secret",
                     "type": "string",
-                    "example": "hoop-client-secret"
+                    "example": "lyric-iam-client-secret"
                 },
                 "groups_claim": {
                     "description": "Specifies the claim identifier used to configure group propagation.",
@@ -17822,7 +17822,7 @@ const docTemplate = `{
                 "client_id": {
                     "description": "Statically pre-registered OAuth client ID at the IdP, for IdPs without\nRFC 7591 Dynamic Client Registration support (e.g. JumpCloud, Okta,\nEntra ID). When set, the gateway advertises itself as the authorization\nserver and serves a Dynamic Client Registration shim that returns this\nclient to MCP clients; tokens whose ` + "`" + `aud` + "`" + ` claim matches this client ID\nare accepted in addition to resource_uri.",
                     "type": "string",
-                    "example": "hoop-mcp"
+                    "example": "lyric-iam-mcp"
                 },
                 "client_secret": {
                     "description": "Optional client secret paired with client_id. Leave empty to use a\npublic client with PKCE (recommended): the registration shim discloses\nthis value to any registering MCP client.",
@@ -17830,7 +17830,7 @@ const docTemplate = `{
                     "example": ""
                 },
                 "enabled": {
-                    "description": "Whether the /mcp endpoint accepts IdP-issued OAuth 2.1 JWTs in addition\nto Hoop-issued bearer tokens.",
+                    "description": "Whether the /mcp endpoint accepts IdP-issued OAuth 2.1 JWTs in addition\nto Lyric IAM-issued bearer tokens.",
                     "type": "boolean"
                 },
                 "groups_claim": {
@@ -18878,7 +18878,7 @@ const docTemplate = `{
                     "example": "standard"
                 },
                 "show_origin_survey": {
-                    "description": "Whether the \"How did you hear about Hoop?\" survey should still be offered.\nTrue only while the user has not answered it and is within 7 days of their\nuser record being created. Always false for anonymous users.",
+                    "description": "Whether the \"How did you hear about Lyric IAM?\" survey should still be offered.\nTrue only while the user has not answered it and is within 7 days of their\nuser record being created. Always false for anonymous users.",
                     "type": "boolean"
                 },
                 "show_setup_checklist": {
@@ -19129,7 +19129,7 @@ const docTemplate = `{
     },
     "tags": [
         {
-            "description": "Hoop implements Oauth2 and OIDC protocol to authenticate users in the system. To obtain a valid access token users need to authenticate in their own identity provider which is generated as a JSON response to the endpoint ` + "`" + `http(s)://{{ .Host }}{{ .BasePath }}/login` + "`" + `. The identity provider them redirects the user to the callback endpoint containing the access token.\n\nThe recommended approach of obtaining an access token is by visiting the Webapp main's page or using the **Hoop command line**. Example:\n\n` + "`" + `` + "`" + `` + "`" + `sh\nhoop config create --api-url https://{{ .Host }}\n# save the token after authenticating at $HOME/.hoop/config.toml\nhoop login\n# show token information\nhoop config view --raw\n` + "`" + `` + "`" + `` + "`" + `\n\nWith an access token you could use any HTTP client to interact with the documented endpoints.\nThe token must be sent through the ` + "`" + `Authorization` + "`" + ` header.\n\nExample:\n\n` + "`" + `` + "`" + `` + "`" + `sh\n# obtain the current configuration of the server\ncurl https://{{ .Host }}{{ .BasePath }}/serverinfo -H \"Authorization: Bearer $ACCESS_TOKEN\"\n` + "`" + `` + "`" + `` + "`" + `\n",
+            "description": "Lyric IAM implements Oauth2 and OIDC protocol to authenticate users in the system. To obtain a valid access token users need to authenticate in their own identity provider which is generated as a JSON response to the endpoint ` + "`" + `http(s)://{{ .Host }}{{ .BasePath }}/login` + "`" + `. The identity provider them redirects the user to the callback endpoint containing the access token.\n\nThe recommended approach of obtaining an access token is by visiting the Webapp main's page or using the **Lyric IAM command line**. Example:\n\n` + "`" + `` + "`" + `` + "`" + `sh\nlyric-iam config create --api-url https://{{ .Host }}\n# save the token after authenticating at $HOME/.lyric-iam/config.toml\nlyric-iam login\n# show token information\nlyric-iam config view --raw\n` + "`" + `` + "`" + `` + "`" + `\n\nWith an access token you could use any HTTP client to interact with the documented endpoints.\nThe token must be sent through the ` + "`" + `Authorization` + "`" + ` header.\n\nExample:\n\n` + "`" + `` + "`" + `` + "`" + `sh\n# obtain the current configuration of the server\ncurl https://{{ .Host }}{{ .BasePath }}/serverinfo -H \"Authorization: Bearer $ACCESS_TOKEN\"\n` + "`" + `` + "`" + `` + "`" + `\n",
             "name": "Authentication"
         },
         {
@@ -19148,7 +19148,7 @@ const docTemplate = `{
             "name": "Features"
         },
         {
-            "description": "Proxy manager endpoints controls how clients connect via gRPC in the gateway. These endpoints are meant to be used when a client is initialized via ` + "`" + `hoop proxy-manager` + "`" + `.",
+            "description": "Proxy manager endpoints controls how clients connect via gRPC in the gateway. These endpoints are meant to be used when a client is initialized via ` + "`" + `lyric-iam proxy-manager` + "`" + `.",
             "name": "Proxy Manager"
         },
         {
@@ -19188,8 +19188,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{"https"},
-	Title:            "Hoop Api",
-	Description:      "Hoop.dev is an access gateway for databases and servers with an API for packet manipulation",
+	Title:            "Lyric IAM Api",
+	Description:      "Lyric IAM.dev is an access gateway for databases and servers with an API for packet manipulation",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

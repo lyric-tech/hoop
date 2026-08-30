@@ -37,21 +37,21 @@ func registerSchemaTools(server *mcp.Server) {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "connection_databases",
-		Description: "List databases available on a Hoop database connection (Postgres, MySQL, MSSQL, MongoDB). " +
+		Description: "List databases available on a Lyric IAM database connection (Postgres, MySQL, MSSQL, MongoDB). " +
 			"Returns the raw query output; agents can parse database names from it.",
 		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: &openWorld},
 	}, connectionDatabasesHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "connection_tables",
-		Description: "List tables in a given database on a Hoop database connection. " +
+		Description: "List tables in a given database on a Lyric IAM database connection. " +
 			"Returns the raw query output.",
 		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: &openWorld},
 	}, connectionTablesHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "connection_columns",
-		Description: "List columns of a specific table on a Hoop database connection, with types. " +
+		Description: "List columns of a specific table on a Lyric IAM database connection, with types. " +
 			"Returns the raw query output.",
 		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: &openWorld},
 	}, connectionColumnsHandler)

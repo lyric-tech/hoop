@@ -39,7 +39,7 @@
       ;; Local Terminal - only if can connect
       (can-connect? connection)
       (conj {:id "local-terminal"
-             :label "Open with Hoop CLI"
+             :label "Open with Lyric IAM CLI"
              :icon (fn [] [:> SquareCode {:size 16}])
              :action :local-terminal})
 

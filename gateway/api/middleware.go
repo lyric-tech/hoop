@@ -107,7 +107,7 @@ func getBodyAsMap(data []byte) map[string]any {
 func CORSMiddleware() gin.HandlerFunc {
 	vs := version.Get()
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Server", fmt.Sprintf("hoopgateway/%s", vs.Version))
+		c.Writer.Header().Set("Server", fmt.Sprintf("lyric-iam-gateway/%s", vs.Version))
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, accept, origin, user-client")

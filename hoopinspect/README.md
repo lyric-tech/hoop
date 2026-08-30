@@ -140,8 +140,8 @@ The command was named `inspect`. On 1.149.0 and newer that name still works as
 a deprecated alias and prints a notice naming the new one. **Below 1.149.0 only
 `inspect` exists**, so a pinned older image needs the old spelling.
 
-`--config` also reads `HOOP_SIDECAR_CONFIG` (or the older
-`HOOP_INSPECT_CONFIG`, still honoured), which is the shape a Kubernetes
+`--config` also reads `LYRIC_IAM_SIDECAR_CONFIG` (or the older
+`LYRIC_IAM_INSPECT_CONFIG`, still honoured), which is the shape a Kubernetes
 deployment wants: mount the ConfigMap, set the variable, pass no arguments.
 
 That binary is already in the images you pull: `hoophq/hoopdev` (agent) and

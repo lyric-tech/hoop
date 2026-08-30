@@ -86,7 +86,7 @@ func SendSSHWrite(t T, tr *MockTransport, sessionID, connID string, payload []by
 
 // SSHOpenChannelPayload builds an encoded sshtypes.OpenChannel packet
 // requesting a "session" channel on the given channel ID. This is the
-// canonical "first packet" in a hoop SSH flow — the client side asks the
+// canonical "first packet" in a lyric-iam SSH flow — the client side asks the
 // agent to open a session channel against the upstream sshd, after which
 // data and exec/pty requests can flow through it.
 //

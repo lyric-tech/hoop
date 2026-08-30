@@ -22,7 +22,7 @@ export default function GuardrailListItem({ guardrail, isFirst, isLast, onConfig
             </Text>
           )}
         </Stack>
-        {/* Hoop-managed guardrails (protection profiles) are immutable — the
+        {/* Lyric IAM-managed guardrails (protection profiles) are immutable — the
             API rejects updates, so there is nothing to configure. */}
         {!guardrail.managed_by && (
           <Button variant="default" onClick={() => onConfigure(guardrail.id)}>

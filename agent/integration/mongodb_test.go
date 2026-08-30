@@ -250,7 +250,7 @@ func TestMongoDB_BadCredentials(t *testing.T) {
 // close the backend TCP socket, which MongoDB does not treat as a reason
 // to abort most in-flight operations (only cursor reads are aborted, and
 // only at interrupt checkpoints) — a heavy command kept running server-side
-// after the hoop client was gone. Close() must now kill the operations of
+// after the lyric-iam client was gone. Close() must now kill the operations of
 // its backend connection through the killOp side channel.
 //
 // The long-running operation is the server `sleep` test command (hence

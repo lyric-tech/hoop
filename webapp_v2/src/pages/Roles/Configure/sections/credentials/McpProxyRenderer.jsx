@@ -429,7 +429,7 @@ export default function McpProxyRenderer({
         finishError('Authorization URL was not returned')
         return
       }
-      const popup = window.open(data.authorization_url, 'hoop-mcp-oauth', POPUP_FEATURES)
+      const popup = window.open(data.authorization_url, 'lyric-iam-mcp-oauth', POPUP_FEATURES)
       if (!popup) {
         finishError('Popup blocked. Allow popups for this site and retry.')
         return
@@ -529,7 +529,7 @@ export default function McpProxyRenderer({
             />
             <Text size="sm" c="dimmed">
               {transport === 'client-stdio'
-                ? 'Each user runs this command on their own machine through `hoop connect`, so the server sees their filesystem and their credentials. Every tool call is still inspected by Hoop before it reaches them.'
+                ? 'Each user runs this command on their own machine through `lyric-iam connect`, so the server sees their filesystem and their credentials. Every tool call is still inspected by Lyric IAM before it reaches them.'
                 : 'The agent runs this command as a child process. Add secrets it needs as environment variables below.'}
             </Text>
           </Stack>
@@ -553,7 +553,7 @@ export default function McpProxyRenderer({
             <Stack gap={4}>
               <Title order={5}>MCP Authorization</Title>
               <Text size="sm" c="dimmed">
-                How Hoop authenticates to this server. Every user of this
+                How Lyric IAM authenticates to this server. Every user of this
                 connection shares the credential configured here.
               </Text>
             </Stack>
@@ -585,7 +585,7 @@ export default function McpProxyRenderer({
               <Stack gap="xs">
                 <Text size="sm" c="dimmed">
                   No credential is stored on this connection. Each user&apos;s MCP
-                  client sends its own token, and Hoop forwards it to the server —
+                  client sends its own token, and Lyric IAM forwards it to the server —
                   so the server sees who is calling, and access follows each
                   user&apos;s own permissions.
                 </Text>
@@ -662,7 +662,7 @@ export default function McpProxyRenderer({
                   </Group>
                 ) : (
                   <>
-                    {/* Pre-registered client credentials. Left blank, Hoop
+                    {/* Pre-registered client credentials. Left blank, Lyric IAM
                         registers a client dynamically (RFC 7591) — which
                         plenty of authorization servers do not offer (GitHub
                         publishes no registration_endpoint), and for those an
@@ -690,7 +690,7 @@ export default function McpProxyRenderer({
                       {busy ? 'Authorizing…' : 'Authorize with MCP'}
                     </Button>
                     <Text size="sm" c="dimmed">
-                      Hoop discovers the server&apos;s authorization server, logs
+                      Lyric IAM discovers the server&apos;s authorization server, logs
                       in, and stores the resulting access token. Register the
                       callback below as the redirect URI of your OAuth app.
                     </Text>
@@ -808,7 +808,7 @@ export default function McpProxyRenderer({
           hideRoleInfo={hideRoleInfo}
           prefix={MCPENV_PREFIX}
           title="Server environment variables"
-          description="Passed to the MCP server process. Hoop adds the MCPENV_ prefix on the wire and strips it before the child sees it."
+          description="Passed to the MCP server process. Lyric IAM adds the MCPENV_ prefix on the wire and strips it before the child sees it."
           keyPlaceholder="FIGMA_TOKEN"
           addLabel="Add variable"
         />

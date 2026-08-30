@@ -183,7 +183,7 @@ FROM ${UBUNTU_IMAGE} AS minimal
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ca-certificates is the one runtime dependency the binary cannot carry itself:
-# the agent dials the gateway over TLS (grpcs://) and, unless HOOP_TLSCA pins a
+# the agent dials the gateway over TLS (grpcs://) and, unless LYRIC_IAM_TLSCA pins a
 # CA, Go verifies the server against the system trust store — which the ubuntu
 # base rootfs does not include. Nothing else is installed.
 RUN groupadd --gid 10001 hoop && \

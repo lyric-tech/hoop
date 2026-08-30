@@ -7,13 +7,13 @@ import TextInput from '@/components/TextInput'
 import { useUserStore } from '@/stores/useUserStore'
 
 const LIST_PATH = '/ai-agents-identities'
-const MCP_DOCS_URL = 'https://hoop.dev/docs/learn/features/mcp-server#mcp-server'
-const CLI_DOCS_URL = 'https://hoop.dev/docs/clients/cli#command-line'
+const MCP_DOCS_URL = 'https://docs.lyric.tech/access/learn/features/mcp-server#mcp-server'
+const CLI_DOCS_URL = 'https://docs.lyric.tech/access/clients/cli#command-line'
 
 function buildMcpSnippet(apiUrl, key) {
   const config = {
     mcpServers: {
-      hoop: {
+      'lyric-iam': {
         type: 'http',
         url: `${apiUrl}/api/mcp`,
         headers: {
@@ -27,9 +27,9 @@ function buildMcpSnippet(apiUrl, key) {
 
 function buildCliSnippet(apiUrl, key) {
   return [
-    "# After installing hoop's CLI",
+    "# After installing lyric-iam's CLI",
     '',
-    'hoop config create \\',
+    'lyric-iam config create \\',
     `    --api-key ${key} \\`,
     `    --api-url ${apiUrl}`,
   ].join('\n')
@@ -75,18 +75,18 @@ export default function AiAgentsIdentitiesCreated() {
           <Stack gap="xs">
             <Title order={4}>Agentic usage via MCP</Title>
             <Text size="sm" c="dimmed">
-              {"Add Hoop's MCP to your .mcp.json file. "}
+              {"Add Lyric IAM's MCP to your .mcp.json file. "}
               <Anchor href={MCP_DOCS_URL} target="_blank" rel="noopener noreferrer" size="sm">
-                {"Learn more about Hoop's MCP."}
+                {"Learn more about Lyric IAM's MCP."}
               </Anchor>
             </Text>
             <CodeSnippet code={buildMcpSnippet(apiUrl, rawKey)} variant="gray" />
           </Stack>
 
           <Stack gap="xs">
-            <Title order={4}>{"Agentic usage via Hoop's CLI"}</Title>
+            <Title order={4}>{"Agentic usage via Lyric IAM's CLI"}</Title>
             <Text size="sm" c="dimmed">
-              {"Install Hoop's CLI in the agent's machine. "}
+              {"Install Lyric IAM's CLI in the agent's machine. "}
               <Anchor href={CLI_DOCS_URL} target="_blank" rel="noopener noreferrer" size="sm">
                 Learn how to install our CLI.
               </Anchor>

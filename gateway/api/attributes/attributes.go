@@ -165,7 +165,7 @@ func Put(c *gin.Context) {
 	}
 
 	if existentAttr.ManagedBy != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "this attribute is managed by Hoop and cannot be modified directly"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "this attribute is managed by Lyric IAM and cannot be modified directly"})
 		return
 	}
 	if featureflag.IsEnabled(ctx.GetOrgID(), rulepackFlagName) {
@@ -211,7 +211,7 @@ func Delete(c *gin.Context) {
 
 	if existentAttr, gerr := models.GetAttribute(models.DB, orgID, c.Param("name")); gerr == nil {
 		if existentAttr.ManagedBy != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "this attribute is managed by Hoop and cannot be deleted directly"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "this attribute is managed by Lyric IAM and cannot be deleted directly"})
 			return
 		}
 		if featureflag.IsEnabled(ctx.GetOrgID(), rulepackFlagName) {

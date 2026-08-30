@@ -107,7 +107,7 @@
         [:> Heading {:as "h1" :align "center" :size "6" :mb "2" :weight "bold" :class "text-[--gray-12]"}
          "Setup an Agent"]
         [:> Text {:as "p" :size "3" :align "center" :class "text-[--gray-12]"}
-         "Having an agent is essential at hoop."]
+         "Having an agent is essential at lyric-iam."]
         [:> Text {:as "p" :size "3" :align "center" :class "text-[--gray-12]"}
          "Don't worry, you can do it in your local machine to start."]]
 
@@ -116,7 +116,7 @@
         [setup-card {:icon (r/as-element
                             [:> BrainCog {:size 18 :class "group-hover:text-[--gray-1]"}])
                      :title "Setup an Agent"
-                     :description "Create an agent to start using hoop"
+                     :description "Create an agent to start using lyric-iam"
                      :action #(rf/dispatch [:navigate :onboarding-setup-agent])}]]]]]]])
 
 (defn main []

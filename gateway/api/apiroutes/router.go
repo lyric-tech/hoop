@@ -40,7 +40,7 @@ func New(route *gin.RouterGroup) *Router {
 		log.Fatalf("route is nil")
 	}
 
-	route.Use(otelgin.Middleware("hoopgateway",
+	route.Use(otelgin.Middleware("hoop-gateway",
 		otelgin.WithFilter(func(r *http.Request) bool {
 			return r.RequestURI != "/api/healthz"
 		}),

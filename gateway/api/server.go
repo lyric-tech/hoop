@@ -73,14 +73,14 @@ type Api struct {
 	logger              *zap.Logger
 }
 
-//	@title			Hoop Api
+//	@title			Lyric IAM Api
 //	@version		1.0
-//	@description	Hoop.dev is an access gateway for databases and servers with an API for packet manipulation
-//	@termsOfService	https://hoop.dev/docs/legal/tos
+//	@description	Lyric IAM.dev is an access gateway for databases and servers with an API for packet manipulation
+//	@termsOfService	https://docs.lyric.tech/access/legal/tos
 //	@schemes		https
 
 //	@contact.name	Help
-//	@contact.url	https://help.hoop.dev
+//	@contact.url	https://docs.lyric.tech/access
 //	@contact.email	help@hoop.dev
 
 //	@license.name	MIT

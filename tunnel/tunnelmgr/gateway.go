@@ -56,14 +56,14 @@ func (m *Manager) buildGatewayConfig(ctx context.Context, cfg daemonconfig.Confi
 		// Honour the same env-var escape hatches the daemon honoured
 		// pre-refactor. Wiring them through Options would be cleaner
 		// but for dev/integration runs the env is what people set.
-		TLSSkipVerify: m.opts.TLSSkipVerify || os.Getenv("HOOP_TLS_SKIP_VERIFY") == "true",
-		TLSServerName: firstNonEmpty(m.opts.TLSServerName, os.Getenv("HOOP_TLSSERVERNAME")),
+		TLSSkipVerify: m.opts.TLSSkipVerify || os.Getenv("LYRIC_IAM_TLS_SKIP_VERIFY") == "true",
+		TLSServerName: firstNonEmpty(m.opts.TLSServerName, os.Getenv("LYRIC_IAM_TLSSERVERNAME")),
 	}, apiBase, nil
 }
 
 // isInsecureScheme returns true for schemes that use plain-text gRPC:
 // "http://" or "grpc://". Everything else (bare HOST:PORT, "https://",
-// "grpcs://") implies TLS, matching the hoop CLI's hasInsecureScheme.
+// "grpcs://") implies TLS, matching the lyric-iam CLI's hasInsecureScheme.
 func isInsecureScheme(grpcURL string) bool {
 	low := strings.ToLower(grpcURL)
 	return strings.HasPrefix(low, "http://") || strings.HasPrefix(low, "grpc://")

@@ -219,7 +219,7 @@ function RuleFormFields({ rule, ruleName, isEdit }) {
 
         <SectionRow
           title="Custom analysis prompt"
-          description="Tell the model what to look for. Hoop appends a system prompt so the model always returns a low/medium/high grade."
+          description="Tell the model what to look for. Lyric IAM appends a system prompt so the model always returns a low/medium/high grade."
         >
           <Stack gap="sm">
             <Textarea
@@ -231,7 +231,7 @@ function RuleFormFields({ rule, ruleName, isEdit }) {
               onChange={(e) => setField({ customPrompt: e.currentTarget.value })}
             />
             <Alert color="blue" variant="light" icon={<Info size={16} />} radius="md">
-              Hoop prepends a fixed system prompt before your instructions so the
+              Lyric IAM prepends a fixed system prompt before your instructions so the
               analyzer always returns a structured low/medium/high grade. This is what
               keeps the actions above reliable.
             </Alert>

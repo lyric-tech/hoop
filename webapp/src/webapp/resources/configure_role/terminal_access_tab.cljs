@@ -74,7 +74,7 @@
 
          [toggle-section
           {:title "Terminal access availability"
-           :description "Use hoop.dev's Web Terminal or our CLI's One-Offs commands directly in your terminal."
+           :description "Use Lyric IAM's Web Terminal or our CLI's One-Offs commands directly in your terminal."
            :checked web-terminal-enabled?
            :on-change #(rf/dispatch [:connection-setup/toggle-access-mode :web])}]
          

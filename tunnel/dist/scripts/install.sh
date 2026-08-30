@@ -127,7 +127,7 @@ fi
 # If we're not root, re-exec under sudo so the user only types their
 # password once for the whole install (rather than three times across
 # the various Go-side syscalls). `-E` is deliberately omitted: we do
-# NOT want HOOP_* env vars to leak into the daemon's environment at
+# NOT want LYRIC_IAM_* env vars to leak into the daemon's environment at
 # install time; the daemon should be driven by the on-disk config.
 
 if [ "$(id -u)" != "0" ]; then

@@ -39,8 +39,8 @@ func init() {
 var createSvixEventTypeCmd = &cobra.Command{
 	Use:   "svixeventtype NAME",
 	Short: "Create Svix Event Type",
-	Example: `hoop admin create svixeventtype session.open --description 'session.open sent when a session starts'
-hoop admin create svixet session.close --description --payload file:///path/to/session.close.schema.json`,
+	Example: `lyric-iam admin create svixeventtype session.open --description 'session.open sent when a session starts'
+lyric-iam admin create svixet session.close --description --payload file:///path/to/session.close.schema.json`,
 	Aliases: []string{"svixeventtypes", "svixevent-type", "svixevent-types", "svixet"},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -98,9 +98,9 @@ var createSvixEndppointCmd = &cobra.Command{
 	Use:     "svixendpoint [ID]",
 	Short:   "Create or Update Svix Endpoint.",
 	Aliases: []string{"svixendpoints", "svixep"},
-	Example: `hoop admin create svixendpoint --description 'My main endpoint' --url https://webhook-endpoint
-hoop admin create svixep --url https://webhook-endpoint --filters session.open,session.close
-hoop admin create svixep ep_2vY1R1AfRPOCHMeK6vLSmpeLKvs --overwrite --url https://webhook-endpoint
+	Example: `lyric-iam admin create svixendpoint --description 'My main endpoint' --url https://webhook-endpoint
+lyric-iam admin create svixep --url https://webhook-endpoint --filters session.open,session.close
+lyric-iam admin create svixep ep_2vY1R1AfRPOCHMeK6vLSmpeLKvs --overwrite --url https://webhook-endpoint
 	`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 && webhookOverwriteFlag {
@@ -148,8 +148,8 @@ hoop admin create svixep ep_2vY1R1AfRPOCHMeK6vLSmpeLKvs --overwrite --url https:
 var createSvixMessageCmd = &cobra.Command{
 	Use:   "svixmessage (PAYLOAD|FILE_PAYLOAD)",
 	Short: "Creates a new message and dispatches it to all of the endpoints",
-	Example: `hoop admin create svixmessage '{"message": "my webhook message"}' --event-type session.open
-hoop admin create svixmessage file:///tmp/payload.json --event-type session.open
+	Example: `lyric-iam admin create svixmessage '{"message": "my webhook message"}' --event-type session.open
+lyric-iam admin create svixmessage file:///tmp/payload.json --event-type session.open
 	`,
 	Aliases: []string{"svixmessages", "svixmsg"},
 	PreRun: func(cmd *cobra.Command, args []string) {

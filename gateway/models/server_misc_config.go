@@ -26,7 +26,7 @@ type PostgresServerConfig struct {
 }
 
 // SSHUserMapping configures how a certificate attribute is matched against a
-// Hoop user attribute to authenticate certificate-based SSH connections.
+// Lyric IAM user attribute to authenticate certificate-based SSH connections.
 type SSHUserMapping struct {
 	CertAttribute string `json:"cert_attr"` // "principal" or "key_id"
 	UserAttribute string `json:"user_attr"` // "email", "subject", or "user_id"

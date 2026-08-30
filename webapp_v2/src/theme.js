@@ -98,7 +98,7 @@ export const theme = createTheme({
       '#02359c'
     ],
 
-    // Slate-tinted neutral ramp (light mode), anchored on the Figma hoop/colors
+    // Slate-tinted neutral ramp (light mode), anchored on the Figma lyric-iam/colors
     // gray tokens (gray/0 #f0f0f3 … gray/9 #4d4d60). The Radix Slate text steps
     // are not in this array — they are wired as semantic tokens in
     // cssVariablesResolver:

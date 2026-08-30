@@ -14,9 +14,10 @@ import {
 } from '@mantine/core'
 import { authService } from '@/services/auth'
 import PageLoader from '@/components/PageLoader'
+import { PRODUCT_NAME } from '@/utils/branding'
 
 const LOGIN_ERROR_MESSAGES = {
-  slack_not_configured: 'You must configure your Slack with Hoop',
+  slack_not_configured: 'You must configure your Slack with Lyric IAM',
   code_exchange_failure:
     'Something went wrong. Try again and if the error persists, talk to the account administrator',
   pending_review: 'The organization administrator must approve your access first',
@@ -88,7 +89,7 @@ function Signup() {
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <Stack align="center" mb="lg">
           <Title order={2} ta="center">
-            Welcome to hoop.dev
+            Welcome to {PRODUCT_NAME}
           </Title>
           <Text size="sm" ta="center" c="dimmed">
             Before getting started, set a name for your organization.

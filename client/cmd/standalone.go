@@ -25,7 +25,7 @@ var startStandaloneCmd = &cobra.Command{
 	Short:        "Runs the gateway and a local agent in a single process",
 	Long: `Runs the gateway and a local agent in a single process, suitable for
 single-node deployments. When POSTGRES_DB_URI is not set, an embedded
-PostgreSQL (pglite) is used with data stored under $HOME/.hoop/standalone.`,
+PostgreSQL (pglite) is used with data stored under $HOME/.lyric-iam/standalone.`,
 	SilenceUsage: false,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := runStandalone(); err != nil {
@@ -65,16 +65,16 @@ func runStandalone() error {
 		return fmt.Errorf("failed provisioning the standalone agent credentials: %w", err)
 	}
 
-	// agent.Run loads its configuration from HOOP_KEY and blocks in the
+	// agent.Run loads its configuration from LYRIC_IAM_KEY and blocks in the
 	// connect/reconnect loop against the local gateway.
-	os.Setenv("HOOP_KEY", dsn)
+	os.Setenv("LYRIC_IAM_KEY", dsn)
 	log.Infof("starting standalone agent %q against the local gateway", services.StandaloneAgentName)
 	agent.Run()
 	return nil
 }
 
 // applyStandaloneDefaults points filesystem-dependent gateway settings at a
-// per-user standalone home ($HOME/.hoop/standalone) when they are not
+// per-user standalone home ($HOME/.lyric-iam/standalone) when they are not
 // explicitly configured:
 //   - POSTGRES_DB_URI -> embedded pglite database under pgdata/
 //   - session WAL (audit plugin) -> sessions/ instead of /opt/hoop/sessions
@@ -83,7 +83,7 @@ func applyStandaloneDefaults() error {
 	if err != nil {
 		return fmt.Errorf("unable to resolve the user home directory for the standalone data (set POSTGRES_DB_URI and PLUGIN_AUDIT_PATH to override): %v", err)
 	}
-	standaloneHome := filepath.Join(home, ".hoop", "standalone")
+	standaloneHome := filepath.Join(home, ".lyric-iam", "standalone")
 
 	if os.Getenv("POSTGRES_DB_URI") == "" {
 		dataDir := filepath.Join(standaloneHome, "pgdata")

@@ -26,7 +26,7 @@ var (
 // CreateOrgKey
 //
 //	@Summary		Create Org Key
-//	@Description	Create the organization key to run with `hoop run` command line.
+//	@Description	Create the organization key to run with `lyric-iam run` command line.
 //	@Tags			Organization Management
 //	@Produce		json
 //	@Success		201		{object}	openapi.OrgKeyResponse
@@ -59,7 +59,7 @@ func CreateAgentKey(c *gin.Context) {
 // GetOrgKey
 //
 //	@Summary		Get Org Key
-//	@Description	Get the organization key to run with `hoop run` command line
+//	@Description	Get the organization key to run with `lyric-iam run` command line
 //	@Tags			Organization Management
 //	@Produce		json
 //	@Success		200		{object}	openapi.OrgKeyResponse

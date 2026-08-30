@@ -301,7 +301,7 @@ func GetConnectionAttributes(db *gorm.DB, orgID uuid.UUID, connectionName string
 }
 
 // UpsertConnectionAttributes replaces the attribute associations for the given connection.
-// Hoop-managed attributes (e.g. the protection-profile attribute) round-trip through the
+// Lyric IAM-managed attributes (e.g. the protection-profile attribute) round-trip through the
 // connection's `attributes` field on reads, so they are replaceable like any user attribute —
 // omitting one from the request detaches it. Only rulepack-owned associations (attribute rows
 // with a non-null rulepack_id) are preserved across the update, because the read path omits

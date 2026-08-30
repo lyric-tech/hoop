@@ -9,8 +9,8 @@ import (
 )
 
 func TestPrintVersionMismatchWarning(t *testing.T) {
-	const installLine = "hoop versions install"
-	const docsLine = "https://hoop.dev/docs/clients/cli-versions"
+	const installLine = "lyric-iam versions install"
+	const docsLine = "https://docs.lyric.tech/access/clients/cli-versions"
 
 	tests := []struct {
 		name         string

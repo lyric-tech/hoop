@@ -8,7 +8,7 @@ import { LICENSE_STATUS, daysUntilExpiration, formatLicenseDate } from '@/utils/
 import { openSupport } from '@/utils/support'
 
 const LICENSE_PAGE = '/settings/license'
-const SUPPORT_MESSAGE = 'I want to renew my hoop license'
+const SUPPORT_MESSAGE = 'I want to renew my lyric-iam license'
 const WARN_DAYS = 30
 // Dismissing silences one step only; inside LOCKED_DAYS there is no close button.
 const DISMISS_STEPS = [30, 14]
@@ -23,7 +23,7 @@ function licenseNotice({ licenseInfo, isAdmin, userId, dismissedFor }) {
   if (status === LICENSE_STATUS.EXPIRED) {
     return {
       color: 'red',
-      message: `Your hoop license expired on ${formatLicenseDate(expireAt)}. New sessions are blocked until a valid license is installed.`,
+      message: `Your lyric-iam license expired on ${formatLicenseDate(expireAt)}. New sessions are blocked until a valid license is installed.`,
       action: 'update',
     }
   }
@@ -32,7 +32,7 @@ function licenseNotice({ licenseInfo, isAdmin, userId, dismissedFor }) {
     const reason = verifyError ? `: ${verifyError}` : ''
     return {
       color: 'red',
-      message: `Your hoop license could not be verified${reason}. New sessions are blocked until a valid license is installed.`,
+      message: `Your lyric-iam license could not be verified${reason}. New sessions are blocked until a valid license is installed.`,
       action: 'update',
     }
   }
@@ -51,7 +51,7 @@ function licenseNotice({ licenseInfo, isAdmin, userId, dismissedFor }) {
   const when = daysLeft <= 0 ? 'today' : daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`
   return {
     color: 'amber',
-    message: `Your hoop license expires ${when}, on ${formatLicenseDate(expireAt)}. Renew it to keep sessions running.`,
+    message: `Your lyric-iam license expires ${when}, on ${formatLicenseDate(expireAt)}. Renew it to keep sessions running.`,
     action: 'support',
     dismissKey,
   }

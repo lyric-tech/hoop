@@ -88,7 +88,7 @@ export const GENERAL_PROFILES = [
   },
 ]
 
-// Display labels for the Hoop-managed protection-profile attributes
+// Display labels for the Lyric IAM-managed protection-profile attributes
 // (gateway/services/protection_profiles_catalog.go AttributeName values).
 export const MANAGED_ATTRIBUTE_LABELS = {
   'hoop_protection_profile-hipaa_ready': 'HIPAA Ready',

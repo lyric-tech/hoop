@@ -58,7 +58,7 @@
 
          [:> Box {:p "7" :class "space-y-radix-9"}
           [form-section {:title "Set basic information"
-                         :description "Used to identify this API key and its actions across Hoop."}
+                         :description "Used to identify this API key and its actions across Lyric IAM."}
            [forms/input {:label "Name"
                          :placeholder "e.g. AI Agent SRE"
                          :value @name-val

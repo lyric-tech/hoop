@@ -22,7 +22,7 @@ export default function RuleListItem({ rule, isFirst, isLast, onConfigure }) {
             </Text>
           )}
         </Stack>
-        {/* Hoop-managed rules stay configurable: the API locks their name,
+        {/* Lyric IAM-managed rules stay configurable: the API locks their name,
             access type, duration and targeting, but the approval settings
             are still editable. */}
         <Button variant="default" onClick={() => onConfigure(rule.name)}>

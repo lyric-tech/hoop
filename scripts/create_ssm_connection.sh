@@ -4,7 +4,7 @@
 # You should run hoop login before running this script
 
 # Default values
-HOOP_API_URL="${HOOP_API_URL:-http://localhost:8009}"
+LYRIC_IAM_API_URL="${LYRIC_IAM_API_URL:-http://localhost:8009}"
 CONNECTION_NAME="${CONNECTION_NAME:-ssm-connection}"
 AGENT_ID="${AGENT_ID:-75122BCE-F957-49EB-A812-2AB60977CD9F}" # set the default docker agent id
 AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
@@ -37,7 +37,7 @@ usage() {
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -u|--url) HOOP_API_URL="$2"; shift 2 ;;
+        -u|--url) LYRIC_IAM_API_URL="$2"; shift 2 ;;
         -n|--name) CONNECTION_NAME="$2"; shift 2 ;;
         -a|--agent-id) AGENT_ID="$2"; shift 2 ;;
         -k|--access-key) AWS_ACCESS_KEY_ID="$2"; shift 2 ;;
@@ -82,7 +82,7 @@ fi
 echo -e "${GREEN}✅ Login successful${NC}"
 
 # Use the API URL from environment or default
-API_URL="$HOOP_API_URL"
+API_URL="$LYRIC_IAM_API_URL"
 
 # Encode credentials
 ENCODED_ACCESS_KEY=$(echo -n "$AWS_ACCESS_KEY_ID" | base64 -w 0)

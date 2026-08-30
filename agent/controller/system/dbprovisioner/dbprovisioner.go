@@ -115,8 +115,8 @@ func processDBProvisionerRequest(client pb.ClientTransport, pkt *pb.Packet) {
 		provisionerRequestJSON, _ := json.Marshal(req)
 		cmd, err := libhoop.NewAdHocExec(
 			map[string]any{
-				"envvar:HOOP_AWS_CONNECT_REQUEST":  base64.StdEncoding.EncodeToString(provisionerRequestJSON),
-				"envvar:HOOP_AWS_CONNECT_RESPONSE": base64.StdEncoding.EncodeToString(provisionerResponseJSON),
+				"envvar:LYRIC_IAM_AWS_CONNECT_REQUEST":  base64.StdEncoding.EncodeToString(provisionerRequestJSON),
+				"envvar:LYRIC_IAM_AWS_CONNECT_RESPONSE": base64.StdEncoding.EncodeToString(provisionerResponseJSON),
 			},
 			req.ExecHook.Command,
 			[]byte(req.ExecHook.InputFile),

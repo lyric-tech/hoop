@@ -2,7 +2,7 @@
   (:require
    [clojure.string]
    [re-frame.core :as rf]
-   [webapp.connections.views.hoop-cli-modal :as hoop-cli-modal]))
+   [webapp.connections.views.hoop-cli-modal :as lyric-iam-cli-modal]))
 
 ;; Event handlers for command palette
 
@@ -144,10 +144,10 @@
           [:dispatch [:navigate :editor-plugin {:role (:connection-name action)}]]]}
 
      :local-terminal
-     ;; Same logic as connection-list: open hoop-cli modal
+     ;; Same logic as connection-list: open lyric-iam-cli modal
      {:fx [[:dispatch [:command-palette->close]]
            [:dispatch-later {:ms 100
-                             :dispatch [:modal->open {:content [hoop-cli-modal/main (:connection-name action)]
+                             :dispatch [:modal->open {:content [lyric-iam-cli-modal/main (:connection-name action)]
                                                       :maxWidth "1100px"
                                                       :class "overflow-hidden"}]}]]}
 

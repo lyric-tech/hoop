@@ -43,8 +43,8 @@ type login struct {
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "Authenticate at Hoop",
-	Long:  `Login to gain access to hoop usage.`,
+	Short: "Authenticate at Lyric IAM",
+	Long:  `Login to gain access to lyric-iam usage.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			_ = cmd.Help()
@@ -177,7 +177,7 @@ func doLogin(apiURL, tlsCA string) (string, error) {
 	}
 	go callbackHttpServer.ListenAndServe()
 	if noBrowser {
-		fmt.Printf("\nOpen the URL below to authenticate on your Hoop instance\n")
+		fmt.Printf("\nOpen the URL below to authenticate on your Lyric IAM instance\n")
 		fmt.Printf("---------------------------------------------------------\n")
 		fmt.Printf("• %s\n\n", loginUrl)
 	} else {

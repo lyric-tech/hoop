@@ -4,11 +4,11 @@
 // standalone mode (DEP-38): the gateway running on the embedded PGlite
 // database with the dedicated `standalone` agent connected in-process.
 //
-// The suite boots the same layers `hoop start standalone` boots — embedded
+// The suite boots the same layers `lyric-iam start standalone` boots — embedded
 // database, HTTP API, plugin chain, gRPC transport — and drives the exact
 // provisioning code path the command runs (services.StandaloneAgentDSN). It
 // exists so a change that breaks the single binary fails here, in CI,
-// rather than on a user's first `hoop start standalone`.
+// rather than on a user's first `lyric-iam start standalone`.
 package standalone
 
 import (

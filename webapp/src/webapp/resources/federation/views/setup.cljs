@@ -92,8 +92,8 @@
 (defn- identity-mapping-editor [form]
   [:> Box {:class "space-y-4"}
    [forms/input
-    {:label "Source attribute (Hoop)"
-     :helper-text "JSONPath into the Hoop session context."
+    {:label "Source attribute (Lyric IAM)"
+     :helper-text "JSONPath into the Lyric IAM session context."
      :placeholder "$.user.email"
      :not-margin-bottom? true
      :required true
@@ -137,15 +137,15 @@
    [:> Box {:class "border border-[--gray-6] rounded-md p-4 bg-[--gray-2] space-y-2"}
     (if (oauth-provider? form)
       [:<>
-       [env-var-row "HOOP_GCP_ACCESS_TOKEN"]
+       [env-var-row "LYRIC_IAM_GCP_ACCESS_TOKEN"]
        [env-var-row "CLOUDSDK_CORE_PROJECT"]
-       [env-var-row "HOOP_FEDERATED_PRINCIPAL"]]
+       [env-var-row "LYRIC_IAM_FEDERATED_PRINCIPAL"]]
       [:<>
        [env-var-row "GOOGLE_APPLICATION_CREDENTIALS"]
        [env-var-row "CLOUDSDK_CORE_PROJECT"]
-       [env-var-row "HOOP_FEDERATED_PRINCIPAL"]])]
+       [env-var-row "LYRIC_IAM_FEDERATED_PRINCIPAL"]])]
    [:> Text {:size "1" :class "text-[--gray-11]"}
-    "Hoop guarantees these names exist for every successful session. "
+    "Lyric IAM guarantees these names exist for every successful session. "
     "Your queries can rely on them the same way they would with statically configured credentials."]])
 
 (def ^:private provider-options
@@ -239,7 +239,7 @@
                                     (str/blank? (get-in form [:extra_config :project_id])) "Set the GCP Project ID to enable testing."
                                     (str/blank? (:identity_target_template form)) "Set the target principal template to enable testing."
                                     (str/blank? (:agent_id conn-data)) "Select an agent to enable testing."
-                                    :else "Run a dry-run test as a specific Hoop user")}
+                                    :else "Run a dry-run test as a specific Lyric IAM user")}
              [:> Button {:variant "soft"
                          :type "button"
                          :disabled (not can-test?)
@@ -278,7 +278,7 @@
 
            [section
             "Identity mapping"
-            "How the Hoop user's identity maps to the cloud IAM principal that gets impersonated."
+            "How the Lyric IAM user's identity maps to the cloud IAM principal that gets impersonated."
             [identity-mapping-editor form]])
 
          [section

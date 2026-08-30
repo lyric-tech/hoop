@@ -22,7 +22,7 @@ export default function RuleListItem({ rule, isFirst, isLast, onConfigure }) {
             </Text>
           )}
         </Stack>
-        {/* Hoop-managed rules (protection profiles) are immutable — the API
+        {/* Lyric IAM-managed rules (protection profiles) are immutable — the API
             rejects updates, so there is nothing to configure. */}
         {!rule.managed_by && (
           <Button variant="default" onClick={() => onConfigure(rule.name)}>

@@ -23,7 +23,7 @@ func TestIsFederatedJWT(t *testing.T) {
 	}{
 		{"matching issuer", mk(`{"iss":"https://hoophq.us.auth0.com/","sub":"u"}`), idp, true},
 		{"matching issuer no trailing slash", mk(`{"iss":"https://hoophq.us.auth0.com","sub":"u"}`), idp, true},
-		{"different issuer (hoop local)", mk(`{"sub":"a@a.com","email":"a@a.com"}`), idp, false},
+		{"different issuer (lyric-iam local)", mk(`{"sub":"a@a.com","email":"a@a.com"}`), idp, false},
 		{"different issuer explicit", mk(`{"iss":"https://other.example","sub":"u"}`), idp, false},
 		{"empty expected issuer", mk(`{"iss":"anything"}`), "", false},
 		{"not a jwt shape", "not-a-jwt", idp, false},

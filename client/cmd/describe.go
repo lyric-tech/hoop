@@ -16,9 +16,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var describeExampleDesc = `hoop describe db-read
-hoop describe my-postgres-connection
-hoop describe -o json redis-cache`
+var describeExampleDesc = `lyric-iam describe db-read
+lyric-iam describe my-postgres-connection
+lyric-iam describe -o json redis-cache`
 
 var describeCmd = &cobra.Command{
 	Use:     "describe CONNECTION",
@@ -331,7 +331,7 @@ func formatSingleTag(key, value string) string {
 		return ""
 	}
 
-	// If it's an internal Hoop tag: hoop.dev/group.key
+	// If it's an internal Lyric IAM tag: hoop.dev/group.key
 	if strings.HasPrefix(key, "hoop.dev/") {
 		// Remove the "hoop.dev/" prefix
 		remaining := strings.TrimPrefix(key, "hoop.dev/")

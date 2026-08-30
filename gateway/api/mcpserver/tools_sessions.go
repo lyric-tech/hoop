@@ -70,14 +70,14 @@ func registerSessionTools(server *mcp.Server) {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "sessions_get_analysis",
-		Description: "Get Hoop's AI analysis for a session: risk level, title, explanation, recommended action. " +
+		Description: "Get Lyric IAM's AI analysis for a session: risk level, title, explanation, recommended action. " +
 			"Returns status=unavailable when the session has no analysis yet (e.g. still in progress).",
 		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: &openWorld},
 	}, sessionsGetAnalysisHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "sessions_wait_analysis",
-		Description: "Long-poll until Hoop's AI analysis for a session is available, or the timeout elapses. " +
+		Description: "Long-poll until Lyric IAM's AI analysis for a session is available, or the timeout elapses. " +
 			"AI analysis is generated asynchronously after a session ends, so a session that just completed " +
 			"may take a moment. Response shape mirrors sessions_get_analysis and adds timed_out and " +
 			"waited_seconds. Timeout is not an error.",

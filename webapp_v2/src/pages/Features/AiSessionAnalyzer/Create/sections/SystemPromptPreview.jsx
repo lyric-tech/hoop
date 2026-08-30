@@ -5,7 +5,7 @@ import Badge from '@/components/Badge'
 import CodeSnippet from '@/components/CodeSnippet'
 import { useAiSessionAnalyzerStore } from '../../store'
 
-// Read-only view of the prompt Hoop prepends, so admins can see it while
+// Read-only view of the prompt Lyric IAM prepends, so admins can see it while
 // writing their own.
 export default function SystemPromptPreview() {
   const [expanded, setExpanded] = useState(false)
@@ -31,7 +31,7 @@ export default function SystemPromptPreview() {
           <Group gap="xs" align="center" wrap="nowrap">
             <Sparkles size={14} color="var(--mantine-color-indigo-6)" />
             <Text size="sm" fw={500}>
-              {"Hoop's appended system prompt"}
+              {"Lyric IAM's appended system prompt"}
             </Text>
             <Badge variant="light" color="gray" radius="xl">
               Read-only

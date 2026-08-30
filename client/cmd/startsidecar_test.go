@@ -41,7 +41,7 @@ func TestWarnDeprecatedSidecarAlias(t *testing.T) {
 				}
 				return
 			}
-			if !strings.Contains(got, "hoop start sidecar") {
+			if !strings.Contains(got, "lyric-iam start sidecar") {
 				t.Fatalf("warning does not name the new command: %q", got)
 			}
 			if !strings.Contains(got, "deprecated") {
@@ -64,8 +64,8 @@ func TestSidecarConfigFromEnv(t *testing.T) {
 		{msg: "neither set resolves to empty"},
 	} {
 		t.Run(tt.msg, func(t *testing.T) {
-			t.Setenv("HOOP_SIDECAR_CONFIG", tt.sidecar)
-			t.Setenv("HOOP_INSPECT_CONFIG", tt.inspect)
+			t.Setenv("LYRIC_IAM_SIDECAR_CONFIG", tt.sidecar)
+			t.Setenv("LYRIC_IAM_INSPECT_CONFIG", tt.inspect)
 
 			if got := sidecarConfigFromEnv(); got != tt.want {
 				t.Fatalf("got %q, want %q", got, tt.want)

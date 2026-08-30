@@ -2,7 +2,7 @@
 # Phase 1 of 2 — Bring up SPIRE + Hoop gateway on local k3s/colima.
 #
 # This script stops after the gateway is up and prints a manual checklist
-# (signup admin user, create agent record in the UI, copy HOOP_KEY).
+# (signup admin user, create agent record in the UI, copy LYRIC_IAM_KEY).
 # After completing those steps, run scripts/local-spiffe-agent.sh to deploy
 # the SPIFFE-authenticated agent.
 #
@@ -12,7 +12,7 @@ set -euo pipefail
 
 # ---- knobs ----
 TRUST_DOMAIN="${TRUST_DOMAIN:-local.hoop.dev}"
-HOOP_NS="${HOOP_NS:-hoop}"
+LYRIC_IAM_NS="${LYRIC_IAM_NS:-hoop}"
 SPIRE_MGMT_NS="${SPIRE_MGMT_NS:-spire-mgmt}"
 SPIRE_SERVER_NS="${SPIRE_SERVER_NS:-spire-server}"
 SPIRE_SYSTEM_NS="${SPIRE_SYSTEM_NS:-spire-system}"
@@ -23,7 +23,7 @@ AUDIENCE="${AUDIENCE:-http://localhost:8009}"
 
 # Pin both images to a known-good build.
 # 1403.0.0-668b288  -> includes the GORM fix for agent_spiffe_mappings.
-# 1403.0.0-5a9bd6f  -> also includes HOOP_GRPC_INSECURE in the agent.
+# 1403.0.0-5a9bd6f  -> also includes LYRIC_IAM_GRPC_INSECURE in the agent.
 GATEWAY_IMAGE_TAG="${GATEWAY_IMAGE_TAG:-1403.0.0-5a9bd6f}"
 AGENT_IMAGE_TAG="${AGENT_IMAGE_TAG:-1403.0.0-5a9bd6f}"
 
@@ -51,7 +51,7 @@ else
   HELM_VERSION_FLAG=()
 fi
 
-WORKDIR="${WORKDIR:-${HOME}/.hoop/local-spiffe}"
+WORKDIR="${WORKDIR:-${HOME}/.lyric-iam/local-spiffe}"
 mkdir -p "$WORKDIR"
 
 log()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -75,7 +75,7 @@ done
 
 # ---- 1. namespaces ----
 log "namespaces"
-for ns in "$HOOP_NS" "$SPIRE_MGMT_NS" "$SPIRE_SERVER_NS" "$SPIRE_SYSTEM_NS"; do
+for ns in "$LYRIC_IAM_NS" "$SPIRE_MGMT_NS" "$SPIRE_SERVER_NS" "$SPIRE_SYSTEM_NS"; do
   kubectl get ns "$ns" >/dev/null 2>&1 || kubectl create ns "$ns"
 done
 
@@ -149,7 +149,7 @@ if ! kubectl -n "$SPIRE_SERVER_NS" exec "$SPIRE_SERVER_POD" -c spire-server -- \
     /opt/spire/bin/spire-server entry create \
       -spiffeID  "$SPIFFE_ID" \
       -parentID  "$PARENT_ID" \
-      -selector  "k8s:ns:${HOOP_NS}" \
+      -selector  "k8s:ns:${LYRIC_IAM_NS}" \
       -selector  "k8s:sa:hoopagent" \
       -jwtSVIDTTL 300
 else
@@ -181,10 +181,10 @@ config:
   LOG_LEVEL: 'debug'
   LOG_ENCODING: 'console'
 
-  HOOP_SPIFFE_MODE: 'enforce'
-  HOOP_SPIFFE_TRUST_DOMAIN: '${TRUST_DOMAIN}'
-  HOOP_SPIFFE_AUDIENCE: '${AUDIENCE}'
-  HOOP_SPIFFE_REFRESH_PERIOD: '5m'
+  LYRIC_IAM_SPIFFE_MODE: 'enforce'
+  LYRIC_IAM_SPIFFE_TRUST_DOMAIN: '${TRUST_DOMAIN}'
+  LYRIC_IAM_SPIFFE_AUDIENCE: '${AUDIENCE}'
+  LYRIC_IAM_SPIFFE_REFRESH_PERIOD: '5m'
 
 postgres:
   enabled: true
@@ -196,20 +196,20 @@ EOF
 log "gateway helm upgrade ($GATEWAY_CHART${CHART_VERSION:+ @ $CHART_VERSION})"
 helm upgrade --install hoop "$GATEWAY_CHART" \
   ${HELM_VERSION_FLAG[@]+"${HELM_VERSION_FLAG[@]}"} \
-  -n "$HOOP_NS" \
+  -n "$LYRIC_IAM_NS" \
   -f "$WORKDIR/gateway-values.yaml" \
-  --set-file config.HOOP_SPIFFE_BUNDLE_JWKS="$WORKDIR/spire-bundle.jwks"
+  --set-file config.LYRIC_IAM_SPIFFE_BUNDLE_JWKS="$WORKDIR/spire-bundle.jwks"
 
 log "wait for gateway"
-kubectl -n "$HOOP_NS" rollout status deploy/hoopgateway --timeout=180s
+kubectl -n "$LYRIC_IAM_NS" rollout status deploy/hoopgateway --timeout=180s
 
 # ---- 6. Port-forward (background, idempotent) ----
 log "port-forward 8009 + 8010"
 pkill -f "port-forward.*hoopgateway" 2>/dev/null || true
 sleep 1
-kubectl -n "$HOOP_NS" port-forward svc/hoopgateway 8009:8009 \
+kubectl -n "$LYRIC_IAM_NS" port-forward svc/hoopgateway 8009:8009 \
   >"$WORKDIR/pf-8009.log" 2>&1 &
-kubectl -n "$HOOP_NS" port-forward svc/hoopgateway 8010:8010 \
+kubectl -n "$LYRIC_IAM_NS" port-forward svc/hoopgateway 8010:8010 \
   >"$WORKDIR/pf-8010.log" 2>&1 &
 sleep 3
 
@@ -226,7 +226,7 @@ Manual steps before running phase 2:
      gateway, just log in with that user.)
 
   2. In the UI, create an agent named "${AGENT_NAME}" (mode: standard).
-     The UI will show a HOOP_KEY — keep it for reference, but the SPIFFE
+     The UI will show a LYRIC_IAM_KEY — keep it for reference, but the SPIFFE
      flow won't use it at runtime; the agent authenticates via JWT-SVID.
 
   3. Authenticate the CLI against the local gateway:
@@ -241,8 +241,8 @@ Manual steps before running phase 2:
      spiffe-mapping' — the same flow operators use in production.
 
 Useful follow-ups while debugging:
-  kubectl -n ${HOOP_NS} logs deploy/hoopgateway -c hoopgateway -f
-  kubectl -n ${HOOP_NS} get pods
+  kubectl -n ${LYRIC_IAM_NS} logs deploy/hoopgateway -c hoopgateway -f
+  kubectl -n ${LYRIC_IAM_NS} get pods
 ================================================================================
 
 EOM

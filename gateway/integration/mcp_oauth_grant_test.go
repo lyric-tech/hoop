@@ -77,7 +77,7 @@ func newFakeMCPServer(t *testing.T, initialTTL, renewedTTL time.Duration) *fakeM
 	}
 	mux := http.NewServeMux()
 
-	// RFC 9728: the MCP endpoint's protected-resource metadata. Hoop looks for
+	// RFC 9728: the MCP endpoint's protected-resource metadata. Lyric IAM looks for
 	// the path-suffixed form first.
 	prm := func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, map[string]any{
@@ -213,7 +213,7 @@ func completeMCPLogin(t *testing.T, token string, fake *fakeMCPServer) (flowID, 
 
 // completeMCPLoginAs is completeMCPLogin with explicit client credentials.
 // Supplying both records token_auth_method=client_secret_post on the flow, and
-// therefore on the grant — the branch where Hoop builds the token request
+// therefore on the grant — the branch where Lyric IAM builds the token request
 // itself instead of delegating to the oauth library.
 func completeMCPLoginAs(t *testing.T, token string, fake *fakeMCPServer, clientID, clientSecret string) (flowID, authHeader string) {
 	t.Helper()
@@ -471,7 +471,7 @@ func TestMCPOAuthGrantConcurrentRefresh(t *testing.T) {
 //
 // Both token-endpoint auth methods are covered because they take different
 // code paths to the same persist call: "none" delegates to the oauth library,
-// while client_secret_post uses Hoop's own request builder. Only the second
+// while client_secret_post uses Lyric IAM's own request builder. Only the second
 // reaches persistRefreshedGrant with an empty RefreshToken, so a test that
 // exercised only the first would pass with the erase fully restored.
 //

@@ -8,7 +8,7 @@
 # enablement or a region name rather than anything in hoopinspect.
 #
 # Usage:
-#   HOOP_PROJECT=my-project ./00-preflight.sh
+#   LYRIC_IAM_PROJECT=my-project ./00-preflight.sh
 #
 # Costs one Vertex call.
 
@@ -24,28 +24,28 @@ for bin in gcloud curl python3; do
 done
 ok "gcloud, curl and python3 are present"
 
-[[ -n "${HOOP_PROJECT:-}" ]] || die "set HOOP_PROJECT to your GCP project id"
-note "project ${HOOP_PROJECT}   region ${HOOP_REGION}   model ${HOOP_MODEL}"
+[[ -n "${LYRIC_IAM_PROJECT:-}" ]] || die "set LYRIC_IAM_PROJECT to your GCP project id"
+note "project ${LYRIC_IAM_PROJECT}   region ${LYRIC_IAM_REGION}   model ${LYRIC_IAM_MODEL}"
 
 # ------------------------------------------------------------- credentials
 # Two modes, matching the relay: a service-account key file, or Application
 # Default Credentials. ADC is preferred, because under Workload Identity there
 # is then no credential on disk at all.
-if [[ -n "${HOOP_CREDENTIALS_FILE:-}" ]]; then
-    [[ -f "$HOOP_CREDENTIALS_FILE" ]] || die "HOOP_CREDENTIALS_FILE $HOOP_CREDENTIALS_FILE does not exist"
+if [[ -n "${LYRIC_IAM_CREDENTIALS_FILE:-}" ]]; then
+    [[ -f "$LYRIC_IAM_CREDENTIALS_FILE" ]] || die "LYRIC_IAM_CREDENTIALS_FILE $LYRIC_IAM_CREDENTIALS_FILE does not exist"
 
     # The relay refuses a key any local account can read, the way ssh refuses a
     # private key. Catch it here rather than at startup.
-    mode=$(stat -f '%Lp' "$HOOP_CREDENTIALS_FILE" 2>/dev/null || stat -c '%a' "$HOOP_CREDENTIALS_FILE")
+    mode=$(stat -f '%Lp' "$LYRIC_IAM_CREDENTIALS_FILE" 2>/dev/null || stat -c '%a' "$LYRIC_IAM_CREDENTIALS_FILE")
     if [[ "${mode: -2}" != "00" ]]; then
         die "credential file is mode $mode; the relay refuses anything readable by group or other.
-       chmod 600 $HOOP_CREDENTIALS_FILE"
+       chmod 600 $LYRIC_IAM_CREDENTIALS_FILE"
     fi
-    ok "credential file $HOOP_CREDENTIALS_FILE is mode $mode"
+    ok "credential file $LYRIC_IAM_CREDENTIALS_FILE is mode $mode"
 
-    token=$(GOOGLE_APPLICATION_CREDENTIALS="$HOOP_CREDENTIALS_FILE" \
+    token=$(GOOGLE_APPLICATION_CREDENTIALS="$LYRIC_IAM_CREDENTIALS_FILE" \
         gcloud auth application-default print-access-token 2>/dev/null) \
-        || die "could not mint a token from $HOOP_CREDENTIALS_FILE"
+        || die "could not mint a token from $LYRIC_IAM_CREDENTIALS_FILE"
 else
     # Application Default Credentials, which is what the relay resolves
     # through google.FindDefaultCredentials when credentials_file is unset.
@@ -57,10 +57,10 @@ else
     token=$(gcloud auth application-default print-access-token 2>/dev/null) || die \
 "no Application Default Credentials. Run:
        gcloud auth application-default login
-       gcloud auth application-default set-quota-project $HOOP_PROJECT
+       gcloud auth application-default set-quota-project $LYRIC_IAM_PROJECT
 
      Or point at a service-account key instead:
-       export HOOP_CREDENTIALS_FILE=/path/to/key.json"
+       export LYRIC_IAM_CREDENTIALS_FILE=/path/to/key.json"
 fi
 ok "minted a GCP access token from ADC"
 
@@ -68,9 +68,9 @@ ok "minted a GCP access token from ADC"
 # "global" uses the unprefixed host. Getting this wrong yields a DNS failure
 # rather than an API error, which reads like a network problem and sends you
 # to the wrong place.
-host="${HOOP_REGION}-aiplatform.googleapis.com"
-[[ "$HOOP_REGION" == "global" ]] && host="aiplatform.googleapis.com"
-url="https://${host}/v1/projects/${HOOP_PROJECT}/locations/${HOOP_REGION}/publishers/anthropic/models/${HOOP_MODEL}:rawPredict"
+host="${LYRIC_IAM_REGION}-aiplatform.googleapis.com"
+[[ "$LYRIC_IAM_REGION" == "global" ]] && host="aiplatform.googleapis.com"
+url="https://${host}/v1/projects/${LYRIC_IAM_PROJECT}/locations/${LYRIC_IAM_REGION}/publishers/anthropic/models/${LYRIC_IAM_MODEL}:rawPredict"
 note "POST ${url}"
 
 body=$(cat <<'JSON'
@@ -91,14 +91,14 @@ case "$code" in
     401) die "401 unauthorized. The token is stale:
        gcloud auth application-default login" ;;
     403) die "403 permission denied. The caller lacks roles/aiplatform.user:
-       gcloud projects add-iam-policy-binding $HOOP_PROJECT \\
+       gcloud projects add-iam-policy-binding $LYRIC_IAM_PROJECT \\
          --member=\"user:\$(gcloud config get-value account)\" \\
          --role=\"roles/aiplatform.user\"" ;;
-    404) die "404 on the model path. Either $HOOP_MODEL is not enabled in Model
-       Garden for this project, or it is not served from $HOOP_REGION.
+    404) die "404 on the model path. Either $LYRIC_IAM_MODEL is not enabled in Model
+       Garden for this project, or it is not served from $LYRIC_IAM_REGION.
        Enable it at:
        https://console.cloud.google.com/vertex-ai/publishers/anthropic/model-garden
-       Or try HOOP_REGION=global.
+       Or try LYRIC_IAM_REGION=global.
 
 $(head -c 400 <<<"$payload")" ;;
     *)   die "HTTP $code
