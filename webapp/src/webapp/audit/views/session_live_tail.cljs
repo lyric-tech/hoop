@@ -12,12 +12,12 @@
    ["@radix-ui/themes" :refer [Badge Box Flex IconButton Switch
                                Text TextField Tooltip]]
    ["lucide-react" :refer [ArrowDown Database Search Terminal Zap]]
-   ["fancy-ansi/react" :refer [AnsiHtml]]
    [clojure.string :as string]
    [re-frame.core :as rf]
    [reagent.core :as r]
    [webapp.audit.views.empty-event-stream :as empty-event-stream]
    [webapp.audit.views.pg-wire :as pg-wire]
+   [webapp.components.xterm-terminal :as xterm-terminal]
    [webapp.utilities :as utilities]))
 
 ;; ─── Helpers ───────────────────────────────────────────────────────────────
@@ -234,10 +234,10 @@
       "Waiting for events…")]])
 
 (defn- terminal-output [text]
-  [:section {:class (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
-                         "whitespace-pre text-gray-200 text-sm")}
-   [:> AnsiHtml {:text text
-                 :className "font-mono whitespace-pre text-sm"}]])
+  ;; Real terminal emulation: TUI output (vim/top/watch), colors and cursor
+  ;; movement render correctly instead of one-keystroke-per-row HTML.
+  [:section {:class "bg-[#111827]"}
+   [xterm-terminal/main {:text text}]])
 
 (defn- jump-to-latest-button [on-click]
   [:> Box {:class "absolute bottom-3 right-3"}

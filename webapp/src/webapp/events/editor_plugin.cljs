@@ -31,7 +31,11 @@
    (let [payload {:script script
                   :env_vars env_vars
                   :connection connection-name
-                  :metadata metadata
+                  ;; the gateway binds metadata as a JSON object; normalize
+                  ;; the app-db vector shape here so no caller can ship an
+                  ;; array and get an opaque 400 back
+                  :metadata (cond-> metadata
+                              (sequential? metadata) metadata->json-stringify)
                   :jira_fields jira_fields}
          on-failure (fn [error]
                       (rf/dispatch [:show-snackbar {:text "Failed to execute script"

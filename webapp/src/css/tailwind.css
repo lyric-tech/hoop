@@ -1,6 +1,7 @@
 @import "allotment/dist/style.css";
 @import "@radix-ui/themes/styles.css";
 @import "asciinema-player/dist/bundle/asciinema-player.css";
+@import "xterm/css/xterm.css";
 @import "./highlight.css";
 @import "./cmdk.css";
 /* Unlayered and after the Tailwind directives below, so it outranks the style

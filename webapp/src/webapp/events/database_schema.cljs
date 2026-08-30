@@ -195,6 +195,22 @@
                                      :details (or error "Failed to load database")}]]]}))
 
 ;; Events for loading tables (for multi-database banks)
+(defn mongo-find-target
+  "Find-bar target for a mongo connection's schema state: the current
+  database and its sorted collections. The gateway keys a mongo schema-tree
+  by the database name itself (schema_name = dbName in queries_schema.go),
+  so a keyed lookup is exact — and correctly yields nil during the window
+  where :current-database already changed but :schema-tree still holds the
+  previous database's collections."
+  [{:keys [current-database schema-tree]}]
+  (when-let [collections (and current-database
+                              (some->> (get schema-tree current-database)
+                                       keys
+                                       sort
+                                       seq))]
+    {:database current-database
+     :collections collections}))
+
 (rf/reg-event-fx
  :database-schema->load-tables
  (fn [{:keys [db]} [_ connection database]]

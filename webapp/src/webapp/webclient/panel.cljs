@@ -34,6 +34,7 @@
    [webapp.webclient.components.connection-dialog :as connection-dialog]
    [webapp.webclient.components.header :as header]
    [webapp.webclient.components.language-select :as language-select]
+   [webapp.webclient.components.mongo-query-bar :as mongo-query-bar]
    [webapp.webclient.components.panels.database-schema :as database-schema-panel]
    [webapp.webclient.components.panels.metadata :as metadata-panel]
    [webapp.webclient.components.side-panel :refer [with-panel]]
@@ -477,6 +478,11 @@
                            :data-output-region true
                            :tabIndex "-1"
                            :aria-label "Script output"}
+                  (when (= connection-type "mongodb")
+                    ;; keyed by connection so the bar's local state (filter,
+                    ;; collection, limit) resets when the connection changes
+                    ^{:key (:name current-connection)}
+                    [mongo-query-bar/main (:name current-connection)])
                   [log-area/main
                    connection-type
                    @parallel-mode-active?
