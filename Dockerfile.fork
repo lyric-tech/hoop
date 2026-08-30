@@ -59,3 +59,9 @@ COPY --from=webapp-build /ui/public /app/ui/public
 USER root
 RUN chown -R hoop:hoop /app/hoop /app/ui && chmod 755 /app/hoop
 USER hoop
+
+# The gateway chart passes explicit args ("hoop start gateway"), which override
+# this. The agent chart passes none and relies on the image command, the way
+# hoophq/hoopdev does -- without this the container would run tini with nothing
+# to exec and the agent would never start.
+CMD ["hoop", "start", "agent"]
