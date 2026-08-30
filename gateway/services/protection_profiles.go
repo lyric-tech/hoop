@@ -58,7 +58,7 @@ type ProtectionProfileApplyResult struct {
 // ApplyOrgProtectionProfile switches the organization's default protection
 // profile in a single transaction.
 //
-// newProfile == nil selects manual configuration: every managed_by='lyric-iam'
+// newProfile == nil selects manual configuration: every managed_by='hoop'
 // rule and attribute is deleted (junctions cascade) and the org column is
 // set to NULL.
 //

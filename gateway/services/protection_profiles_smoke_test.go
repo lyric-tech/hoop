@@ -97,9 +97,9 @@ func TestProtectionProfileLifecycleSmoke(t *testing.T) {
 	}
 	assertCount(t, 1, `SELECT COUNT(*) FROM private.attributes WHERE org_id = ? AND managed_by = 'lyric-iam'`, orgID)
 	assertCount(t, 12, `SELECT COUNT(*) FROM private.guardrail_rules WHERE org_id = ? AND managed_by = 'lyric-iam'`, orgID)
-	// "Lyric IAM - Confidential data" (medium-only) GC'd, "Lyric IAM - Full masking" created.
+	// "Hoop - Confidential data" (medium-only) GC'd, "Hoop - Full masking" created.
 	assertCount(t, 1, `SELECT COUNT(*) FROM private.datamasking_rules WHERE org_id = ? AND managed_by = 'lyric-iam'`, orgID)
-	assertCount(t, 0, `SELECT COUNT(*) FROM private.datamasking_rules WHERE org_id = ? AND name = 'Lyric IAM - Confidential data'`, orgID)
+	assertCount(t, 0, `SELECT COUNT(*) FROM private.datamasking_rules WHERE org_id = ? AND name = 'Hoop - Confidential data'`, orgID)
 	assertCount(t, 0, `SELECT COUNT(*) FROM private.connections_attributes WHERE org_id = ? AND attribute_name = ?`,
 		orgID, protectionProfileCatalog[medium].AttributeName)
 	assertCount(t, 2, `SELECT COUNT(*) FROM private.connections_attributes WHERE org_id = ? AND attribute_name = ?`,
@@ -110,20 +110,20 @@ func TestProtectionProfileLifecycleSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("analyzer resolution: %v", err)
 	}
-	if rule.Name != "Lyric IAM - Block high risk" {
-		t.Fatalf("analyzer rule = %q, want %q", rule.Name, "Lyric IAM - Block high risk")
+	if rule.Name != "Hoop - Block high risk" {
+		t.Fatalf("analyzer rule = %q, want %q", rule.Name, "Hoop - Block high risk")
 	}
 
 	// 4b. Approval settings customized on a managed access rule survive a
 	//     profile re-apply (materialize never rewrites existing rows).
 	mustExec(t, `UPDATE private.access_request_rules
 		SET reviewers_groups = '{sre,admin}', min_approvals = 2
-		WHERE org_id = ? AND name = 'Lyric IAM-Command_approval'`, orgID)
+		WHERE org_id = ? AND name = 'Hoop-Command_approval'`, orgID)
 	if _, err := ApplyOrgProtectionProfile(ctx, orgID, &high, ""); err != nil {
 		t.Fatalf("re-apply high after customization: %v", err)
 	}
 	if got := scanStr(t, `SELECT min_approvals::text FROM private.access_request_rules
-		WHERE org_id = ? AND name = 'Lyric IAM-Command_approval'`, orgID); got != "2" {
+		WHERE org_id = ? AND name = 'Hoop-Command_approval'`, orgID); got != "2" {
 		t.Fatalf("customized min_approvals = %s, want 2 (re-apply must not rewrite managed rules)", got)
 	}
 
