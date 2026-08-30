@@ -51,9 +51,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # --short=7 is pinned: plain --short lets git widen the abbreviation as
+      # the repo grows, which would silently change the tag format and break
+      # any deploy command written against the old width.
       - name: Resolve image tag
         id: tag
-        run: echo "tag=${BASE_TAG}-lyric-iam-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          tag="${BASE_TAG}-lyric-iam-$(git rev-parse --short=7 HEAD)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$tag" >> "$GITHUB_ENV"
 
       - uses: azure/login@v2
         with:
@@ -95,3 +101,10 @@ jobs:
       - name: Wait for the rollout
         if: github.event_name == 'workflow_dispatch' && inputs.deploy
         run: kubectl -n "$K8S_NAMESPACE" rollout status deploy/hoopgateway --timeout=5m
+
+      # The exact tag, so a manual `helm upgrade --set image.gw.tag=...` is a
+      # copy-paste rather than a guess at the sha width.
+      - name: Report the image
+        if: always()
+        run: |
+          echo "Image: \`$REGISTRY/$IMAGE:$IMAGE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
