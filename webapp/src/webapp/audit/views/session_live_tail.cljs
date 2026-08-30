@@ -18,6 +18,7 @@
    [reagent.core :as r]
    [webapp.audit.views.empty-event-stream :as empty-event-stream]
    [webapp.audit.views.pg-wire :as pg-wire]
+   [webapp.components.error-boundary :as error-boundary]
    [webapp.components.xterm-terminal :as xterm-terminal]
    [webapp.utilities :as utilities]))
 
@@ -234,21 +235,21 @@
       "Waiting for the next query…"
       "Waiting for events…")]])
 
-;; xterm crashes under advanced compilation on prod (constructor invoked
-;; without new) — keep it opt-in behind a localStorage flag until fixed:
-;;   localStorage.setItem("lyric-iam:live-tail-xterm", "true")
-(defn- xterm-enabled? []
-  (try (= "true" (.getItem js/localStorage "lyric-iam:live-tail-xterm"))
-       (catch :default _ false)))
+;; ANSI-to-HTML fallback: no cursor addressing, but it always renders. Used
+;; when the vendored xterm bundle is missing, and as the error boundary's
+;; fallback so a terminal crash can never white-screen the session page.
+(defn- ansi-output [text]
+  [:section {:class (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
+                         "whitespace-pre text-gray-200 text-sm")}
+   [:> AnsiHtml {:text text
+                 :className "font-mono whitespace-pre text-sm"}]])
 
 (defn- terminal-output [text]
-  (if (xterm-enabled?)
-    [:section {:class "bg-[#111827]"}
-     [xterm-terminal/main {:text text}]]
-    [:section {:class (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
-                           "whitespace-pre text-gray-200 text-sm")}
-     [:> AnsiHtml {:text text
-                   :className "font-mono whitespace-pre text-sm"}]]))
+  (if (xterm-terminal/available?)
+    [error-boundary/main {:fallback [ansi-output text]}
+     [:section {:class "bg-[#111827]"}
+      [xterm-terminal/main {:text text}]]]
+    [ansi-output text]))
 
 (defn- jump-to-latest-button [on-click]
   [:> Box {:class "absolute bottom-3 right-3"}
