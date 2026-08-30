@@ -242,7 +242,7 @@ func UpdateOrgProtectionProfile(c *gin.Context) {
 }
 
 func getLicenseType(ctx *storagev2.Context) string {
-	licenseType := license.OSSType
+	licenseType := license.DefaultType
 	if ctx.OrgLicenseData != nil && len(*ctx.OrgLicenseData) > 0 {
 		var l license.License
 		if err := json.Unmarshal(*ctx.OrgLicenseData, &l); err == nil {

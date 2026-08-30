@@ -141,7 +141,7 @@ func (c *Context) GroupRoleName() string {
 	return "regular"
 }
 func (c *Context) GetLicenseType() string {
-	licenseType := license.OSSType
+	licenseType := license.DefaultType
 	if c.OrgLicenseData != nil && len(*c.OrgLicenseData) > 0 {
 		var l license.License
 		err := json.Unmarshal(*c.OrgLicenseData, &l)

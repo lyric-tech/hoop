@@ -35,6 +35,10 @@ const (
 	EnterpriseType string = "enterprise"
 )
 
+// DefaultType is the edition assumed when an org has no license installed.
+// Internal fork: enterprise, so every feature is enabled without a license.
+const DefaultType string = EnterpriseType
+
 // Feature keys that a license can restrict. An empty/absent features list
 // means every feature is enabled.
 const (

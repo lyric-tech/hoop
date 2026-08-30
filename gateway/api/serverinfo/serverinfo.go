@@ -149,7 +149,7 @@ func defaultOSSLicense() *license.License {
 	return &license.License{
 		KeyID: "",
 		Payload: license.Payload{
-			Type:         license.OSSType,
+			Type:         license.DefaultType,
 			IssuedAt:     time.Now().UTC().Unix(),
 			ExpireAt:     time.Now().UTC().AddDate(10, 0, 0).Unix(),
 			AllowedHosts: []string{"*"},

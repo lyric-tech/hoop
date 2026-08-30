@@ -34,7 +34,7 @@ func requireRedactProvider(c *gin.Context) bool {
 }
 
 func getLicenseType(ctx *storagev2.Context) string {
-	licenseType := license.OSSType
+	licenseType := license.DefaultType
 	if ctx.OrgLicenseData != nil && len(*ctx.OrgLicenseData) > 0 {
 		var l license.License
 		err := json.Unmarshal(*ctx.OrgLicenseData, &l)

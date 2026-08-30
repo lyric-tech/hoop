@@ -26,11 +26,11 @@ func (c *ConnectionInfo) Validate() error {
 
 func (c *APIContext) GetLicenseType() string {
 	if c == nil || c.OrgLicenseData == nil || len(*c.OrgLicenseData) == 0 {
-		return license.OSSType
+		return license.DefaultType
 	}
 	var l license.License
 	if err := json.Unmarshal(*c.OrgLicenseData, &l); err != nil {
-		return license.OSSType
+		return license.DefaultType
 	}
 	return l.Payload.Type
 }

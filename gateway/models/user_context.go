@@ -52,7 +52,7 @@ func (c *Context) GetUserGroups() []string { return c.UserGroups }
 func (c *Context) IsAdmin() bool           { return slices.Contains(c.UserGroups, types.GroupAdmin) }
 func (c *Context) IsAuditor() bool         { return slices.Contains(c.UserGroups, types.GroupAuditor) }
 func (c *Context) GetLicenseType() string {
-	licenseType := license.OSSType
+	licenseType := license.DefaultType
 	if len(c.OrgLicenseData) > 0 {
 		var l license.License
 		err := json.Unmarshal(c.OrgLicenseData, &l)

@@ -130,7 +130,7 @@ func (s *Server) Connect(stream pb.Transport_ConnectServer) (err error) {
 	}
 	// if the license information is not present in the database
 	// consider the type of license as open source.
-	licenseType := license.OSSType
+	licenseType := license.DefaultType
 	if gwctx.UserContext.OrgLicenseData != nil {
 		l, err := license.Parse(gwctx.UserContext.OrgLicenseData, s.ApiHostname)
 		if err != nil {

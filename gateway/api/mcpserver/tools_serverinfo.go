@@ -92,7 +92,7 @@ func serverInfoGetHandler(ctx context.Context, _ *mcp.CallToolRequest, _ serverI
 		}
 	} else {
 		// Default OSS license
-		licenseInfo["type"] = license.OSSType
+		licenseInfo["type"] = license.DefaultType
 		licenseInfo["issued_at"] = time.Now().UTC().Unix()
 		licenseInfo["expire_at"] = time.Now().UTC().AddDate(10, 0, 0).Unix()
 		licenseInfo["allowed_hosts"] = []string{"*"}
