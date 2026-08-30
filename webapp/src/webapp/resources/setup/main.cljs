@@ -30,7 +30,7 @@
        (when (and onboarding? (not= current-step :success))
          [:> Flex {:justify "start" :class "px-8"}
           [:figure
-           [:img {:src "/images/hoop-branding/PNG/hoop-symbol_black@4x.png"
+           [:img {:src "/images/lyric-branding/lyric-symbol_black.svg"
                   :alt "Lyric IAM Logo"
                   :class "w-16"}]]])
 

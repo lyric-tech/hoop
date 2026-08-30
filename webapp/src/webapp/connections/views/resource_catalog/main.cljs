@@ -73,7 +73,7 @@
               [:> Box {:class "space-y-radix-6 mb-12"}
                (when is-onboarding?
                  [:figure
-                  [:img {:src "/images/hoop-branding/PNG/hoop-symbol_black@4x.png"
+                  [:img {:src "/images/lyric-branding/lyric-symbol_black.svg"
                          :alt "Lyric IAM Logo"
                          :class "w-16"}]])
                [:> Box

@@ -14,7 +14,7 @@
 
 (defn- loader-content [{:keys [message description]}]
   [:<>
-   [:img {:src "/images/hoop-branding/SVG/hoop-symbol_black.svg"
+   [:img {:src "/images/lyric-branding/lyric-symbol_black.svg"
           :height "40"
           :width "40"
           :alt "Lyric IAM"}]
