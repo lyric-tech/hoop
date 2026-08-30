@@ -1,8 +1,13 @@
-# Build this fork's gateway image and roll it out to the remix cluster.
+# Build this fork's gateway image, and roll it out when asked.
+#
+# Every push to main builds and pushes an image tagged with its commit. The
+# rollout is deliberately NOT automatic: run the workflow manually (Actions >
+# Build and deploy fork > Run workflow) to deploy. A rollback is the same
+# workflow against an older commit, or
+# `helm upgrade --set image.gw.tag=<older sha>`.
 #
 # The image is the upstream release image with our Go binary and web UI
-# swapped in (Dockerfile.fork), tagged immutably per commit so a rollback is
-# `helm upgrade --set image.gw.tag=<older sha>`.
+# swapped in (Dockerfile.fork).
 #
 # Azure auth is OIDC — no long-lived secret. Set these repository variables
 # (Settings > Secrets and variables > Actions > Variables):
@@ -17,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: Roll the image out after building
+        description: Roll the image out to remix-cluster after building
         type: boolean
         default: true
 
@@ -71,13 +76,13 @@ jobs:
           docker push "$REGISTRY/$IMAGE:${{ steps.tag.outputs.tag }}"
 
       - name: Get cluster credentials
-        if: inputs.deploy != false
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy
         run: az aks get-credentials -g "$AKS_RESOURCE_GROUP" -n "$AKS_CLUSTER" --overwrite-existing
 
       # --reuse-values keeps every value set out of band (auth config, DB URI,
       # ingress); only the gateway image moves. The agent release is untouched.
       - name: Deploy
-        if: inputs.deploy != false
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy
         run: |
           helm upgrade "$HELM_RELEASE" oci://ghcr.io/hoophq/helm-charts/hoop-chart \
             --version "$CHART_VERSION" \
@@ -88,5 +93,5 @@ jobs:
             --set image.gw.pullPolicy=IfNotPresent
 
       - name: Wait for the rollout
-        if: inputs.deploy != false
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy
         run: kubectl -n "$K8S_NAMESPACE" rollout status deploy/hoopgateway --timeout=5m
