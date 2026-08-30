@@ -1,0 +1,92 @@
+# Build this fork's gateway image and roll it out to the remix cluster.
+#
+# The image is the upstream release image with our Go binary and web UI
+# swapped in (Dockerfile.fork), tagged immutably per commit so a rollback is
+# `helm upgrade --set image.gw.tag=<older sha>`.
+#
+# Azure auth is OIDC — no long-lived secret. Set these repository variables
+# (Settings > Secrets and variables > Actions > Variables):
+#   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+# The identity needs AcrPush on the registry and Azure Kubernetes Service
+# Cluster User Role on the cluster.
+name: Build and deploy fork
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Roll the image out after building
+        type: boolean
+        default: true
+
+# One deploy at a time; a newer commit supersedes a queued one but never
+# interrupts a rollout in flight.
+concurrency:
+  group: fork-deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: lyricacr.azurecr.io
+  IMAGE: hoop
+  BASE_TAG: '1.150.0'
+  CHART_VERSION: '1.150.2'
+  AKS_RESOURCE_GROUP: remix-lyric-studio-rg
+  AKS_CLUSTER: remix-cluster
+  K8S_NAMESPACE: hoop
+  HELM_RELEASE: hoop
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: echo "tag=${BASE_TAG}-lyric-iam-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to the registry
+        run: az acr login -n "${REGISTRY%%.*}"
+
+      # The runner is amd64 and the cluster is amd64, so this is a native
+      # build: no QEMU, no buildx driver setup.
+      - name: Build and push
+        run: |
+          docker build -f Dockerfile.fork \
+            --build-arg BASE_TAG="$BASE_TAG" \
+            --build-arg VERSION="${{ steps.tag.outputs.tag }}" \
+            --build-arg GITCOMMIT="$(git rev-parse --short HEAD)" \
+            -t "$REGISTRY/$IMAGE:${{ steps.tag.outputs.tag }}" .
+          docker push "$REGISTRY/$IMAGE:${{ steps.tag.outputs.tag }}"
+
+      - name: Get cluster credentials
+        if: inputs.deploy != false
+        run: az aks get-credentials -g "$AKS_RESOURCE_GROUP" -n "$AKS_CLUSTER" --overwrite-existing
+
+      # --reuse-values keeps every value set out of band (auth config, DB URI,
+      # ingress); only the gateway image moves. The agent release is untouched.
+      - name: Deploy
+        if: inputs.deploy != false
+        run: |
+          helm upgrade "$HELM_RELEASE" oci://ghcr.io/hoophq/helm-charts/hoop-chart \
+            --version "$CHART_VERSION" \
+            -n "$K8S_NAMESPACE" \
+            --reuse-values \
+            --set image.gw.repository="$REGISTRY/$IMAGE" \
+            --set image.gw.tag="${{ steps.tag.outputs.tag }}" \
+            --set image.gw.pullPolicy=IfNotPresent
+
+      - name: Wait for the rollout
+        if: inputs.deploy != false
+        run: kubectl -n "$K8S_NAMESPACE" rollout status deploy/hoopgateway --timeout=5m

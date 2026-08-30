@@ -1,0 +1,61 @@
+# Fork image: the upstream release image with this tree's gateway binary and
+# web UI swapped in.
+#
+# Only two things differ from hoophq/hoop:<BASE_TAG> -- the Go multi-call
+# binary and the bundled UI. Everything else (hoop_rs, OCR, rootfs, tooling)
+# is inherited, so this builds in minutes instead of rebuilding Rust.
+#
+# The two builder stages run on the BUILD platform: Go cross-compiles with
+# CGO_ENABLED=0, and the web bundles are plain files with no architecture.
+# Only the final layer is TARGETPLATFORM-specific, so an amd64 image builds
+# on an arm64 laptop without emulation.
+#
+#   docker buildx build -f Dockerfile.fork --platform linux/amd64 \
+#     --build-arg VERSION=1.150.0-lyric-iam \
+#     -t lyricacr.azurecr.io/hoop:1.150.0-lyric-iam .
+
+ARG BASE_TAG=1.150.0
+
+# ---- Go multi-call binary -------------------------------------------------
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS go-build
+ARG TARGETOS
+ARG TARGETARCH
+ARG VERSION=dev
+ARG GITCOMMIT=unknown
+WORKDIR /src
+COPY . .
+# The build expects the `libhoop` import path; the repo ships the OSS stub as
+# `_libhoop` (COPY does not preserve the symlink portably).
+RUN rm -f libhoop && ln -s _libhoop libhoop
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+        -ldflags "-s -w \
+            -X github.com/hoophq/hoop/common/version.version=${VERSION} \
+            -X github.com/hoophq/hoop/common/version.gitCommit=${GITCOMMIT} \
+            -X github.com/hoophq/hoop/common/version.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        -o /out/hoop github.com/hoophq/hoop/client
+
+# ---- Web UI (CLJS bundle + React shell) -----------------------------------
+# Mirrors scripts/dev/build-webapp.sh: shadow-cljs first, then vite, then the
+# React index.html on top -- the layout the gateway serves from /app/ui/public.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk-noble AS webapp-build
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends curl ca-certificates gnupg git && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY webapp/ ./webapp/
+COPY webapp_v2/ ./webapp_v2/
+RUN cd webapp && npm install && npm run release:hoop-ui
+RUN cd webapp_v2 && npm install && npm run build
+RUN mkdir -p /ui/public && \
+    cp -a webapp/resources/public/. /ui/public/ && \
+    cp -a webapp_v2/dist/. /ui/public/
+
+# ---- Runtime: upstream release image with our two artefacts ---------------
+FROM hoophq/hoop:${BASE_TAG}
+COPY --from=go-build     /out/hoop  /app/hoop
+COPY --from=webapp-build /ui/public /app/ui/public
+USER root
+RUN chown -R hoop:hoop /app/hoop /app/ui && chmod 755 /app/hoop
+USER hoop
