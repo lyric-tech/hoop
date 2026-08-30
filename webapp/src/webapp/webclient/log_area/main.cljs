@@ -3,16 +3,21 @@
             [clojure.string :as cs]
             [re-frame.core :as rf]
             [reagent.core :as r]
-            [webapp.audit.views.session-details :as session-details]
             [webapp.components.ag-grid-table :as ag-grid-table]
+            [webapp.components.document-view :as doc-view]
+            [webapp.components.kubectl-table :as kubectl-table]
             [webapp.components.results-download-menu :as download-menu]
             [webapp.components.results-matrix :as results-matrix]
-            [webapp.features.activation-journey.views.terminal-banner :as terminal-banner]
+            [webapp.components.rich-output :as rich-output]
             [webapp.webclient.log-area.output-tabs :refer [tabs]]
             [webapp.webclient.log-area.logs :as logs]))
 
 (def selected-tab (r/atom (or (.getItem js/localStorage "webclient-selected-tab")
                               "Logs")))
+
+;; Which [session-id rich-tab] the auto-select already fired for: each fresh
+;; result surfaces its rich tab once, then the user's choice wins.
+(defonce ^:private auto-selected-for (r/atom nil))
 
 (defn- clean-postgres-script [script]
   (let [lines (cs/split script #"\n")]
@@ -40,7 +45,8 @@
 
 (defn main [_]
   (let [script-response (rf/subscribe [:editor-plugin->script])
-        matrix-cache (results-matrix/new-cache)]
+        matrix-cache (results-matrix/new-cache)
+        rich-cache (rich-output/new-cache)]
     (fn [connection-type parallel-mode-active? dark-mode?]
       (let [response (sanitize-response (:output (:data @script-response)) connection-type)
             logs-content {:status (:status @script-response)
@@ -54,6 +60,7 @@
                                     :else (:script (:data @script-response)))
                           :response-id (:session_id (:data @script-response))
                           :has-review (:has_review (:data @script-response))
+                          :review-info (:review-info (:data @script-response))
                           :execution-time (:execution_time (:data @script-response))
                           :classes "h-full"}
             tabular-status (:status @script-response)
@@ -72,7 +79,19 @@
                      (results-matrix/release-stale! matrix-cache response))
             results-heads (:heads parsed)
             results-body (:body parsed)
+            ;; Documents tree or kubectl table, decided (and cached) in one
+            ;; shared place for the panel and the session modal alike.
+            rich (when (= tabular-status :success)
+                   (rich-output/classify rich-cache connection-type response))
+            mongo-docs (when (= (:kind rich) :documents) (:data rich))
+            kubectl-table-data (when (= (:kind rich) :k8s-table) (:data rich))
+            rich-tab (case (:kind rich)
+                       :documents "Documents"
+                       :k8s-table "Table"
+                       nil)
             available-tabs (merge
+                            (when mongo-docs {:documents "Documents"})
+                            (when kubectl-table-data {:table "Table"})
                             {:logs "Logs"}
                             (when (and connection-type-database?
                                        (not parallel-mode-active?))
@@ -85,12 +104,7 @@
                                  (results-matrix/rows? response)))
             session-id (:session_id (:data @script-response))
             on-view-session-details (when session-id
-                                      #(rf/dispatch
-                                        [:modal->open
-                                         {:id "session-details"
-                                          :maxWidth "95vw"
-                                          :content [session-details/main
-                                                    {:id session-id :verb "exec"}]}]))
+                                      #(logs/open-session-details session-id))
             menu-props (when session-id
                          {:results response
                           :matrix (:matrix parsed)
@@ -101,38 +115,44 @@
                           :has-large-payload? false
                           :on-view-session-details on-view-session-details})]
 
-        (when-not (some #(= @selected-tab %) (vals available-tabs))
-          (.setItem js/localStorage "webclient-selected-tab" (first (vals available-tabs)))
-          (reset! selected-tab (first (vals available-tabs))))
+        (cond
+          (not (some #(= @selected-tab %) (vals available-tabs)))
+          (do (.setItem js/localStorage "webclient-selected-tab" (first (vals available-tabs)))
+              (reset! selected-tab (first (vals available-tabs))))
 
-        [:> Box {:class "flex-1 min-h-0 flex flex-col overflow-hidden"}
-         [:> Box {:class "h-full flex flex-col bg-gray-2 border-b border-gray-3"}
-          [:> Flex {:justify "between" :align "center" :gap "4" :class "pr-small"}
-           [:> Box {:class "flex-1 min-w-0"}
-            [tabs {:on-click (fn [_ value]
-                               (.setItem js/localStorage "webclient-selected-tab" value)
-                               (reset! selected-tab value))
-                   :tabs available-tabs
-                   :selected-tab @selected-tab}]]
-           (when menu-props
-             [:> Box {:class "mb-regular pt-small flex-shrink-0"}
-              [download-menu/main menu-props]])]
-          [terminal-banner/main]
-          [:> Box {:role "tabpanel"
-                   :id (str "tabpanel-" (case @selected-tab
-                                          "Tabular" :tabular
-                                          "Logs" :logs
-                                          :logs))
-                   :aria-labelledby (str "tab-" (case @selected-tab
-                                                  "Tabular" :tabular
-                                                  "Logs" :logs
-                                                  :logs))
-                   :class "flex-1 min-h-0 overflow-hidden"}
-           (case @selected-tab
-             "Tabular" [ag-grid-table/main results-heads results-body tabular-loading? dark-mode?
-                        {:height "100%"
-                         :pagination? (boolean (and results-body
-                                                    (> (.-length results-body) 100)))
-                         :auto-size-columns? true}]
-             "Logs" [logs/main :logs logs-content]
-             :else [logs/main logs-content])]]]))))
+          (and rich-tab session-id
+               (not= @auto-selected-for [session-id rich-tab]))
+          (do (reset! auto-selected-for [session-id rich-tab])
+              (reset! selected-tab rich-tab)))
+
+        (let [tab-key (case @selected-tab
+                        "Documents" :documents
+                        "Table" :table
+                        "Tabular" :tabular
+                        :logs)]
+          [:> Box {:class "flex-1 min-h-0 flex flex-col overflow-hidden"}
+           [:> Box {:class "h-full flex flex-col bg-gray-2 border-b border-gray-3"}
+            [:> Flex {:justify "between" :align "center" :gap "4" :class "pr-small"}
+             [:> Box {:class "flex-1 min-w-0"}
+              [tabs {:on-click (fn [_ value]
+                                 (.setItem js/localStorage "webclient-selected-tab" value)
+                                 (reset! selected-tab value))
+                     :tabs available-tabs
+                     :selected-tab @selected-tab}]]
+             (when menu-props
+               [:> Box {:class "mb-regular pt-small flex-shrink-0"}
+                [download-menu/main menu-props]])]
+            [:> Box {:role "tabpanel"
+                     :id (str "tabpanel-" tab-key)
+                     :aria-labelledby (str "tab-" tab-key)
+                     :class "flex-1 min-h-0 overflow-hidden"}
+             (case @selected-tab
+               "Documents" [doc-view/main mongo-docs]
+               "Table" [kubectl-table/main kubectl-table-data]
+               "Tabular" [ag-grid-table/main results-heads results-body tabular-loading? dark-mode?
+                          {:height "100%"
+                           :pagination? (boolean (and results-body
+                                                      (> (.-length results-body) 100)))
+                           :auto-size-columns? true}]
+               "Logs" [logs/main :logs logs-content]
+               [logs/main logs-content])]]])))))

@@ -8,8 +8,7 @@
                 [bidi "2.1.6"]
                 [clj-commons/pushy "0.3.10"]
                 [cider/cider-nrepl "0.50.2"]
-                [binaryage/devtools "1.0.3"]
-                [re-frisk "1.7.1"]]
+                [binaryage/devtools "1.0.3"]]
 
  :dev-http
  {8280 "resources/public"
@@ -21,8 +20,7 @@
    :output-dir "resources/public/js"
    :asset-path "/js"
    :modules {:app {:init-fn webapp.core/init}}
-   :devtools {:preloads [re-frisk.preload]
-              :http-root "resources/public/"}
+   :devtools {:http-root "resources/public/"}
    :compiler-options {:external-config {:react {:version "18"}}}
    :dev {:compiler-options {:source-map-detail-level :all
                             :optimizations :none

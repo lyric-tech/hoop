@@ -1,9 +1,10 @@
 (ns webapp.webclient.log-area.logs
   (:require ["@radix-ui/themes" :refer [Box Button Callout Spinner Flex Text]]
-            ["lucide-react" :refer [AlertTriangle Clock]]
+            ["lucide-react" :refer [AlertTriangle Clock Play]]
             [clojure.string :as cs]
             [re-frame.core :as rf]
             [webapp.audit.views.session-details :as session-details]
+            [webapp.audit.views.time-window-modal :as time-window-modal]
             [webapp.formatters :as formatters]))
 
 (def ^:const max-rendered-chars
@@ -39,22 +40,118 @@
          (humanize-size max-rendered-chars) " of " (humanize-size total-chars)
          ". Use the output menu to download or view the complete result.")]])
 
+(defn open-session-details
+  "Opens the session-details modal for an exec session. Shared by the
+  webclient output surfaces."
+  [session-id]
+  (rf/dispatch [:modal->open
+                {:id "session-details"
+                 :maxWidth "95vw"
+                 :content [session-details/main {:id session-id :verb "exec"}]}]))
+
+;; One row per banner state: [title description callout-color icon], where
+;; icon is :spinner, :alert or :clock.
+(defn- review-copy [state review-status]
+  (case state
+    :waiting-approval ["Waiting for review approval"
+                       "This run needs approval. The result will show up here as soon as it is approved and finishes."
+                       "blue" :spinner]
+    :ready ["Approved — ready to run"
+            "The review was approved. Execute it and the result will show up here."
+            "blue" :clock]
+    :executing ["Approved — executing"
+                "The review was approved and the command is running."
+                "blue" :spinner]
+    :fetching-output ["Loading result"
+                      "The run finished — fetching its output."
+                      "blue" :spinner]
+    :rejected [(if (= review-status "REVOKED") "Review revoked" "Review rejected")
+               "This run was not approved, so there is no output."
+               "red" :alert]
+    :large-output ["Result too large to show here"
+                   "The run finished, but its output is over 4MB. Open the session details to view or download it."
+                   "amber" :clock]
+    :poll-timeout ["Still waiting for this review"
+                   "No decision after 2 minutes. Check again, or open the session details to track it."
+                   "gray" :clock]
+    ["Checking review status"
+     "This run needs review. Watching the session so the result shows up here."
+     "blue" :spinner]))
+
+(defn- review-banner
+  "Live status for a reviewed run. The panel polls the session in the
+  background (see :editor-plugin->poll-review-session) and swaps this banner
+  for the real output once the run finishes."
+  [{:keys [review-info session-id execution-time]}]
+  (let [{:keys [state review-status review-id can-review?]} review-info
+        [title description color icon] (review-copy state review-status)
+        restart-poll! #(rf/dispatch [:editor-plugin->poll-review-session session-id 0])
+        decide! (fn [decision & opts]
+                  (rf/dispatch (into [:audit->add-review {:review-id review-id} decision] opts))
+                  (restart-poll!))
+        approve-window! (fn []
+                          (rf/dispatch
+                           [:modal->open
+                            {:id "time-window-modal"
+                             :maxWidth "500px"
+                             :content [time-window-modal/main
+                                       {:on-confirm
+                                        (fn [{:keys [start-time end-time]}]
+                                          (decide! "approved"
+                                                   :start-time start-time
+                                                   :end-time end-time)
+                                          (rf/dispatch [:modal->close]))
+                                        :on-cancel #(rf/dispatch [:modal->close])}]}]))
+        execute! (fn []
+                   (rf/dispatch [:audit->execute-session {:id session-id}])
+                   (rf/dispatch [:editor-plugin->review-set-state session-id :executing])
+                   (restart-poll!))]
+    [:> Box {:class "py-regular pl-regular pr-large whitespace-normal"}
+     [:> Callout.Root {:color color :size "1"}
+      [:> Callout.Icon
+       (case icon
+         :spinner [:> Spinner {:loading true}]
+         :alert [:> AlertTriangle {:size 16}]
+         [:> Clock {:size 16}])]
+      [:> Flex {:direction "column" :gap "2" :align "start"}
+       [:> Text {:size "2" :weight "medium"} title]
+       [:> Text {:size "1"} description]
+       (when session-id
+         [:> Flex {:gap "2" :align "center" :wrap "wrap"}
+          (case state
+            :ready
+            [:> Button {:size "1" :on-click execute!}
+             [:> Play {:size 12}] "Execute"]
+
+            :waiting-approval
+            (when can-review?
+              [:<>
+               [:> Button {:size "1" :color "green" :on-click #(decide! "approved")}
+                "Approve"]
+               [:> Button {:size "1" :variant "soft" :on-click approve-window!}
+                "Approve with time window"]
+               [:> Button {:size "1" :variant "soft" :color "red" :on-click #(decide! "rejected")}
+                "Reject"]])
+
+            :poll-timeout
+            [:> Button {:size "1" :variant "soft" :on-click restart-poll!}
+             "Check again"]
+
+            nil)
+          [:> Button {:size "1" :variant "soft" :color "gray"
+                      :on-click #(open-session-details session-id)}
+           "View session details"]])]]
+     [:div {:class "text-gray-11 text-sm mt-2"}
+      (str (formatters/current-time) " [cost " (formatters/time-elapsed execution-time) "]")]]))
+
 (defn- logs-area-list
   [status {:keys [logs logs-status logs-truncated? logs-total-chars
-                  execution-time has-review? session-id]}]
+                  execution-time has-review? review-info session-id]}]
   (case status
     :success (if has-review?
-               [:div {:class "group relative py-regular pl-regular pr-large whitespace-pre"
-                      :on-click (fn []
-                                  (rf/dispatch (rf/dispatch
-                                                [:modal->open
-                                                 {:id "session-details"
-                                                  :maxWidth "95vw"
-                                                  :content [session-details/main {:id session-id :verb "exec"}]}])))}
-                [:div {:class "text-sm mb-1"}
-                 "This task needs to be reviewed. Please click here to see the details."]
-                [:div {:class "text-gray-11 text-sm"}
-                 (str (formatters/current-time) " [cost " (formatters/time-elapsed execution-time) "]")]]
+               [review-banner {:review-info review-info
+                               :session-id session-id
+                               :execution-time execution-time}]
 
                [:div {:class " group relative py-regular pl-regular pr-large whitespace-pre"}
                 (when logs-truncated?
@@ -82,12 +179,7 @@
                   [:<>
                    [:> Button {:size "1"
                                :variant "soft"
-                               :on-click (fn []
-                                           (rf/dispatch
-                                            [:modal->open
-                                             {:id "session-details"
-                                              :maxWidth "95vw"
-                                              :content [session-details/main {:id session-id :verb "exec"}]}]))}
+                               :on-click #(open-session-details session-id)}
                     "View session details"]
                    [:> Text {:size "1" :class "text-gray-10 font-mono"}
                     (str "Session: " session-id)]])]]]
@@ -149,4 +241,5 @@
           :script (:script config)
           :execution-time (:execution-time config)
           :has-review? (:has-review config)
+          :review-info (:review-info config)
           :session-id (:response-id config)}])]]))

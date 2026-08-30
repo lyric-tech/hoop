@@ -3,8 +3,10 @@
    [cljs.core :as c]
    [clojure.string :as cs]
    [re-frame.core :as rf]
+   [webapp.audit.reviews :as reviews]
    [webapp.jira-templates.loading-jira-templates :as loading-jira-templates]
    [webapp.jira-templates.prompt-form :as prompt-form]
+   [webapp.utilities :as utilities]
    [webapp.webclient.components.mandatory-metadata-form :as mandatory-metadata-form]))
 
 (defn discover-connection-type [connection]
@@ -62,13 +64,138 @@
 (rf/reg-event-fx
  ::editor-plugin->set-script-success
  (fn [{:keys [db]} [_ data script]]
-   (let [status (if (= "running" (:output_status data)) :running :success)]
+   (let [status (if (= "running" (:output_status data)) :running :success)
+         ;; A reviewed exec returns no inline output — the gateway only records
+         ;; it on the session. Start polling so the result lands in the panel.
+         review? (boolean (and (:has_review data) (:session_id data)))]
      ;; Notify the React shell that a session now exists — the sidebar
      ;; Config Status checklist reacts instantly to "Run your first session".
      (.dispatchEvent js/window (js/CustomEvent. "hoop:session-executed"))
-     {:db (assoc-in db [:editor-plugin->script] {:status status
-                                                 :data (merge data {:script script})})
-      :fx [[:dispatch [:activation-journey/advance-terminal-banner]]]})))
+     {:db (assoc-in db [:editor-plugin->script]
+                    {:status status
+                     :data (cond-> (merge data {:script script})
+                             review? (assoc :review-info {:state :checking}))})
+      :fx (cond-> [[:dispatch [:activation-journey/advance-terminal-banner]]]
+            review? (conj [:dispatch [:editor-plugin->poll-review-session
+                                      (:session_id data) 0]]))})))
+
+;; ── Reviewed exec runs: resolve the output into the Terminal panel ─────────
+;; Admin runs auto-approve and execute immediately; other runs sit in PENDING
+;; until a reviewer decides. Either way the panel keeps watching the session
+;; and, once it is done, pulls the event stream and merges it into
+;; :editor-plugin->script — from there the normal pipeline (Logs, Documents,
+;; Table tabs) renders it exactly like an unreviewed run.
+
+(def ^:private review-poll-interval-ms 2500)
+(def ^:private review-poll-max-attempts 48) ;; ~2 minutes
+;; Same inline cap session-details uses before switching to the stream viewer.
+(def ^:private review-stream-max-bytes (* 4 1024 1024))
+
+(defn- current-review-session? [db session-id]
+  (= session-id (get-in db [:editor-plugin->script :data :session_id])))
+
+(rf/reg-event-fx
+ :editor-plugin->poll-review-session
+ (fn [{:keys [db]} [_ session-id attempt]]
+   ;; Stop silently when the panel moved on to another run or already resolved.
+   (if-not (and (current-review-session? db session-id)
+                (get-in db [:editor-plugin->script :data :has_review]))
+     {}
+     {:fx [[:dispatch
+            [:fetch {:method "GET"
+                     :uri (str "/sessions/" session-id)
+                     :on-success #(rf/dispatch [::editor-plugin->review-session-fetched
+                                                session-id attempt %])
+                     :on-failure #(rf/dispatch [::editor-plugin->review-poll-later
+                                                session-id attempt])}]]]})))
+
+(rf/reg-event-fx
+ ::editor-plugin->review-session-fetched
+ (fn [{:keys [db]} [_ session-id attempt session]]
+   (if-not (current-review-session? db session-id)
+     {}
+     (let [review-status (get-in session [:review :status])
+           set-info #(assoc-in db [:editor-plugin->script :data :review-info] %)]
+       (cond
+         (contains? #{"REJECTED" "REVOKED"} review-status)
+         {:db (set-info {:state :rejected :review-status review-status})}
+
+         (= "done" (:status session))
+         (if (and (:event_size session)
+                  (> (:event_size session) review-stream-max-bytes))
+           {:db (set-info {:state :large-output :review-status review-status})}
+           {:db (set-info {:state :fetching-output :review-status review-status})
+            :fx [[:dispatch
+                  [:fetch {:method "GET"
+                           :uri (str "/sessions/" session-id
+                                     "?expand=event_stream&event_stream=base64")
+                           :on-success #(rf/dispatch [::editor-plugin->review-output-fetched
+                                                      session-id %])
+                           :on-failure #(rf/dispatch [::editor-plugin->review-poll-later
+                                                      session-id attempt])}]]]})
+
+         :else
+         (let [can-review? (reviews/can-review?
+                            (:review session)
+                            (get-in db [:users->current-user :data :groups]))]
+           {:db (set-info {:state (case review-status
+                                    "APPROVED" (if (= "ready" (:status session))
+                                                 :ready
+                                                 :executing)
+                                    ;; PROCESSING/UNKNOWN = the approved exec is
+                                    ;; running in the agent
+                                    ("PROCESSING" "UNKNOWN") :executing
+                                    :waiting-approval)
+                           :review-status review-status
+                           :review-id (get-in session [:review :id])
+                           :can-review? can-review?})
+            :fx [[:dispatch [::editor-plugin->review-poll-later session-id attempt]]]}))))))
+
+;; Instant local state flip for banner actions (Execute click → :executing)
+;; while the next poll tick catches up with the server.
+(rf/reg-event-db
+ :editor-plugin->review-set-state
+ (fn [db [_ session-id state]]
+   (if (current-review-session? db session-id)
+     (update-in db [:editor-plugin->script :data :review-info] assoc :state state)
+     db)))
+
+(rf/reg-event-fx
+ ::editor-plugin->review-output-fetched
+ (fn [{:keys [db]} [_ session-id session]]
+   (if-not (current-review-session? db session-id)
+     {}
+     (let [output (utilities/decode-b64 (or (first (:event_stream session)) ""))
+           exit-code (:exit_code session)
+           output-status (if (and (some? exit-code) (not (zero? exit-code)))
+                           "failed"
+                           "success")]
+       {:db (update db :editor-plugin->script
+                    #(-> %
+                         (assoc :status :success)
+                         (update :data merge
+                                 {:output output
+                                  :output_status output-status
+                                  :has_review false
+                                  :review-info {:state :resolved
+                                                :review-status (get-in session
+                                                                       [:review :status])}})))}))))
+
+(rf/reg-event-fx
+ ::editor-plugin->review-poll-later
+ (fn [{:keys [db]} [_ session-id attempt]]
+   (cond
+     (not (current-review-session? db session-id))
+     {}
+
+     (>= attempt review-poll-max-attempts)
+     {:db (assoc-in db [:editor-plugin->script :data :review-info]
+                    {:state :poll-timeout})}
+
+     :else
+     {:fx [[:dispatch-later
+            {:ms review-poll-interval-ms
+             :dispatch [:editor-plugin->poll-review-session session-id (inc attempt)]}]]})))
 
 (rf/reg-event-fx
  ::editor-plugin->set-script-failure

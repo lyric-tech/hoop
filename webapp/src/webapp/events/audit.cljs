@@ -540,11 +540,14 @@
 
 (rf/reg-event-fx
  :audit->add-review
+ ;; target: {:review-id ..} plus an optional :session — when present, the
+ ;; session list and details are refetched on success (the modal's needs);
+ ;; callers without a session (the Terminal review banner) poll on their own.
  (fn
-   [_ [_ session status & {:keys [start-time
-                                  end-time
-                                  force-review
-                                  rejection-reason]}]]
+   [_ [_ {:keys [review-id session]} status & {:keys [start-time
+                                                      end-time
+                                                      force-review
+                                                      rejection-reason]}]]
    (let [body (cond-> {:status (string/upper-case status)}
                 (and start-time end-time)
                 (assoc :time_window {:type "time_range"
@@ -558,18 +561,19 @@
                 (assoc :rejection_reason rejection-reason))]
      {:fx [[:dispatch
             [:fetch {:method "PUT"
-                     :uri (str "/reviews/" (-> session :review :id))
+                     :uri (str "/reviews/" review-id)
                      :body body
                      :on-success
                      (fn []
                        (rf/dispatch [:show-snackbar
                                      {:level :success
                                       :text "Your review was added"}])
-                       (js/setTimeout
-                        (fn []
-                          (rf/dispatch [:audit->get-sessions])
-                          (rf/dispatch [:audit->get-session-by-id session]))
-                        500))
+                       (when session
+                         (js/setTimeout
+                          (fn []
+                            (rf/dispatch [:audit->get-sessions])
+                            (rf/dispatch [:audit->get-session-by-id session]))
+                          500)))
                      :on-failure #(rf/dispatch [:show-snackbar {:text "Failed to add review"
                                                                 :level :error
                                                                 :details %}])}]]]})))

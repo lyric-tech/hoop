@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Center, Stack, Loader, Text, Transition } from '@mantine/core'
 import { XCircle } from 'lucide-react'
+import LyricLogo from '@/components/LyricLogo'
 
 // Most callers pass no `h` and render inside AppShell.Main, which already
 // reserves the shell header with `padding-top: var(--app-shell-header-offset)`.
@@ -31,12 +32,7 @@ function PageLoader({ message, description, error, overlay, h }) {
       <Transition mounted={visible} transition="fade" duration={300}>
         {(styles) => (
           <Stack align="center" gap="xl" style={{ ...styles, maxWidth: 320 }}>
-            <img
-              src="/images/hoop-branding/SVG/hoop-symbol_black.svg"
-              height={40}
-              width={40}
-              alt="hoop"
-            />
+            <LyricLogo markOnly height={40} />
 
             {error ? (
               <XCircle size={32} color="var(--mantine-color-red-6)" strokeWidth={1.5} />

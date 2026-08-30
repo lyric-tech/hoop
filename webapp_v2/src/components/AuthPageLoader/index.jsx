@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Center, Stack, Loader, Text, Transition } from '@mantine/core'
 import { XCircle } from 'lucide-react'
+import LyricLogo from '@/components/LyricLogo'
 
 // Full-screen loading state for auth-flow routes (login redirect, OAuth
 // callbacks, session verification). Auth screens are always dark — there is
@@ -18,12 +19,7 @@ function AuthPageLoader({ message, description, error }) {
       <Transition mounted={visible} transition="fade" duration={300}>
         {(styles) => (
           <Stack align="center" gap="xl" maw={320} style={styles}>
-            <img
-              src="/images/hoop-branding/SVG/hoop-symbol_white.svg"
-              height={40}
-              width={40}
-              alt="hoop"
-            />
+            <LyricLogo markOnly variant="white" height={40} />
 
             {error ? (
               <XCircle size={32} color="var(--mantine-color-red-6)" strokeWidth={1.5} />

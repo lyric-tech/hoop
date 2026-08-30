@@ -73,32 +73,6 @@
             (= status "not_analyzed")    "Run analysis"
             :else                        "Retry analysis")])])))
 
-(defn no-presidio-callout []
-  [:> Callout.Root {:size "2"
-                    :class "w-full bg-[--violet-2] p-3"}
-   [:> Callout.Icon
-    [:> Sparkles {:size 16
-                  :color "var(--violet-9)"}]]
-   [:> Callout.Text {:class "text-gray-12"}
-    [:> Text {:as "p" :size "2" :weight "bold" :class "mb-2"}
-     "Unlock Live Data Masking"]
-    [:> Text {:as "p" :size "2" :class "mb-2"}
-     "Redact sensitive fields on the fly to reduce exposure risk and keep your data pipelines compliant."]
-    [:> Flex {:direction "column" :gap "2"}
-     [:> Link {:href "#"
-               :class "text-primary-10 flex items-center gap-1 w-fit no-underline font-medium"
-               :on-click (fn [e]
-                           (.preventDefault e)
-                           (rf/dispatch [:close-modal])
-                           (rf/dispatch [:navigate :ai-data-masking]))}
-      "Configure it on Live Data Masking"
-      [:> ArrowUpRight {:size 16}]]
-     [:> Link {:href (get-in config/docs-url [:features :ai-datamasking])
-               :target "_blank"
-               :class "text-primary-10 flex items-center gap-1 w-fit no-underline font-medium"}
-      "Go to Live Data Masking Docs"
-      [:> ArrowUpRight {:size 16}]]]]])
-
 (defn- build-analytics-report [session-report session]
   (let [report-items (get-in session-report [:data :items])
         report-total (get-in session-report [:data :total_redact_count])
@@ -296,11 +270,11 @@
         ;; visible whether the accordion is collapsed or expanded.
         rdp-status-subtitle (when (rdp-session? session)
                               [rdp-analysis-tracker {:session session}])]
-    (cond
-      (not= redact-provider "mspresidio")
-      [no-presidio-callout]
-
-      free-license?
+    ;; Renders only when a masking provider is configured — the upsell that
+    ;; used to cover the unconfigured case was removed for the Lyric fork.
+    (when (= redact-provider "mspresidio")
+      (cond
+        free-license?
       [data-masking-analytics
        analytics-report
        {:title "Enable Live Data Masking"
@@ -316,7 +290,7 @@
                     "Configure it on Live Data Masking"
                     [:> ArrowUpRight {:size 14}]]]}]
 
-      :else
-      (if rdp-status-subtitle
-        [data-masking-analytics analytics-report :subtitle rdp-status-subtitle]
-        [data-masking-analytics analytics-report]))))
+        :else
+        (if rdp-status-subtitle
+          [data-masking-analytics analytics-report :subtitle rdp-status-subtitle]
+          [data-masking-analytics analytics-report])))))

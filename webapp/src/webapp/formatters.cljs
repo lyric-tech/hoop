@@ -258,3 +258,8 @@
   [iso]
   (when (and iso (not (string/blank? iso)))
     (.getTime (js/Date. iso))))
+
+(defn date->hhmm
+  "Formats a js/Date as zero-padded 24h \"HH:mm\" local time."
+  [d]
+  (dfns/format d "HH:mm"))

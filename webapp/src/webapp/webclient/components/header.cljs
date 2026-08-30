@@ -1,7 +1,7 @@
 (ns webapp.webclient.components.header
   (:require
    ["@radix-ui/themes" :refer [Box Button Flex Heading IconButton Tooltip]]
-   ["lucide-react" :refer [CircleHelp PackagePlus ChevronDown
+   ["lucide-react" :refer [PackagePlus ChevronDown
                            Play Sun Moon Search]]
    [re-frame.core :as rf]
    [webapp.components.notification-badge :refer [notification-badge]]
@@ -97,18 +97,6 @@
                          (rf/dispatch [:connections/get-connections-paginated {:page 1 :force-refresh? true}])
                          (rf/dispatch [:primary-connection/toggle-dialog true]))}
              [:> Search {:size 16}]]]
-
-           [:> Tooltip {:content "Help"}
-            [:> IconButton
-             {:size "1"
-              :color "gray"
-              :variant "ghost"
-              :highContrast true
-              :aria-label "Open help documentation"
-              :onClick (fn []
-                         (js/window.open "https://help.hoop.dev" "_blank"))}
-             [:> CircleHelp {:size 16}]]]
-
 
            [:> Tooltip {:content "Theme"}
             [:> IconButton

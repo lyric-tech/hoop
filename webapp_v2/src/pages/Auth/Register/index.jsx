@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '@/stores/useAuthStore'
 import { authService } from '@/services/auth'
 import PageLoader from '@/components/PageLoader'
+import LyricLogo from '@/components/LyricLogo'
 
 function Register() {
   const navigate = useNavigate()
@@ -87,11 +88,9 @@ function Register() {
     <Center style={{ minHeight: '100vh', backgroundColor: 'var(--mantine-color-gray-1)' }}>
       <Box style={{ width: '90%', maxWidth: 400 }}>
         <Paper shadow="sm" p={40} radius="lg">
-          <img
-            src="/images/hoop-branding/SVG/hoop-symbol_black.svg"
-            alt="hoop"
-            style={{ width: 48, display: 'block', margin: '0 auto 24px' }}
-          />
+          <Center mb={24}>
+            <LyricLogo markOnly height={48} />
+          </Center>
 
           <Title order={2} ta="center" mb="lg">
             Create an account

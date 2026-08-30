@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Group, Image, Stack, Text, Title } from '@mantine/core'
+import { Box, Group, Stack, Text, Title } from '@mantine/core'
 import Button from '@/components/Button'
 import { useMinDelay } from '@/hooks/useMinDelay'
 import PageLoader from '@/components/PageLoader'
@@ -10,6 +10,8 @@ import { protectionProfilesService } from '@/services/protectionProfiles'
 import { useBridgeStore } from '@/stores/useBridgeStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { showSnackbar } from '@/utils/snackbar'
+import LyricLogo from '@/components/LyricLogo'
+import { PRODUCT_NAME } from '@/utils/branding'
 
 /**
  * Onboarding step shown to admins before the resource setup: pick a
@@ -69,13 +71,7 @@ function OnboardingProtectionRules() {
       <Box p="xl">
         <Stack gap="xl">
           <Group justify="space-between" align="center">
-            <Image
-              src="/images/hoop-branding/PNG/hoop-symbol_black@4x.png"
-              alt="Hoop"
-              w={40}
-              h={40}
-              fit="contain"
-            />
+            <LyricLogo markOnly height={40} />
             <Button loading={applying} disabled={!selected} onClick={handleApply}>
               Apply and continue
             </Button>
@@ -84,7 +80,7 @@ function OnboardingProtectionRules() {
           <Stack gap="xs">
             <Title order={1}>Protect your resources</Title>
             <Text size="lg" c="dimmed">
-              Pick how Hoop should guard everything you connect.
+              Pick how {PRODUCT_NAME} should guard everything you connect.
             </Text>
             <Text size="lg" c="dimmed">
               We set it all up. You can change any configuration later on.

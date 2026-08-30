@@ -6,6 +6,7 @@ import { NavItem } from './NavItem'
 import { ConfigStatus } from './ConfigStatus'
 import { shouldHide } from './helpers'
 import { MAIN_ITEMS, DISCOVER_ITEMS, ORGANIZATION_ITEMS } from './constants'
+import LyricLogo from '@/components/LyricLogo'
 import classes from './Sidebar.module.css'
 
 // Left padding lives in the CSS module — it carries an optical correction that
@@ -43,13 +44,8 @@ export function SidebarExpanded({ navKey }) {
       h="100%"
       style={{ boxSizing: 'border-box', overflow: 'hidden' }}
     >
-      <Box mb="xl" mt="xl" className={classes.logoExpanded}>
-        <img
-          src="/images/hoop-branding/PNG/hoop-symbol+text_black@4x.png"
-          alt="Hoop"
-          width={160}
-          style={{ display: 'block' }}
-        />
+      <Box mb="md" mt="md" className={classes.logoExpanded}>
+        <LyricLogo height={36} />
       </Box>
 
       <ScrollArea

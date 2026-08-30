@@ -16,6 +16,8 @@ import Button from '@/components/Button'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { authService } from '@/services/auth'
 import classes from './Setup.module.css'
+import LyricLogo from '@/components/LyricLogo'
+import { PRODUCT_NAME } from '@/utils/branding'
 
 const TRUSTED_BY = ['EBANX', 'RD Station', 'Dock', 'PicPay', 'Unico']
 
@@ -37,13 +39,9 @@ function LeftPanel() {
     <Box component="aside" className={classes.leftPanel}>
       <Box>
         <Flex align="center" gap="xs" mb="xl">
-          <img
-            src="/images/hoop-branding/SVG/hoop-symbol_white.svg"
-            alt="hoop.dev"
-            width={20}
-          />
+          <LyricLogo markOnly variant="white" height={20} />
           <Text size="sm" fw={700} c="white">
-            hoop.dev
+            {PRODUCT_NAME}
           </Text>
         </Flex>
 

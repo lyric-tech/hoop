@@ -16,6 +16,7 @@
    [webapp.audit.views.data-masking-analytics :as data-masking-analytics]
    [webapp.audit.views.guardrails-info :as guardrails-info]
    [webapp.features.ai-session-analyzer.views.session-analysis :as session-analysis]
+   [webapp.audit.reviews :as reviews]
    [webapp.audit.views.time-window-modal :as time-window-modal]
    [webapp.sessions.components.reject-details-modal :as reject-details-modal]
 
@@ -217,12 +218,7 @@
                                           (max 1 (js/Math.ceil (/ (- (.getTime (js/Date. credentials-expire-at))
                                                                      (.getTime (js/Date.)))
                                                                   60000))))
-              can-review? (let [user-groups (set (:groups user))]
-                            (and (some (fn [review-group]
-                                         (and (= "PENDING" (:status review-group))
-                                              (contains? user-groups (:group review-group))))
-                                       review-groups)
-                                 (= "PENDING" review-status)))
+              can-review? (reviews/can-review? (:review session) (:groups user))
               can-force-approve? (let [user-groups (set (:groups user))
                                        connection-data (:data @connection-details)
                                        review (:review session)
@@ -244,23 +240,27 @@
                                            {:on-confirm
                                             (fn [{:keys [comment]}]
                                               (rf/dispatch [:audit->add-review
-                                                            session
+                                                            {:review-id (-> session :review :id)
+                                                             :session session}
                                                             "rejected"
                                                             :rejection-reason comment])
                                               (rf/dispatch [:modal->close]))
                                             :on-cancel #(rf/dispatch [:modal->close])}]}]))
               handle-approve (fn []
                                (rf/dispatch [:audit->add-review
-                                             session
+                                             {:review-id (-> session :review :id)
+                                              :session session}
                                              "approved"]))
               handle-force-approve (fn []
                                      (rf/dispatch [:audit->add-review
-                                                   session
+                                                   {:review-id (-> session :review :id)
+                                                    :session session}
                                                    "approved"
                                                    :force-review true]))
               handle-approve-time-window (fn [data]
                                            (rf/dispatch [:audit->add-review
-                                                         session
+                                                         {:review-id (-> session :review :id)
+                                                          :session session}
                                                          "approved"
                                                          :start-time (:start-time data)
                                                          :end-time (:end-time data)])

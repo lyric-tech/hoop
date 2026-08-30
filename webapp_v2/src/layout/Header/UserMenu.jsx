@@ -1,31 +1,21 @@
 import { Group, Stack, Text, UnstyledButton } from '@mantine/core'
-import { ChevronDown, LogOut, MessageCircleQuestion } from 'lucide-react'
+import { ChevronDown, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ActionMenu from '@/components/ActionMenu'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { getUserDisplayName } from '@/utils/user'
-import { GITHUB_DISCUSSIONS_URL } from '@/utils/support'
 import { UserAvatar } from './UserAvatar'
 import classes from './Header.module.css'
 
 export function UserMenu() {
   const navigate = useNavigate()
-  const { user, gatewayVersion, analyticsTracking } = useUserStore()
+  const { user, gatewayVersion } = useUserStore()
   const { logout } = useAuthStore()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
-  }
-
-  // Intercom is booted with custom_launcher_selector pointing at this id, so
-  // clicking the item opens the messenger. Without analytics the messenger is
-  // never booted, so fall back to the public discussions board.
-  const handleSupport = () => {
-    if (!analyticsTracking) {
-      window.open(GITHUB_DISCUSSIONS_URL, '_blank', 'noopener,noreferrer')
-    }
   }
 
   const target = (
@@ -53,15 +43,6 @@ export function UserMenu() {
           )}
         </Stack>
       </ActionMenu.Label>
-
-      <ActionMenu.Item
-        id="intercom-support-trigger"
-        className={classes.menuItem}
-        leftSection={<MessageCircleQuestion size={16} aria-hidden="true" />}
-        onClick={handleSupport}
-      >
-        Contact support
-      </ActionMenu.Item>
 
       <ActionMenu.Item
         danger

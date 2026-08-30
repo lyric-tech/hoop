@@ -16,9 +16,11 @@ import {
 import { useAuthStore } from '@/stores/useAuthStore'
 import { authService } from '@/services/auth'
 import AuthPageLoader from '@/components/AuthPageLoader'
+import LyricLogo from '@/components/LyricLogo'
+import { PRODUCT_NAME } from '@/utils/branding'
 
 const LOGIN_ERROR_MESSAGES = {
-  slack_not_configured: 'You must configure your Slack with Hoop',
+  slack_not_configured: `You must configure your Slack with ${PRODUCT_NAME}`,
   code_exchange_failure:
     'Something went wrong. Try again and if the error persists, talk to the account administrator',
   pending_review: 'The organization administrator must approve your access first',
@@ -35,11 +37,9 @@ function AuthCard({ children }) {
     <Center style={{ minHeight: '100vh', backgroundColor: 'var(--mantine-color-gray-0)' }}>
       <Box style={{ width: '90%', maxWidth: 400 }}>
         <Paper shadow="sm" p={40} radius="lg">
-          <img
-            src="/images/hoop-branding/SVG/hoop-symbol_black.svg"
-            alt="hoop"
-            style={{ width: 48, display: 'block', margin: '0 auto 24px' }}
-          />
+          <Center mb={24}>
+            <LyricLogo markOnly height={48} />
+          </Center>
           {children}
         </Paper>
       </Box>
@@ -167,7 +167,7 @@ function Login() {
     return (
       <AuthCard>
         <Title order={2} ta="center" mb="lg">
-          Welcome to Hoop
+          Welcome to {PRODUCT_NAME}
         </Title>
         <Alert color="red" mb="md">
           {error}

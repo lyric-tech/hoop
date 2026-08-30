@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/utils/branding'
 import { Database, Users, Sparkles, ShieldCogCorner, ShieldCheck } from 'lucide-react'
 
 // Setup checklist definition (Figma: EVAL Config status, node 14:2).
@@ -9,7 +10,7 @@ export const STEP_DEFS = [
     title: 'Connect a resource',
     icon: Database,
     subItems: [
-      { checkKey: 'agent_deployed', label: 'Deploy Hoop Agent', to: '/agents/new' },
+      { checkKey: 'agent_deployed', label: `Deploy ${PRODUCT_NAME} Agent`, to: '/agents/new' },
       { checkKey: 'resource_created', label: 'Create a Resource', to: '/resource-catalog' },
       { checkKey: 'session_ran', label: 'Run your first session', action: 'run-first-session' },
     ],

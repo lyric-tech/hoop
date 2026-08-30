@@ -5,6 +5,7 @@ import { useUserStore } from '@/stores/useUserStore'
 import { IconBtn } from './IconBtn'
 import { shouldHide } from './helpers'
 import { MAIN_ITEMS, DISCOVER_ITEMS, ORGANIZATION_ITEMS } from './constants'
+import LyricLogo from '@/components/LyricLogo'
 import classes from './Sidebar.module.css'
 
 export function SidebarCollapsed() {
@@ -21,17 +22,8 @@ export function SidebarCollapsed() {
       align="center"
       className={classes.collapsedNav}
     >
-      <Box mb="xl" mt="xl" className={classes.logoCollapsed}>
-        {/* The symbol SVG carries a viewBox but no width/height, so both axes
-            are given here — with only a height it has no layout width to fall
-            back on if the asset fails to load. viewBox is square. */}
-        <img
-          src="/images/hoop-branding/SVG/hoop-symbol_black.svg"
-          alt="Hoop"
-          width={24}
-          height={24}
-          style={{ display: 'block' }}
-        />
+      <Box mb="md" mt="md" className={classes.logoCollapsed}>
+        <LyricLogo markOnly height={26} />
       </Box>
 
       <ScrollArea
