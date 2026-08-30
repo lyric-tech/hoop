@@ -316,8 +316,11 @@ func TestDataMaskingRuleCRUD(t *testing.T) {
 		t.Errorf("datamasking update did not persist: description=%v", afterBody["description"])
 	}
 
-	// The OSS license boundary is enforced: more than one entity type is
-	// rejected with 403. (Enterprise lifts this; the suite runs OSS.)
+	// Upstream rejects more than one entity type with 403 under an OSS
+	// license. This fork sets license.DefaultType = EnterpriseType, so an org
+	// with no license installed is enterprise and the limit is lifted. If the
+	// enterprise-default patch is ever reverted this flips back to 403 and
+	// this assertion catches it.
 	overLimit := testServer.Put(t, "/datamasking-rules/"+ruleID, token, openapi.DataMaskingRuleRequest{
 		Name:        ruleName,
 		Description: "two entity types",
@@ -328,8 +331,8 @@ func TestDataMaskingRuleCRUD(t *testing.T) {
 		ScoreThreshold: &score,
 	})
 	defer overLimit.Body.Close()
-	if overLimit.StatusCode != http.StatusForbidden {
-		t.Errorf("datamasking OSS entity-type limit: expected 403, got %d", overLimit.StatusCode)
+	if overLimit.StatusCode != http.StatusOK {
+		t.Errorf("datamasking entity-type limit under enterprise-default: expected 200, got %d", overLimit.StatusCode)
 	}
 
 	// Delete, gone.

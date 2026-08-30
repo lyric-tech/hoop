@@ -98,6 +98,7 @@ export default function AiAgentsIdentities() {
             <Table.Tr>
               <Table.Th>Key</Table.Th>
               <Table.Th>Name</Table.Th>
+              <Table.Th>Owner</Table.Th>
               <Table.Th>Created at</Table.Th>
               <Table.Th>Created by</Table.Th>
               <Table.Th>Last used at</Table.Th>
@@ -129,6 +130,7 @@ export default function AiAgentsIdentities() {
                     )}
                   </Table.Td>
                   <Table.Td>{agent.name ?? '—'}</Table.Td>
+                  <Table.Td>{agent.owner_email ?? '—'}</Table.Td>
                   <Table.Td>{formatDate(agent.created_at)}</Table.Td>
                   <Table.Td>{agent.created_by ?? '—'}</Table.Td>
                   <Table.Td>{formatDate(agent.last_used_at)}</Table.Td>

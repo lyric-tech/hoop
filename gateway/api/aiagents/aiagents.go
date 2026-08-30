@@ -1,6 +1,7 @@
 package aiagents
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,26 @@ import (
 	"github.com/hoophq/hoop/gateway/models"
 	"github.com/hoophq/hoop/gateway/storagev2"
 )
+
+// maxOwnerNameAttempts bounds the suffixing done when two agents share an
+// owner: the derived name collides with the (org_id, name) unique index, so
+// the second agent for a user becomes "ABC's AI agent (2)".
+const maxOwnerNameAttempts = 20
+
+// resolveOwner loads the owner user and rejects one from another org. The
+// route is admin-only, but org scoping is what keeps an admin from attaching
+// their agent to a user in a different tenant: models.GetUserByID is not
+// org-scoped.
+func resolveOwner(orgID, ownerUserID string) (*models.User, error) {
+	user, err := models.GetUserByID(ownerUserID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil || user.OrgID != orgID {
+		return nil, nil
+	}
+	return user, nil
+}
 
 // List AI Agents
 //
@@ -76,18 +97,46 @@ func Create(c *gin.Context) {
 		return
 	}
 
+	name := req.Name
+	var ownerUserID *string
+	if req.OwnerUserID != nil && *req.OwnerUserID != "" {
+		owner, err := resolveOwner(ctx.OrgID, *req.OwnerUserID)
+		if err != nil {
+			httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching owner user")
+			return
+		}
+		if owner == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "owner user not found"})
+			return
+		}
+		// An owned agent never carries a caller-supplied name.
+		name = models.AIAgentNameForOwner(owner.Name)
+		ownerUserID = &owner.ID
+	}
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "name is required when owner_user_id is not set"})
+		return
+	}
+
 	rawKey := models.GenerateAIAgent()
 	aiAgent := &models.AIAgent{
-		OrgID:     ctx.OrgID,
-		Name:      req.Name,
-		KeyHash:   models.HashAIAgent(rawKey),
-		MaskedKey: models.MaskAIAgent(rawKey),
-		Status:    "active",
-		Groups:    req.Groups,
-		CreatedBy: ctx.UserEmail,
+		OrgID:       ctx.OrgID,
+		Name:        name,
+		KeyHash:     models.HashAIAgent(rawKey),
+		MaskedKey:   models.MaskAIAgent(rawKey),
+		Status:      "active",
+		Groups:      req.Groups,
+		OwnerUserID: ownerUserID,
+		CreatedBy:   ctx.UserEmail,
 	}
 
 	err := models.CreateAIAgent(aiAgent)
+	// A derived name is not the caller's to fix, so resolve the collision here
+	// rather than making them rename an agent they never named.
+	for attempt := 2; err == models.ErrAlreadyExists && ownerUserID != nil && attempt <= maxOwnerNameAttempts; attempt++ {
+		aiAgent.Name = fmt.Sprintf("%s (%d)", name, attempt)
+		err = models.CreateAIAgent(aiAgent)
+	}
 	switch err {
 	case models.ErrAlreadyExists:
 		c.JSON(http.StatusConflict, gin.H{"message": "an ai agent with this name already exists"})
@@ -131,9 +180,42 @@ func Update(c *gin.Context) {
 		return
 	}
 
+	// An absent owner_user_id leaves the owner alone; an explicit empty string
+	// detaches it. Both decode to the same nil pointer if we only checked for
+	// nil, which would silently unown every agent the existing UI updates.
+	ownerUserID := existing.OwnerUserID
+	if req.OwnerUserID != nil {
+		if *req.OwnerUserID == "" {
+			ownerUserID = nil
+		} else {
+			owner, err := resolveOwner(ctx.OrgID, *req.OwnerUserID)
+			if err != nil {
+				httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching owner user")
+				return
+			}
+			if owner == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "owner user not found"})
+				return
+			}
+			ownerUserID = &owner.ID
+		}
+	}
+
 	name := existing.Name
 	if req.Name != nil {
 		name = *req.Name
+	}
+	if ownerUserID != nil {
+		owner, err := resolveOwner(ctx.OrgID, *ownerUserID)
+		if err != nil {
+			httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching owner user")
+			return
+		}
+		if owner == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "owner user not found"})
+			return
+		}
+		name = models.AIAgentNameForOwner(owner.Name)
 	}
 	groups := req.Groups
 	if groups == nil {
@@ -141,10 +223,11 @@ func Update(c *gin.Context) {
 	}
 
 	aiAgent := &models.AIAgent{
-		ID:     existing.ID,
-		OrgID:  ctx.OrgID,
-		Name:   name,
-		Groups: groups,
+		ID:          existing.ID,
+		OrgID:       ctx.OrgID,
+		Name:        name,
+		Groups:      groups,
+		OwnerUserID: ownerUserID,
 	}
 
 	err = models.UpdateAIAgent(aiAgent)
@@ -256,6 +339,9 @@ func toResponse(a models.AIAgent) openapi.AIAgentResponse {
 		MaskedKey:     a.MaskedKey,
 		Status:        openapi.AIAgentStatusType(a.Status),
 		Groups:        a.Groups,
+		OwnerUserID:   a.OwnerUserID,
+		OwnerEmail:    a.OwnerEmail,
+		OwnerName:     a.OwnerName,
 		CreatedBy:     a.CreatedBy,
 		DeactivatedBy: a.DeactivatedBy,
 		CreatedAt:     a.CreatedAt,

@@ -23,11 +23,29 @@ type AIAgent struct {
 	MaskedKey     string         `gorm:"column:masked_key"`
 	Status        string         `gorm:"column:status"`
 	Groups        pq.StringArray `gorm:"column:groups;type:text[];->"`
+	OwnerUserID   *string        `gorm:"column:owner_user_id"`
+	OwnerEmail    *string        `gorm:"column:owner_email;->"`
+	OwnerName     *string        `gorm:"column:owner_name;->"`
 	CreatedBy     string         `gorm:"column:created_by"`
 	DeactivatedBy *string        `gorm:"column:deactivated_by"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
 	DeactivatedAt *time.Time     `gorm:"column:deactivated_at"`
 	LastUsedAt    *time.Time     `gorm:"column:last_used_at"`
+}
+
+// aiAgentUserEmail resolves the address recorded on an agent's sessions,
+// reviews and audit entries.
+func aiAgentUserEmail(agentName, ownerEmail string) string {
+	if ownerEmail != "" {
+		return ownerEmail
+	}
+	return agentName
+}
+
+// AIAgentNameForOwner is the single source of truth for an owned agent's
+// display name. Callers must not compose this string themselves.
+func AIAgentNameForOwner(ownerName string) string {
+	return fmt.Sprintf("%s's AI agent", ownerName)
 }
 
 func GenerateAIAgent() string {
@@ -55,11 +73,13 @@ func ListAIAgents(orgID string) ([]AIAgent, error) {
 	err := DB.Raw(`
 	SELECT ak.id, ak.org_id, ak.name, ak.masked_key, ak.status,
 	ak.created_by, ak.deactivated_by, ak.created_at, ak.deactivated_at, ak.last_used_at,
+	ak.owner_user_id, u.email AS owner_email, u.name AS owner_name,
 	COALESCE((
 		SELECT array_agg(ug.name::TEXT) FROM private.user_groups ug
 		WHERE ug.ai_agent_id = ak.id
 	), ARRAY[]::TEXT[]) AS groups
 	FROM private.ai_agents ak
+	LEFT JOIN private.users u ON u.id = ak.owner_user_id
 	WHERE ak.org_id = ?`, orgID).
 		Find(&items).
 		Error
@@ -79,11 +99,13 @@ func GetAIAgentByNameOrID(orgID, nameOrID string) (*AIAgent, error) {
 	err := DB.Raw(`
 	SELECT ak.id, ak.org_id, ak.name, ak.masked_key, ak.status,
 	ak.created_by, ak.deactivated_by, ak.created_at, ak.deactivated_at, ak.last_used_at,
+	ak.owner_user_id, u.email AS owner_email, u.name AS owner_name,
 	COALESCE((
 		SELECT array_agg(ug.name::TEXT) FROM private.user_groups ug
 		WHERE ug.ai_agent_id = ak.id
 	), ARRAY[]::TEXT[]) AS groups
 	FROM private.ai_agents ak
+	LEFT JOIN private.users u ON u.id = ak.owner_user_id
 	WHERE ak.org_id = ? AND `+identifierClause, orgID, nameOrID).
 		Scan(&item).
 		Error
@@ -108,9 +130,10 @@ func CreateAIAgent(aiAgent *AIAgent) error {
 			"name":       aiAgent.Name,
 			"key_hash":   aiAgent.KeyHash,
 			"masked_key": aiAgent.MaskedKey,
-			"status":     aiAgent.Status,
-			"created_by": aiAgent.CreatedBy,
-			"created_at": aiAgent.CreatedAt,
+			"status":        aiAgent.Status,
+			"created_by":    aiAgent.CreatedBy,
+			"created_at":    aiAgent.CreatedAt,
+			"owner_user_id": aiAgent.OwnerUserID,
 		}).Error
 		if err != nil {
 			if errors.Is(err, gorm.ErrDuplicatedKey) {
@@ -136,7 +159,8 @@ func UpdateAIAgent(aiAgent *AIAgent) error {
 		res := tx.Table("private.ai_agents").
 			Where("id = ? AND org_id = ?", aiAgent.ID, aiAgent.OrgID).
 			Updates(map[string]any{
-				"name": aiAgent.Name,
+				"name":          aiAgent.Name,
+				"owner_user_id": aiAgent.OwnerUserID,
 			})
 		if res.Error != nil {
 			if errors.Is(res.Error, gorm.ErrDuplicatedKey) {
@@ -176,10 +200,12 @@ func GetAIAgentContext(keyHash string) (*Context, error) {
 		OrgLicenseData json.RawMessage `gorm:"column:org_license_data"`
 		AIAgentID      string          `gorm:"column:ai_agent_id"`
 		AIAgentName    string          `gorm:"column:ai_agent_name"`
+		OwnerEmail     string          `gorm:"column:owner_email"`
 		Groups         pq.StringArray  `gorm:"column:groups;type:text[]"`
 	}
 	err := DB.Raw(`
 	SELECT ak.id AS ai_agent_id, ak.name AS ai_agent_name,
+		COALESCE(u.email, '') AS owner_email,
 		o.id AS org_id, o.name AS org_name, o.license_data AS org_license_data,
 		COALESCE((
 			SELECT array_agg(ug.name::TEXT) FROM private.user_groups ug
@@ -187,6 +213,7 @@ func GetAIAgentContext(keyHash string) (*Context, error) {
 		), ARRAY[]::TEXT[]) AS groups
 	FROM private.ai_agents ak
 	JOIN private.orgs o ON ak.org_id = o.id
+	LEFT JOIN private.users u ON u.id = ak.owner_user_id
 	WHERE ak.key_hash = ? AND ak.status = 'active'`, keyHash).
 		Scan(&ctx).
 		Error
@@ -196,6 +223,14 @@ func GetAIAgentContext(keyHash string) (*Context, error) {
 	if ctx.AIAgentID == "" {
 		return nil, nil
 	}
+	// Sessions, reviews and audit entries record UserEmail. An owned agent
+	// reports its owner's address there so its actions are traceable to a
+	// person; an agent with no owner keeps the pre-owner behaviour of echoing
+	// its own name, which is not an address but is what existing rows hold.
+	//
+	// UserID and UserSubject stay the agent's own id: they are the
+	// authentication identity, and the agent's groups — not the owner's —
+	// remain what authorizes it.
 	return &Context{
 		OrgID:          ctx.OrgID,
 		OrgName:        ctx.OrgName,
@@ -203,7 +238,7 @@ func GetAIAgentContext(keyHash string) (*Context, error) {
 		UserID:         ctx.AIAgentID,
 		UserSubject:    ctx.AIAgentID,
 		UserName:       ctx.AIAgentName,
-		UserEmail:      ctx.AIAgentName,
+		UserEmail:      aiAgentUserEmail(ctx.AIAgentName, ctx.OwnerEmail),
 		UserStatus:     "active",
 		UserGroups:     ctx.Groups,
 	}, nil

@@ -10710,9 +10710,6 @@ const docTemplate = `{
         },
         "openapi.AIAgentCreateRequest": {
             "type": "object",
-            "required": [
-                "name"
-            ],
             "properties": {
                 "groups": {
                     "description": "Groups to assign to this AI Agent",
@@ -10725,9 +10722,15 @@ const docTemplate = `{
                     ]
                 },
                 "name": {
-                    "description": "Human-readable name for the AI Agent",
+                    "description": "Human-readable name for the AI Agent. Ignored when owner_user_id is set:\nan owned agent's name is always derived from its owner.",
                     "type": "string",
                     "example": "claude-ops"
+                },
+                "owner_user_id": {
+                    "description": "The user this agent acts for. When set, the agent's name becomes\n\"\u003cowner name\u003e's AI agent\" and its sessions, reviews and audit entries\nare recorded against the owner's email address.",
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "BF997324-5A27-4778-806A-41EE83598494"
                 }
             }
         },
@@ -10787,6 +10790,24 @@ const docTemplate = `{
                 },
                 "org_id": {
                     "description": "Organization ID",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "owner_email": {
+                    "description": "Email of the owner. This is the address recorded on the agent's\nsessions, reviews and audit entries.",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "abc@example.com"
+                },
+                "owner_name": {
+                    "description": "Display name of the owner",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "ABC"
+                },
+                "owner_user_id": {
+                    "description": "The user this agent acts for, if any",
                     "type": "string",
                     "format": "uuid",
                     "readOnly": true
@@ -10860,6 +10881,24 @@ const docTemplate = `{
                     "format": "uuid",
                     "readOnly": true
                 },
+                "owner_email": {
+                    "description": "Email of the owner. This is the address recorded on the agent's\nsessions, reviews and audit entries.",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "abc@example.com"
+                },
+                "owner_name": {
+                    "description": "Display name of the owner",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "ABC"
+                },
+                "owner_user_id": {
+                    "description": "The user this agent acts for, if any",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
                 "status": {
                     "description": "Current status of the AI Agent",
                     "enum": [
@@ -10900,9 +10939,15 @@ const docTemplate = `{
                     ]
                 },
                 "name": {
-                    "description": "Updated display name",
+                    "description": "Updated display name. Ignored while the agent has an owner.",
                     "type": "string",
                     "example": "claude-prod"
+                },
+                "owner_user_id": {
+                    "description": "The user this agent acts for. Omit to leave the owner unchanged; send an\nempty string to detach it, which returns the agent to its literal name\nand stops recording the owner's email on its actions.",
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "BF997324-5A27-4778-806A-41EE83598494"
                 }
             }
         },

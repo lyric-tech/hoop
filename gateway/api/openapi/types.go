@@ -236,10 +236,15 @@ const (
 )
 
 type AIAgentCreateRequest struct {
-	// Human-readable name for the AI Agent
-	Name string `json:"name" binding:"required" example:"claude-ops"`
+	// Human-readable name for the AI Agent. Ignored when owner_user_id is set:
+	// an owned agent's name is always derived from its owner.
+	Name string `json:"name" example:"claude-ops"`
 	// Groups to assign to this AI Agent
 	Groups []string `json:"groups" example:"engineering"`
+	// The user this agent acts for. When set, the agent's name becomes
+	// "<owner name>'s AI agent" and its sessions, reviews and audit entries
+	// are recorded against the owner's email address.
+	OwnerUserID *string `json:"owner_user_id" format:"uuid" example:"BF997324-5A27-4778-806A-41EE83598494"`
 }
 
 type AIAgentCreateResponse struct {
@@ -249,10 +254,14 @@ type AIAgentCreateResponse struct {
 }
 
 type AIAgentUpdateRequest struct {
-	// Updated display name
+	// Updated display name. Ignored while the agent has an owner.
 	Name *string `json:"name" example:"claude-prod"`
 	// Updated group list (replaces existing groups)
 	Groups []string `json:"groups" example:"engineering,platform"`
+	// The user this agent acts for. Omit to leave the owner unchanged; send an
+	// empty string to detach it, which returns the agent to its literal name
+	// and stops recording the owner's email on its actions.
+	OwnerUserID *string `json:"owner_user_id" format:"uuid" example:"BF997324-5A27-4778-806A-41EE83598494"`
 }
 
 type AIAgentResponse struct {
@@ -268,6 +277,13 @@ type AIAgentResponse struct {
 	Status AIAgentStatusType `json:"status" enums:"active,revoked"`
 	// Groups assigned to this AI Agent
 	Groups []string `json:"groups" example:"engineering"`
+	// The user this agent acts for, if any
+	OwnerUserID *string `json:"owner_user_id" readonly:"true" format:"uuid"`
+	// Email of the owner. This is the address recorded on the agent's
+	// sessions, reviews and audit entries.
+	OwnerEmail *string `json:"owner_email" readonly:"true" example:"abc@example.com"`
+	// Display name of the owner
+	OwnerName *string `json:"owner_name" readonly:"true" example:"ABC"`
 	// Subject of the admin who created this agent
 	CreatedBy string `json:"created_by"`
 	// Subject of the admin who revoked this agent

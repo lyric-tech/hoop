@@ -105,14 +105,17 @@
             "type": "array"
           },
           "name": {
-            "description": "Human-readable name for the AI Agent",
+            "description": "Human-readable name for the AI Agent. Ignored when owner_user_id is set:\nan owned agent's name is always derived from its owner.",
             "example": "claude-ops",
+            "type": "string"
+          },
+          "owner_user_id": {
+            "description": "The user this agent acts for. When set, the agent's name becomes\n\"\u003cowner name\u003e's AI agent\" and its sessions, reviews and audit entries\nare recorded against the owner's email address.",
+            "example": "BF997324-5A27-4778-806A-41EE83598494",
+            "format": "uuid",
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ],
         "type": "object"
       },
       "openapi.AIAgentCreateResponse": {
@@ -170,6 +173,24 @@
           },
           "org_id": {
             "description": "Organization ID",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "owner_email": {
+            "description": "Email of the owner. This is the address recorded on the agent's\nsessions, reviews and audit entries.",
+            "example": "abc@example.com",
+            "readOnly": true,
+            "type": "string"
+          },
+          "owner_name": {
+            "description": "Display name of the owner",
+            "example": "ABC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "owner_user_id": {
+            "description": "The user this agent acts for, if any",
             "format": "uuid",
             "readOnly": true,
             "type": "string"
@@ -243,6 +264,24 @@
             "readOnly": true,
             "type": "string"
           },
+          "owner_email": {
+            "description": "Email of the owner. This is the address recorded on the agent's\nsessions, reviews and audit entries.",
+            "example": "abc@example.com",
+            "readOnly": true,
+            "type": "string"
+          },
+          "owner_name": {
+            "description": "Display name of the owner",
+            "example": "ABC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "owner_user_id": {
+            "description": "The user this agent acts for, if any",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
           "status": {
             "allOf": [
               {
@@ -283,8 +322,14 @@
             "type": "array"
           },
           "name": {
-            "description": "Updated display name",
+            "description": "Updated display name. Ignored while the agent has an owner.",
             "example": "claude-prod",
+            "type": "string"
+          },
+          "owner_user_id": {
+            "description": "The user this agent acts for. Omit to leave the owner unchanged; send an\nempty string to detach it, which returns the agent to its literal name\nand stops recording the owner's email on its actions.",
+            "example": "BF997324-5A27-4778-806A-41EE83598494",
+            "format": "uuid",
             "type": "string"
           }
         },

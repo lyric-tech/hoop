@@ -298,12 +298,12 @@ func TestProtectionProfileManagedRules(t *testing.T) {
 	testutil.DecodeJSON(t, grList, &guardrails)
 	managedGuardrails := 0
 	for _, g := range guardrails {
-		if g["managed_by"] == "lyric-iam" {
+		if g["managed_by"] == "hoop" {
 			managedGuardrails++
 		}
 	}
 	if managedGuardrails == 0 {
-		t.Errorf("guardrails list: expected at least one rule with managed_by=lyric-iam, got none")
+		t.Errorf("guardrails list: expected at least one rule with managed_by=hoop, got none")
 	}
 
 	// Managed masking rule is listed with managed_by set and refuses updates.
@@ -314,13 +314,13 @@ func TestProtectionProfileManagedRules(t *testing.T) {
 	testutil.DecodeJSON(t, dmList, &maskingRules)
 	var managedMasking map[string]any
 	for _, r := range maskingRules {
-		if r["managed_by"] == "lyric-iam" {
+		if r["managed_by"] == "hoop" {
 			managedMasking = r
 			break
 		}
 	}
 	if managedMasking == nil {
-		t.Fatalf("datamasking list: expected a rule with managed_by=lyric-iam, got none")
+		t.Fatalf("datamasking list: expected a rule with managed_by=hoop, got none")
 	}
 	blocked := testServer.Put(t, "/datamasking-rules/"+managedMasking["id"].(string), token, map[string]any{
 		"name":                   managedMasking["name"],
