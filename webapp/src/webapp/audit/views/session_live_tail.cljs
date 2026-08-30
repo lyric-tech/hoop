@@ -18,6 +18,7 @@
    [reagent.core :as r]
    [webapp.audit.views.empty-event-stream :as empty-event-stream]
    [webapp.audit.views.pg-wire :as pg-wire]
+   [webapp.components.xterm-terminal :as xterm-terminal]
    [webapp.utilities :as utilities]))
 
 ;; ─── Helpers ───────────────────────────────────────────────────────────────
@@ -233,11 +234,21 @@
       "Waiting for the next query…"
       "Waiting for events…")]])
 
+;; xterm crashes under advanced compilation on prod (constructor invoked
+;; without new) — keep it opt-in behind a localStorage flag until fixed:
+;;   localStorage.setItem("lyric-iam:live-tail-xterm", "true")
+(defn- xterm-enabled? []
+  (try (= "true" (.getItem js/localStorage "lyric-iam:live-tail-xterm"))
+       (catch :default _ false)))
+
 (defn- terminal-output [text]
-  [:section {:class (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
-                         "whitespace-pre text-gray-200 text-sm")}
-   [:> AnsiHtml {:text text
-                 :className "font-mono whitespace-pre text-sm"}]])
+  (if (xterm-enabled?)
+    [:section {:class "bg-[#111827]"}
+     [xterm-terminal/main {:text text}]]
+    [:section {:class (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
+                           "whitespace-pre text-gray-200 text-sm")}
+     [:> AnsiHtml {:text text
+                   :className "font-mono whitespace-pre text-sm"}]]))
 
 (defn- jump-to-latest-button [on-click]
   [:> Box {:class "absolute bottom-3 right-3"}
