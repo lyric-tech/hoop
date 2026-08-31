@@ -1,5 +1,5 @@
 (ns webapp.resources.main
-  (:require ["lucide-react" :refer [EllipsisVertical Tag Shapes Search]]
+  (:require ["lucide-react" :refer [EllipsisVertical Tag Shapes Search Server]]
             ["@radix-ui/themes" :refer [IconButton Box Button DropdownMenu
                                         Flex Text Popover TextField Link Tabs Heading Select]]
             [clojure.string :as cs]
@@ -92,6 +92,39 @@
      (for [{:keys [id value label]} resource-types]
        ^{:key id}
        [:> Select.Item {:value value} label]))]])
+
+(defn cluster-filter-component
+  "Cluster filter: pick the cluster, then the roles list shows only its
+  resources. Options come from the agents list rather than the loaded rows, so
+  a cluster is offered even when none of its roles are on the current page, and
+  the filter is applied server-side by agent.
+
+  ponytail: one agent per cluster is assumed, which is the naming convention.
+  Two agents deriving the same label would each get their own entry."
+  [agents selected-agent-id on-change]
+  (let [options (->> agents
+                     (map (fn [{:keys [id name]}]
+                            {:id id :label (formatters/cluster-from-agent-name name)}))
+                     (sort-by :label))
+        selected-label (some (fn [{:keys [id label]}]
+                               (when (= id selected-agent-id) label))
+                             options)]
+    [:> Select.Root {:value (or selected-agent-id "all")
+                     :onValueChange #(on-change (when-not (= % "all") %))}
+     [:> Select.Trigger {:size "2"
+                         :variant (if selected-agent-id "soft" "surface")
+                         :color "gray"
+                         :class "text-gray-11 [&_.rt-SelectIcon]:hidden"
+                         :aria-label "Filter by cluster"}
+      [:> Flex {:gap "2" :align "center"}
+       [:> Server {:size 16 :aria-hidden "true" :class "text-gray-11"}]
+       (or selected-label "Cluster")]]
+     [:> Select.Content {:position "popper"}
+      [:> Select.Item {:value "all"} "All clusters"]
+      (doall
+       (for [{:keys [id label]} options]
+         ^{:key id}
+         [:> Select.Item {:value id} label]))]]))
 
 ;; Custom Tab Header Component
 (defn custom-tab-header []
@@ -262,8 +295,10 @@
         tags-popover-open? (r/atom false)
         selected-resource (r/atom nil)
         selected-attribute (r/atom nil)
+        selected-cluster-agent (r/atom nil)
         search-debounce-timer (r/atom nil)
         connections-metadata (rf/subscribe [:connections->metadata])
+        agents (rf/subscribe [:agents])
         gateway-info (rf/subscribe [:gateway->info])]
 
     ;; Initial load
@@ -271,6 +306,7 @@
     (rf/dispatch [:connections/get-connections-paginated {:force-refresh? true}])
     (rf/dispatch [:connections->get-connection-tags])
     (rf/dispatch [:guardrails->get-all])
+    (rf/dispatch [:agents->get-agents])
 
     (when (nil? @connections-metadata)
       (rf/dispatch [:connections->load-metadata]))
@@ -289,11 +325,20 @@
             connections-loading? (= :loading (:loading connections-state))
             ;; Conditional logic based on active tab
             current-loading? (if (= @active-tab "resources") resources-loading? connections-loading?)
-            has-filters? (or (seq @selected-tags) @selected-resource @selected-attribute)
+            has-filters? (or (seq @selected-tags) @selected-resource @selected-attribute
+                             @selected-cluster-agent)
             current-count (if (= @active-tab "resources")
                             (count resources-data)
                             (count connections-data))
 
+            ;; Every filter control rebuilds the whole map from the atoms, so
+            ;; a new filter is added here once rather than at each call site.
+            current-filters (fn []
+                              (cond-> {}
+                                (not-empty @selected-tags)
+                                (assoc :tag_selector (tag-selector/tags-to-query-string @selected-tags))
+                                @selected-resource (assoc :subtype @selected-resource)
+                                @selected-cluster-agent (assoc :agent_id @selected-cluster-agent)))
             apply-filter (fn [filter-update]
                            (when @search-debounce-timer
                              (js/clearTimeout @search-debounce-timer))
@@ -354,6 +399,7 @@
                                        (reset! selected-tags {})
                                        (reset! selected-resource nil)
                                        (reset! selected-attribute nil)
+                                       (reset! selected-cluster-agent nil)
                                        (reset! search-name "")
                                        (when @search-debounce-timer
                                          (js/clearTimeout @search-debounce-timer))
@@ -395,11 +441,7 @@
                                                               (rf/dispatch [:connections/get-connections-paginated
                                                                             {:page 1 :force-refresh? true
                                                                              :search trimmed
-                                                                             :filters (cond-> {}
-                                                                                        (not-empty @selected-tags)
-                                                                                        (assoc :tag_selector (tag-selector/tags-to-query-string @selected-tags))
-                                                                                        @selected-resource
-                                                                                        (assoc :subtype @selected-resource))
+                                                                             :filters (current-filters)
                                                                              :attribute @selected-attribute}])))
                                                           500)))))}
               [:> TextField.Slot [:> Search {:size 16}]]]
@@ -433,36 +475,33 @@
                  [tag-selector/tag-selector @selected-tags
                   (fn [new-selected]
                     (reset! selected-tags new-selected)
-                    (apply-filter (cond-> {}
-                                    (not-empty new-selected) (assoc :tag_selector (tag-selector/tags-to-query-string new-selected))
-                                    @selected-resource (assoc :subtype @selected-resource))))]]])
+                    (apply-filter (current-filters)))]]])
 
              (when (= @active-tab "roles")
                [attribute-filter/main {:selected @selected-attribute
                                        :on-select (fn [attribute-name]
                                                     (reset! selected-attribute attribute-name)
-                                                    (apply-filter (cond-> {}
-                                                                    (not-empty @selected-tags)
-                                                                    (assoc :tag_selector (tag-selector/tags-to-query-string @selected-tags))
-                                                                    @selected-resource
-                                                                    (assoc :subtype @selected-resource))))
+                                                    (apply-filter (current-filters)))
                                        :on-clear (fn []
                                                    (reset! selected-attribute nil)
-                                                   (apply-filter (cond-> {}
-                                                                   (not-empty @selected-tags)
-                                                                   (assoc :tag_selector (tag-selector/tags-to-query-string @selected-tags))
-                                                                   @selected-resource
-                                                                   (assoc :subtype @selected-resource))))
+                                                   (apply-filter (current-filters)))
                                        :label "Attribute"
                                        :placeholder "Search attributes"}])
+
+             ;; Cluster (only for roles): pick the cluster, then the resource
+             (when (= @active-tab "roles")
+               [cluster-filter-component
+                (:data @agents)
+                @selected-cluster-agent
+                (fn [agent-id]
+                  (reset! selected-cluster-agent agent-id)
+                  (apply-filter (current-filters)))])
 
              ;; Resource Type
              [resource-type-component @selected-resource
               (fn [resource]
                 (reset! selected-resource resource)
-                (apply-filter (cond-> {}
-                                (not-empty @selected-tags) (assoc :tag_selector (tag-selector/tags-to-query-string @selected-tags))
-                                resource (assoc :subtype resource))))]]
+                (apply-filter (current-filters)))]]
 
             [:div {:role "status"
                    :aria-live "polite"

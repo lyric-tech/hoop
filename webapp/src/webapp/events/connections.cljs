@@ -140,7 +140,11 @@
                         attribute (assoc :attribute attribute)
                         (:tag_selector filters) (assoc :tag_selector (:tag_selector filters))
                         (:type filters) (assoc :type (:type filters))
-                        (:subtype filters) (assoc :subtype (:subtype filters)))]
+                        (:subtype filters) (assoc :subtype (:subtype filters))
+                        ;; the cluster filter resolves to the agent serving it,
+                        ;; so it narrows server-side instead of only the pages
+                        ;; already loaded
+                        (:agent_id filters) (assoc :agent_id (:agent_id filters)))]
      {:db (-> db
               (update-in [:connections->pagination] merge
                          {:loading true

@@ -305,3 +305,14 @@
   "Render a connection map from the API as \"<cluster>/<name>\"."
   [connection]
   (qualified-resource-name (:cluster connection) (:name connection)))
+
+(defn cluster-from-agent-name
+  "The cluster label an agent serves: its name less a trailing \"-agent\".
+  Mirrors common/cluster.FromAgentName on the gateway — an agent that does not
+  follow the convention is its own cluster label."
+  [agent-name]
+  (let [n (or agent-name "")
+        trimmed (if (string/ends-with? n "-agent")
+                  (subs n 0 (- (count n) (count "-agent")))
+                  n)]
+    (if (string/blank? trimmed) n trimmed)))
