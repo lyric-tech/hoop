@@ -30,3 +30,24 @@
   (testing "surrounding whitespace in the filter is trimmed"
     (is (= "db.getSiblingDB(\"lyric\").getCollection(\"users\").find({a: 1}).limit(5).toArray()"
            (bar/build-script "lyric" "users" "  {a: 1}  " 5)))))
+
+(deftest filter-validity
+  (testing "blank finds everything"
+    (is (bar/valid-filter? ""))
+    (is (bar/valid-filter? "   "))
+    (is (bar/valid-filter? nil)))
+
+  (testing "one object document, shell syntax included"
+    (is (bar/valid-filter? "{}"))
+    (is (bar/valid-filter? "{ createdBy: 'a@b' }"))
+    (is (bar/valid-filter? "{ _id: ObjectId('68f1a2b3c4d5e6f708192a3b') }"))
+    (is (bar/valid-filter? "{ age: { $gt: 21 }, active: true }")))
+
+  (testing "an unfinished or broken document disables Find"
+    (is (not (bar/valid-filter? "{ createdBy: ")))
+    (is (not (bar/valid-filter? "{ a: 1")))
+    (is (not (bar/valid-filter? "createdBy"))))
+
+  (testing "not a lone object: would silently become find(filter, projection)"
+    (is (not (bar/valid-filter? "{ a: 1 }, { b: 1 }")))
+    (is (not (bar/valid-filter? "1")))))

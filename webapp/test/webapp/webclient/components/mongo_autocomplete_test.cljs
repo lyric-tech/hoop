@@ -1,127 +1,170 @@
 (ns webapp.webclient.components.mongo-autocomplete-test
-  "Suggestions for the MongoDB editor. Two things are worth pinning: the
-  field-name lookup, which reads a cache shape owned by another namespace, and
-  the branch order in the completion source -- an operator, a BSON constructor
-  and a field name are all matched by the same token regex, so the order
-  decides what the user is offered."
+  "Suggestions for the MongoDB editor, tested against a REAL EditorState and
+  CompletionContext: the completion source reads the Lezer syntax tree to
+  decide what the cursor position means, so a stub that only fakes
+  matchBefore would test nothing.
+
+  Docs use | for the cursor; the helper strips it."
   (:require
+   ["@codemirror/autocomplete" :refer [CompletionContext]]
+   ["@codemirror/state" :refer [EditorState]]
    [cljs.test :refer-macros [deftest testing is]]
+   [clojure.string :as cs]
    [webapp.webclient.components.mongo-autocomplete :as ac]))
 
-;; The shape :database-schema->columns-loaded writes: cache key is
-;; "<schema>.<table>", and for MongoDB the gateway reports schema_name as the
-;; database name. Values are {field {type {"nullable" bool}}}.
-(def ^:private schema-state
-  {:current-connection "mongo-prod"
-   :data {"mongo-prod"
-          {:current-database "lyric"
-           :columns-cache
-           {"lyric.users" {"_id" {"objectId" {"nullable" false}}
-                           "createdBy" {"string" {"nullable" false}}
-                           "profile.city" {"string" {"nullable" true}}}
-            "lyric.orders" {"_id" {"objectId" {"nullable" false}}
-                            "total" {"decimal" {"nullable" false}}}
-            ;; a different database must not leak in
-            "other.secrets" {"apiKey" {"string" {"nullable" false}}}}}}})
+(def ^:private fields
+  [["_id" "objectId"] ["createdBy" "string"] ["profile.city" "string"] ["total" "decimal"]])
 
-(deftest field-names-come-from-the-schema-cache
-  (testing "unioned across the collections the user expanded, sorted, deduped"
-    (is (= ["_id" "createdBy" "profile.city" "total"]
-           (ac/field-names schema-state "mongo-prod" "lyric"))))
+(def ^:private opts
+  {:fields-fn (fn [collection]
+                ;; scoped when the enclosing chain names a known collection,
+                ;; union otherwise -- mirrors editor-fields' contract
+                (if (= collection "orders") [["total" "decimal"]] fields))
+   :collections-fn (constantly ["orders" "users"])})
 
-  (testing "_id appears once even though both collections have it"
-    (is (= 1 (count (filter #{"_id"} (ac/field-names schema-state "mongo-prod" "lyric"))))))
-
-  (testing "dotted paths for nested fields need no extra work"
-    ;; The columns endpoint already flattens nested documents, so
-    ;; profile.city arrives ready to suggest.
-    (is (some #{"profile.city"} (ac/field-names schema-state "mongo-prod" "lyric"))))
-
-  (testing "another database's fields never leak in"
-    (is (not (some #{"apiKey"} (ac/field-names schema-state "mongo-prod" "lyric")))))
-
-  (testing "nothing expanded yet is an empty list, not a guess"
-    (is (= [] (ac/field-names schema-state "mongo-prod" "unopened")))
-    (is (= [] (ac/field-names schema-state "mongo-prod" nil)))
-    (is (= [] (ac/field-names schema-state nil "lyric")))
-    (is (= [] (ac/field-names {} "mongo-prod" "lyric")))))
-
-;; ── Completion source ─────────────────────────────────────────────────────
-
-(defn- ctx
-  "A stand-in for CodeMirror's CompletionContext: only matchBefore is used."
-  [typed]
-  (clj->js {:matchBefore (fn [_re]
-                           (when (seq typed)
-                             #js {:text typed :from 0}))}))
-
-(defn- complete [dialect typed]
-  (let [fields (ac/field-names schema-state "mongo-prod" "lyric")
-        src (ac/completion-source dialect (constantly fields))]
-    (src (ctx typed))))
+(defn- complete
+  ([doc] (complete doc false))
+  ([doc explicit?]
+   (let [pos (cs/index-of doc "|")
+         text (str (subs doc 0 pos) (subs doc (inc pos)))
+         state (.create EditorState
+                        #js {:doc text
+                             :extensions (clj->js (ac/language-extensions opts))})
+         src (ac/completion-source opts)]
+     (src (CompletionContext. state pos explicit?)))))
 
 (defn- labels [result]
   (when result
     (vec (map #(.-label %) (array-seq (.-options result))))))
 
-(deftest a-dollar-offers-operators
-  (testing "query dialect offers query operators"
-    (let [ls (labels (complete :query "$g"))]
-      (is (some #{"$gte"} ls))
-      (is (some #{"$in"} ls))))
+(defn- option [result label]
+  (when result
+    (first (filter #(= label (.-label %)) (array-seq (.-options result))))))
 
-  (testing "a filter is not offered aggregation stages, which are invalid there"
-    (is (not (some #{"$group"} (labels (complete :query "$g"))))))
+;; ── Key position ────────────────────────────────────────────────────────────
 
-  (testing "aggregation dialect offers stages and accumulators"
-    (let [ls (labels (complete :aggregation "$"))]
-      (is (some #{"$match"} ls))
-      (is (some #{"$group"} ls))
-      (is (some #{"$sum"} ls))))
+(deftest a-key-slot-offers-fields-and-query-operators
+  (let [ls (labels (complete "db.users.find({ crea| })"))]
+    (testing "fields from the schema"
+      (is (some #{"createdBy"} ls))
+      (is (some #{"profile.city"} ls)))
+    (testing "query operators share the list; the typed prefix separates them"
+      (is (some #{"$gt"} ls))
+      (is (not (some #{"$group"} ls))))
+    (testing "BSON constructors are value-side, not key-side"
+      (is (not (some #{"ObjectId"} ls))))))
 
-  (testing "the dialect is passed in, never inferred from the text"
-    ;; The surface knows which editor the user is in. Inferring it would be
-    ;; harder and sometimes wrong -- $limit is legal in both.
-    (is (not= (labels (complete :query "$")) (labels (complete :aggregation "$"))))))
+(deftest a-field-completion-is-a-key-value-pair
+  (testing "accepting a field inserts `name: ` (a snippet, applied as a fn)"
+    (is (fn? (.-apply (option (complete "db.users.find({ crea| })") "createdBy")))))
 
-(deftest a-capital-letter-offers-bson-constructors
-  (testing "typing Obj offers ObjectId and ISODate"
-    (let [ls (labels (complete :query "Obj"))]
-      (is (some #{"ObjectId"} ls))
-      (is (some #{"ISODate"} ls))))
+  (testing "unless a colon already follows -- editing an existing key"
+    (is (= "createdBy"
+           (.-apply (option (complete "db.users.find({ crea|: 1 })") "createdBy")))))
 
-  (testing "constructors win over field names for a capitalised token"
-    ;; A field starting with a capital is possible but rare; a user typing one
-    ;; in a filter is almost always reaching for a constructor.
-    (is (not (some #{"createdBy"} (labels (complete :query "Obj")))))))
+  (testing "a field that is not a legal identifier gets quotes"
+    (is (= "'profile.city'"
+           (.-apply (option (complete "db.users.find({ profile|: 1 })") "profile.city"))))))
 
-(deftest a-bare-word-offers-field-names
-  (testing "typing crea offers the field from the schema cache"
-    (is (some #{"createdBy"} (labels (complete :query "crea")))))
+(deftest a-quoted-key-completes-the-name-inside-the-quotes
+  (let [ls (labels (complete "db.users.find({ \"cre|\" })"))]
+    (is (some #{"createdBy"} ls))
+    (testing "as the bare name -- the quotes are already there"
+      (is (nil? (.-apply (option (complete "db.users.find({ \"cre|\" })") "createdBy")))))))
 
-  (testing "no suggestions at all when no collection has been expanded"
-    ;; nil rather than an empty option list, so CodeMirror leaves the existing
-    ;; completions alone instead of showing an empty popup.
-    (let [src (ac/completion-source :query (constantly []))]
-      (is (nil? (src (ctx "crea")))))))
+(deftest the-find-bar-bare-document-is-a-document-not-a-code-block
+  ;; At statement position { a: 1 } parses as Block > LabeledStatement, not
+  ;; ObjectExpression > Property. Both shapes must complete.
+  (testing "key slot"
+    (is (some #{"createdBy"} (labels (complete "{ crea| }")))))
+  (testing "value slot"
+    (is (some #{"ISODate"} (labels (complete "{ createdAt: | }" true))))))
 
-(deftest no-token-means-no-suggestions
-  (testing "an empty position offers nothing rather than the whole catalog"
-    (is (nil? (complete :query "")))))
+(deftest explicit-invoke-works-on-an-empty-slot
+  (testing "Ctrl-Space right after { offers the key catalog"
+    (let [ls (labels (complete "db.users.find({ | })" true))]
+      (is (some #{"createdBy"} ls))
+      (is (some #{"$exists"} ls))))
+  (testing "but nothing pops uninvited with no token"
+    (is (nil? (complete "db.users.find({ | })")))))
 
-(deftest a-failed-columns-load-never-breaks-field-names
+(deftest fields-scope-to-the-collection-the-chain-names
+  (let [ls (labels (complete "db.orders.find({ | })" true))]
+    (is (some #{"total"} ls))
+    (is (not (some #{"createdBy"} ls)))))
+
+;; ── Aggregation context ─────────────────────────────────────────────────────
+
+(deftest a-stage-slot-offers-stages-only
+  (let [ls (labels (complete "db.users.aggregate([{ $| }])"))]
+    (is (some #{"$match"} ls))
+    (is (some #{"$group"} ls))
+    (testing "no query operators, no fields at the stage level"
+      (is (not (some #{"$eq"} ls)))
+      (is (not (some #{"createdBy"} ls))))))
+
+(deftest inside-group-offers-accumulators
+  (let [ls (labels (complete "db.users.aggregate([{ $group: { _id: 1, t: { $s| } } }])"))]
+    (is (some #{"$sum"} ls))
+    (is (not (some #{"$match"} ls)))))
+
+(deftest inside-match-offers-query-operators-and-fields
+  (let [ls (labels (complete "db.users.aggregate([{ $match: { crea| } }])"))]
+    (is (some #{"createdBy"} ls))
+    (is (some #{"$gt"} ls))
+    (is (not (some #{"$match"} ls)))))
+
+;; ── Value position ──────────────────────────────────────────────────────────
+
+(deftest a-value-slot-offers-constructors-and-literals
+  (let [ls (labels (complete "db.users.find({ createdAt: I| })"))]
+    (is (some #{"ISODate"} ls))
+    (is (some #{"true"} ls))
+    (is (some #{"null"} ls))
+    (is (not (some #{"createdBy"} ls)))))
+
+;; ── Member position ─────────────────────────────────────────────────────────
+
+(deftest after-db-dot-offers-collections
+  (let [ls (labels (complete "db.us|"))]
+    (is (some #{"users"} ls))
+    (is (some #{"orders"} ls))
+    (is (some #{"getCollection"} ls))))
+
+(deftest after-a-collection-offers-methods
+  (let [ls (labels (complete "db.users.fi|"))]
+    (is (some #{"find"} ls))
+    (is (some #{"aggregate"} ls))
+    (is (not (some #{"users"} ls)))))
+
+;; ── Suppression ─────────────────────────────────────────────────────────────
+
+(deftest nothing-completes-where-nothing-belongs
+  (testing "inside a value string"
+    (is (nil? (complete "db.users.find({ a: \"te|xt\" })"))))
+  (testing "inside a comment"
+    (is (nil? (complete "// crea|"))))
+  (testing "empty doc, not explicit"
+    (is (nil? (complete "|")))))
+
+;; ── Field data (pure) ───────────────────────────────────────────────────────
+
+(deftest a-failed-columns-load-never-breaks-field-suggestions
   ;; :database-schema->columns-failure caches {:error "..."} under the same
-  ;; "<db>.<coll>" key a success uses. Only string keys are field names: the
-  ;; keyword :error reaching `sort` threw on keyword-vs-string comparison and
-  ;; killed completion for the whole database on every keystroke.
-  (testing "one broken collection does not poison the others"
-    (let [state (assoc-in schema-state
-                          [:data "mongo-prod" :columns-cache "lyric.broken"]
-                          {:error "columns load failed"})]
-      (is (= ["_id" "createdBy" "profile.city" "total"]
-             (ac/field-names state "mongo-prod" "lyric")))))
-
-  (testing "a database where every load failed suggests nothing, not :error"
-    (let [state (assoc-in {} [:data "mongo-prod" :columns-cache]
-                          {"lyric.broken" {:error "boom"}})]
-      (is (= [] (ac/field-names state "mongo-prod" "lyric"))))))
+  ;; "<db>.<coll>" key a success uses. The keyword once reached `sort` and
+  ;; threw on every keystroke, killing completion for the whole database.
+  (let [state {:data {"mongo-prod"
+                      {:columns-cache
+                       {"lyric.users" {"createdBy" {"string" {"nullable" false}}}
+                        "lyric.broken" {:error "columns load failed"}
+                        "other.secrets" {"apiKey" {"string" {"nullable" false}}}}}}}]
+    (testing "one broken collection does not poison the others"
+      (is (= [["createdBy" "string"]]
+             (ac/database-fields state "mongo-prod" "lyric"))))
+    (testing "an error entry yields no fields, not a keyword"
+      (is (= [] (ac/collection-fields {:error "boom"}))))
+    (testing "another database's fields never leak in"
+      (is (not (some #{"apiKey"} (map first (ac/database-fields state "mongo-prod" "lyric"))))))
+    (testing "blank coordinates are an empty list"
+      (is (= [] (ac/database-fields state nil "lyric")))
+      (is (= [] (ac/database-fields state "mongo-prod" nil))))))

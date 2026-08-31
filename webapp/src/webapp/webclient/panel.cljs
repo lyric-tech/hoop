@@ -150,8 +150,7 @@
                            ;; Compass-style suggestions. The suggestions attach
                            ;; through this language's own languageData, so no
                            ;; other dialect is affected.
-                           "mongodb" (mongo-autocomplete/language-extensions
-                                      :query mongo-autocomplete/editor-fields)
+                           "mongodb" (mongo-autocomplete/language-extensions)
                            "ruby-on-rails" [(.define cm-language/StreamLanguage cm-ruby/ruby)]
                            "python" [(.define cm-language/StreamLanguage cm-python/python)]
                            "clojure" [(.define cm-language/StreamLanguage cm-clojure/clojure)]
@@ -488,7 +487,7 @@
                     ;; keyed by connection so the bar's local state (filter,
                     ;; collection, limit) resets when the connection changes
                     ^{:key (:name current-connection)}
-                    [mongo-query-bar/main (:name current-connection)])
+                    [mongo-query-bar/main (:name current-connection) @dark-mode?])
                   [log-area/main
                    connection-type
                    @parallel-mode-active?
