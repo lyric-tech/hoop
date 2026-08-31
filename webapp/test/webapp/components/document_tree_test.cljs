@@ -36,6 +36,26 @@
                    "{ _id: ObjectId('64f1a2b3c4d5e6f7a8b9c0d2'), name: 'bob' }\n"))]
     (is (= 2 (count docs)))))
 
+(deftest a-toarray-run-unwraps-into-document-cards
+  ;; The find bar appends .toArray(), which prints ONE array holding every
+  ;; document (a bare cursor stops at DBQuery.shellBatchSize = 20 and prints
+  ;; 'Type "it" for more', which parsed as four junk documents).
+  (testing "one top-level array becomes N documents, not one [N elements] node"
+    (let [docs (doc-tree/parse-documents
+                "mongodb"
+                (str preamble "[ { \"n\" : 1 }, { \"n\" : 2 }, { \"n\" : 3 } ]"))]
+      (is (= 3 (count docs)))
+      (is (= 1 (gobj/get (first docs) "n")))))
+
+  (testing "an empty array is a real empty result -> \"No results found\""
+    (is (= [] (doc-tree/parse-documents "mongodb" (str preamble "[ ]"))))
+    (is (= [] (doc-tree/parse-documents "mongodb" "[]"))))
+
+  (testing "several top-level values stay separate documents"
+    (is (= 2 (count (doc-tree/parse-documents
+                     "mongodb"
+                     (str preamble "{ \"a\" : 1 }\n{ \"a\" : 2 }")))))))
+
 (deftest other_connection_types_are_untouched
   (testing "an empty postgres response is not a mongo empty result"
     (is (nil? (doc-tree/parse-documents "postgres" preamble)))

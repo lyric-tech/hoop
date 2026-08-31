@@ -54,6 +54,13 @@
   [v]
   (cond
     (legacy-node? v) (get legacy->kind (gobj/get v mongo/MONGO_TYPE) :raw)
+    ;; A tagged leaf's kind comes from the EXTRACTION, not the tag: a payload
+    ;; that does not match the shape its tag promises is :raw here, which is
+    ;; what routes it to the warning marker (and the amber colour, and the
+    ;; "Unknown" type label) instead of rendering a plausible wrong value in
+    ;; the promised type's colour. Dispatching on the tag alone made that
+    ;; degradation path unreachable.
+    (mt/tagged? v) (:kind (mt/value v))
     :else (mt/classify v)))
 
 (defn branch?
@@ -73,15 +80,17 @@
     (str (gobj/get node "value"))))
 
 (defn- tagged-text [v k]
-  (let [{:keys [kind text subtype]} (mt/value v)]
+  (let [{:keys [kind text subtype base64]} (mt/value v)]
     (case kind
       :objectId (str "ObjectId('" text "')")
       :date (if-let [ms (mt/date-millis v)]
               (.toISOString (js/Date. ms))
               text)
+      ;; base64, not text: for an extracted binary, text is the full raw
+      ;; BinData(0, "...") wrapper, which would print double-wrapped.
       :binary (if-let [uuid (mt/uuid-from-binary v)]
                 (str "UUID('" uuid "')")
-                (str "Binary(" (or subtype 0) ", '" text "')"))
+                (str "Binary(" (or subtype 0) ", '" (or base64 text) "')"))
       :minKey "MinKey()"
       :maxKey "MaxKey()"
       :undefined "undefined"

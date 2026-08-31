@@ -7,11 +7,18 @@
 set -uo pipefail
 cd "$(dirname "$0")/../.." || exit 1
 
-: "${JAVA_HOME:=/opt/homebrew/opt/openjdk@21}"
-export JAVA_HOME
-export PATH="$JAVA_HOME/bin:$PATH"
-: "${CHROME_BIN:=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
-export CHROME_BIN
+# macOS dev conveniences only: applied when the variable is unset AND the
+# local path exists. In CI (linux) java is on PATH and karma-chrome-launcher
+# autodetects Chrome, so both fall through untouched.
+if [ -z "${JAVA_HOME:-}" ] && [ -d /opt/homebrew/opt/openjdk@21 ]; then
+  export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+fi
+if [ -n "${JAVA_HOME:-}" ]; then
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
+if [ -z "${CHROME_BIN:-}" ] && [ -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+  export CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+fi
 
 fail() { echo "FAIL: $1" >&2; exit 1; }
 

@@ -39,6 +39,31 @@ jobs:
       - name: Test
         run: make test-oss
 
+  webapp-test:
+    name: Webapp Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: "zulu"
+          java-version: "21"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: webapp/package-lock.json
+      - name: Install
+        run: cd webapp && npm ci && npm run genversion
+      # Karma suite + tagger round-trip + the release-guard build, which is
+      # the only thing that catches Closure :advanced property renaming on
+      # the JS <-> ClojureScript boundary (dev-mode tests cannot).
+      - name: Test
+        run: cd webapp && npm test
+
   resolve-libhoop:
     name: Resolve libhoop Revision
     runs-on: ubuntu-latest

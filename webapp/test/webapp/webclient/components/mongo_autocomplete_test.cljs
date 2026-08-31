@@ -108,3 +108,20 @@
 (deftest no-token-means-no-suggestions
   (testing "an empty position offers nothing rather than the whole catalog"
     (is (nil? (complete :query "")))))
+
+(deftest a-failed-columns-load-never-breaks-field-names
+  ;; :database-schema->columns-failure caches {:error "..."} under the same
+  ;; "<db>.<coll>" key a success uses. Only string keys are field names: the
+  ;; keyword :error reaching `sort` threw on keyword-vs-string comparison and
+  ;; killed completion for the whole database on every keystroke.
+  (testing "one broken collection does not poison the others"
+    (let [state (assoc-in schema-state
+                          [:data "mongo-prod" :columns-cache "lyric.broken"]
+                          {:error "columns load failed"})]
+      (is (= ["_id" "createdBy" "profile.city" "total"]
+             (ac/field-names state "mongo-prod" "lyric")))))
+
+  (testing "a database where every load failed suggests nothing, not :error"
+    (let [state (assoc-in {} [:data "mongo-prod" :columns-cache]
+                          {"lyric.broken" {:error "boom"}})]
+      (is (= [] (ac/field-names state "mongo-prod" "lyric"))))))

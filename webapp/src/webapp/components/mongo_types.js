@@ -358,7 +358,9 @@ export function fieldPaths(docs, { maxDepth = 6 } = {}) {
   const walk = (node, prefix, depth) => {
     if (depth > maxDepth || node === null || typeof node !== 'object') return
     if (Array.isArray(node)) {
-      for (const item of node) walk(item, prefix, depth)
+      // depth + 1, same as an object hop: recursing at the SAME depth let a
+      // deeply nested array chain blow past maxDepth (and the stack).
+      for (const item of node) walk(item, prefix, depth + 1)
       return
     }
     if (isTagged(node)) return
