@@ -427,7 +427,8 @@ func (a *Agent) processSessionOpen(pkt *pb.Packet) {
 		if a.config.AgentMode == pb.AgentModeEmbeddedType {
 			for _, envKeyVal := range os.Environ() {
 				envKey, envVal, found := strings.Cut(envKeyVal, "=")
-				if !found || envKey == "LYRIC_IAM_DSN" || envKey == "LYRIC_IAM_KEY" {
+				// The agent's own DSN must never reach a connection's env.
+				if !found || config.IsCredentialEnvName(envKey) {
 					continue
 				}
 				key := fmt.Sprintf("envvar:%s", envKey)

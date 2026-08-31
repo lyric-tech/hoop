@@ -48,7 +48,7 @@ func Load() (*Config, error) {
 		if isLegacy {
 			return nil, fmt.Errorf("LYRIC_IAM_DSN (deprecated) is in wrong format, reason=%v", err)
 		}
-		return nil, fmt.Errorf("LYRIC_IAM_KEY is in wrong format, reason=%v", err)
+		return nil, fmt.Errorf("agent key is in wrong format, reason=%v", err)
 	}
 	if dsn != nil {
 		if isLegacy {
@@ -91,7 +91,7 @@ func Load() (*Config, error) {
 			URL:       grpcURL,
 			insecure:  grpcURL == grpc.LocalhostAddr}, nil
 	}
-	return nil, fmt.Errorf("missing LYRIC_IAM_KEY environment variable")
+	return nil, fmt.Errorf("missing LYRIC_IAM_KEY (or HOOP_KEY) environment variable")
 }
 
 // loadFromSVIDFile builds a Config backed by a JWT-SVID file. The file must
@@ -179,13 +179,43 @@ func (c *Config) HasTlsCA() bool   { return c.tlsCA != "" }
 func (c *Config) IsInsecure() bool { return c.insecure }
 func (c *Config) IsValid() bool    { return c.Token != "" && c.URL != "" }
 
-// getEnvToken backwards compatible with LYRIC_IAM_DSN env
+// credentialEnvNames lists the env vars holding the agent DSN, in precedence
+// order. HOOP_KEY/HOOP_DSN are still read because the published agent chart
+// sets those names: a fork-built agent is deployed by that same chart, so
+// dropping them would make the image undeployable without hand-editing every
+// release. Keep this list and the embedded-mode filter in
+// agent/controller/agent.go in step — anything readable here must not be
+// forwarded into a connection's environment.
+var (
+	credentialEnvNames       = []string{"LYRIC_IAM_KEY", "HOOP_KEY"}
+	legacyCredentialEnvNames = []string{"LYRIC_IAM_DSN", "HOOP_DSN"}
+)
+
+// getEnvCredentials resolves the agent DSN, falling back to the deprecated
+// *_DSN names (reported as legacy so the caller can warn).
 func getEnvCredentials() (legacy bool, v string) {
-	v = os.Getenv("LYRIC_IAM_KEY")
-	if v != "" {
-		return
+	for _, name := range credentialEnvNames {
+		if v = os.Getenv(name); v != "" {
+			return false, v
+		}
 	}
-	return true, os.Getenv("LYRIC_IAM_DSN")
+	for _, name := range legacyCredentialEnvNames {
+		if v = os.Getenv(name); v != "" {
+			return true, v
+		}
+	}
+	return true, ""
+}
+
+// IsCredentialEnvName reports whether name holds the agent's own DSN. Used to
+// keep those values out of connection environments.
+func IsCredentialEnvName(name string) bool {
+	for _, n := range append(append([]string{}, credentialEnvNames...), legacyCredentialEnvNames...) {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }
 
 func getLegacyHoopTokenCredentials() string {
