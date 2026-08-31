@@ -6,6 +6,7 @@
    ["./mongo_shell.js" :as mongo]
    ["./dynamo_unwrap.js" :as dynamo]
    ["lucide-react" :refer [ChevronDown ChevronRight]]
+   [clojure.string :as cs]
    [goog.object :as gobj]
    [reagent.core :as r]))
 
@@ -17,10 +18,16 @@
   (let [t (or connection-type "")]
     (cond
       (= t "mongodb")
-      (when (mongo/looksLikeMongo output)
+      (if (mongo/looksLikeMongo output)
         (when-let [res (mongo/parseOutput output)]
           (seq (map (fn [d] (if (.-ok d) (.-value d) (.-raw d)))
-                    (array-seq (.-documents res))))))
+                    (array-seq (.-documents res)))))
+        ;; A find that matched nothing prints only the `use <db>` preamble.
+        ;; That is a real empty result, not unparseable output, so hand back
+        ;; an empty vector: the viewer then says "No results found" instead
+        ;; of dropping the user into a bare "switched to db <name>".
+        (when (cs/blank? (mongo/stripPreamble (or output "")))
+          []))
 
       (or (= t "dynamodb") (= t "cloudwatch"))
       (try

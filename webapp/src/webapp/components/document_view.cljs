@@ -4,9 +4,18 @@
   document-tree."
   (:require
    ["@radix-ui/themes" :refer [DropdownMenu Flex IconButton SegmentedControl Text]]
-   ["lucide-react" :refer [Braces ChevronDown List Table]]
+   ["lucide-react" :refer [Braces ChevronDown List SearchX Table]]
    [reagent.core :as r]
    [webapp.components.document-tree :as doc-tree]))
+
+(defn- empty-state []
+  [:> Flex {:direction "column" :align "center" :justify "center" :gap "1"
+            :class "h-full min-h-[160px] px-4 text-center"}
+   [:> SearchX {:size 28 :class "text-gray-8 mb-1"}]
+   [:> Text {:size "2" :weight "medium" :class "text-gray-12"}
+    "No results found"]
+   [:> Text {:size "1" :class "text-gray-10"}
+    "No documents matched this query. Try adjusting the filter."]])
 
 (defn main [_]
   (let [view-mode (r/atom "List")
@@ -26,7 +35,7 @@
            (let [n (count docs)]
              (str n (if (= n 1) " document" " documents")))]
           [:> Flex {:align "center" :gap "2"}
-           (when-not table?
+           (when (and (not table?) (seq docs))
              [:> DropdownMenu.Root
               [:> DropdownMenu.Trigger
                [:> IconButton {:size "1" :variant "ghost" :color "gray"
@@ -47,7 +56,9 @@
             [:> SegmentedControl.Item {:value "Table" :aria-label "Table view"}
              [:> Table {:size 14}]]]]]
          [:div.flex-1.min-h-0.overflow-auto
-          (case @view-mode
-            "JSON" [doc-tree/json-main docs tree-opts]
-            "Table" [doc-tree/table-main docs]
-            [doc-tree/main docs tree-opts])]]))))
+          (if (empty? docs)
+            [empty-state]
+            (case @view-mode
+              "JSON" [doc-tree/json-main docs tree-opts]
+              "Table" [doc-tree/table-main docs]
+              [doc-tree/main docs tree-opts]))]]))))
