@@ -23,8 +23,14 @@
   [output]
   (if (mongo/looksLikeMongo output)
     (when-let [res (mongo/parseOutput output)]
-      (seq (map (fn [d] (if (.-ok d) (.-value d) (.-raw d)))
-                (array-seq (.-documents res)))))
+      (let [docs (mapv (fn [d] (if (.-ok d) (.-value d) (.-raw d)))
+                       (array-seq (.-documents res)))]
+        ;; A .toArray() run prints ONE array holding every document. Unwrap it
+        ;; so the viewer shows N document cards, not a single [ N elements ]
+        ;; node -- and so an empty [] lands on "No results found".
+        (if (and (= 1 (count docs)) (js/Array.isArray (first docs)))
+          (vec (array-seq (first docs)))
+          (seq docs))))
     ;; A find that matched nothing prints only the `use <db>` preamble.
     ;; That is a real empty result, not unparseable output, so hand back
     ;; an empty vector: the viewer then says "No results found" instead
