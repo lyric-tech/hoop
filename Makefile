@@ -83,7 +83,13 @@ generate-wasm: libhoop-map
 
 test: test-oss test-enterprise
 
-test-oss: libhoop-map generate-wasm test-hoopinspect
+# The libhoop module is not in go.work and its package path is `libhoop`, so
+# `go test github.com/hoophq/hoop/...` never reaches it. Without this target the
+# fork's own proxy implementations would go untested in CI.
+test-libhoop:
+	cd _libhoop && env GOWORK=off CGO_ENABLED=0 go test ./...
+
+test-oss: libhoop-map generate-wasm test-hoopinspect test-libhoop
 	env CGO_ENABLED=0 go test -json -v github.com/hoophq/hoop/...
 
 test-enterprise: libhoop-map generate-wasm
@@ -342,4 +348,4 @@ publish-sentry-sourcemaps:
 	tar -xvf ${DIST_FOLDER}/webapp.tar.gz
 	sentry-cli sourcemaps upload --release=$$(cat ./version.txt) ./public/js/app.js.map --org hoopdev --project webapp
 
-.PHONY: run-dev run-dev-postgres build-dev-webapp test-enterprise test-oss test prepare-mssql-jdbc test-integration test-transport test-gateway test-gateway-pglite test-standalone test-standalone-e2e test-gateway-pglite generate-openapi-docs build-go build-dev-client build-webapp build-helm-chart build-gateway-bundle extract-webapp publish release-s3 release-s3-latest release-s3-cf-templates-latest release-s3-cf-templates-latest swag-fmt build-rust-darwin-all build-rust-linux-all build-rust-single build-empty-folder build-dev-rust install-rust merge-artifacts generate-wasm build-hsh-tunneld build-hsh-tunneld-all build-release-checksums stage-release-scripts
+.PHONY: test-libhoop run-dev run-dev-postgres build-dev-webapp test-enterprise test-oss test prepare-mssql-jdbc test-integration test-transport test-gateway test-gateway-pglite test-standalone test-standalone-e2e test-gateway-pglite generate-openapi-docs build-go build-dev-client build-webapp build-helm-chart build-gateway-bundle extract-webapp publish release-s3 release-s3-latest release-s3-cf-templates-latest release-s3-cf-templates-latest swag-fmt build-rust-darwin-all build-rust-linux-all build-rust-single build-empty-folder build-dev-rust install-rust merge-artifacts generate-wasm build-hsh-tunneld build-hsh-tunneld-all build-release-checksums stage-release-scripts

@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"libhoop/agent/mcpadapter"
-	"libhoop/aianalyzer"
 )
 
 type core struct{}
@@ -52,10 +51,6 @@ func NewConsole(rawEnvVarList map[string]any, args []string, stdout io.WriteClos
 
 func NewSSHProxy(ctx context.Context, clientW io.Writer, opts map[string]string) (Proxy, error) {
 	return &noopProxy{connectionType: "ssh"}, nil
-}
-
-func NewHttpProxy(ctx context.Context, clientW io.Writer, analyzer aianalyzer.Analyzer, opts map[string]string) (Proxy, error) {
-	return &noopProxy{connectionType: "httpproxy"}, nil
 }
 
 // NewMCPProxy is the OSS stub. The returned proxy reports the missing-library
