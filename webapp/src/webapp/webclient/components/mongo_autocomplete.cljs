@@ -126,6 +126,11 @@
       (->> cache
            (filter (fn [[k _]] (cs/starts-with? (str k) prefix)))
            (mapcat (fn [[_ columns]] (keys columns)))
+           ;; A failed load caches {:error "..."} under the same key a success
+           ;; uses (:database-schema->columns-failure). Only string keys are
+           ;; field names; letting :error through made `sort` throw on
+           ;; keyword-vs-string and killed completion for the whole database.
+           (filter string?)
            distinct
            sort
            vec))))

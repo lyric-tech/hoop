@@ -1,7 +1,8 @@
 (ns webapp.webclient.components.mongo-query-bar
   "Compass-style find bar for MongoDB connections: pick a collection, type a
   bare filter object ({createdBy: 'user@lyric.tech'}), hit Find. Builds
-  db.getSiblingDB(<db>).<collection>.find(<filter>).limit(<n>) and dispatches
+  db.getSiblingDB(<db>).getCollection(<coll>).find(<filter>).limit(<n>).toArray()
+  and dispatches
   :editor-plugin/submit-task, so metadata, JIRA-template gates, the review
   flow and the Documents viewer all apply exactly like an editor run.
   Collections come from the Database Schema state — the bar appears once a
@@ -20,10 +21,22 @@
   (let [n (js/parseInt s 10)]
     (when (pos? n) n)))
 
-(defn- build-script [db-name collection filter-text limit]
-  (str "db.getSiblingDB(\"" db-name "\")." collection
+(defn build-script
+  "The find script. Public because its three quirks are pinned by tests:
+
+  * .getCollection(\"..\"), not db.<name>: a collection name is not always a
+    legal property chain (user-events, \"a b\", 2024logs).
+  * .toArray(), not a bare cursor: the REPL prints a cursor 20 documents at a
+    time (DBQuery.shellBatchSize) and then a literal 'Type \"it\" for more'
+    line, so any limit above 20 silently truncated and the trailer parsed as
+    four junk documents. An array prints every document once, on both shells.
+  * db-name needs no escaping (quotes are illegal in MongoDB database names);
+    the collection name gets its quotes escaped."
+  [db-name collection filter-text limit]
+  (str "db.getSiblingDB(\"" db-name "\").getCollection(\""
+       (cs/replace collection "\"" "\\\"") "\")"
        ".find(" (if (cs/blank? filter-text) "{}" (cs/trim filter-text)) ")"
-       ".limit(" limit ")"))
+       ".limit(" limit ").toArray()"))
 
 (defn main [_]
   (let [schema (rf/subscribe [::subs/database-schema])
@@ -39,7 +52,14 @@
       (when-let [{:keys [database collections]}
                  (db-schema/mongo-find-target
                   (get-in @schema [:data connection-name]))]
-        (let [sel (or @collection (first collections))
+        (let [;; The chosen collection is stored WITH its database: the bar is
+              ;; keyed per connection, so switching databases keeps these atoms
+              ;; alive, and a bare name would silently query the old (or a
+              ;; same-named) collection in the new database.
+              sel (let [[db coll] @collection]
+                    (if (and coll (= db database) (some #{coll} collections))
+                      coll
+                      (first collections)))
               find! (fn []
                       (rf/dispatch
                        [:editor-plugin/submit-task
@@ -51,7 +71,7 @@
            [:> Text {:size "1" :class "text-gray-10 whitespace-nowrap"} database]
            [:> Select.Root {:size "1"
                             :value sel
-                            :onValueChange #(reset! collection %)}
+                            :onValueChange #(reset! collection [database %])}
             [:> Select.Trigger {:placeholder "Collection"}]
             [:> Select.Content
              (for [c collections]
