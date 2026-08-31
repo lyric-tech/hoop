@@ -96,7 +96,7 @@
                :gap "1"
                :class "items-end lg:items-start"}
       [:> Box
-       [:b (:connection session)]]
+       [:b (formatters/qualified-resource-name (:cluster session) (:connection session))]]
       [:> Box {:class "text-xxs text-gray-800"}
        [:> Text (:type session)]]]
 

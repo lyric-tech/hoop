@@ -133,7 +133,7 @@ func (s *Server) proccessConnectOKAck(stream *streamclient.ProxyStream) error {
 		return err
 	}
 
-	logAttrs := []any{"connection", pctx.ConnectionName, "sid", pctx.SID,
+	logAttrs := []any{"connection", pctx.QualifiedConnectionName(), "sid", pctx.SID,
 		"mode", pctx.AgentMode, "agent-name", pctx.AgentName, "ua", stream.GetMeta("user-agent")}
 	log.With(logAttrs...).Infof("proxy manager connected: %v", stream)
 	// TODO: add reason to close?

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import PaginatedMultiSelect from '@/components/PaginatedMultiSelect'
+import { qualifyConnection, qualifyName } from '@/utils/cluster'
 import { isEligibleForAccessType } from '../helpers'
 
 /**
@@ -30,15 +31,32 @@ export default function ResourceRolesSelect({
     () =>
       items
         .filter((item) => isEligibleForAccessType(accessType, item))
-        .map((item) => ({ value: item.name, label: item.name })),
+        .map((item) => ({
+          value: item.name,
+          label: qualifyConnection(item),
+          name: item.name,
+          cluster: item.cluster ?? '',
+        })),
     [items, accessType],
   )
 
+  const clusterByName = useMemo(
+    () => new Map(items.map((item) => [item.name, item.cluster ?? ''])),
+    [items],
+  )
+
   // Already-selected roles keep their chip even when the current page or the
-  // eligibility filter excludes them.
+  // eligibility filter excludes them. A role outside the loaded pages has no
+  // known cluster, so its chip falls back to the bare name.
   const selectedOptions = useMemo(
-    () => value.map((name) => ({ value: name, label: name })),
-    [value],
+    () =>
+      value.map((name) => ({
+        value: name,
+        label: qualifyName(clusterByName.get(name), name),
+        name,
+        cluster: clusterByName.get(name) ?? '',
+      })),
+    [value, clusterByName],
   )
 
   return (

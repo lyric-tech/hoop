@@ -3,6 +3,7 @@ import { connectionsService } from '@/services/connections'
 import { isNativeCapableSubtype } from '@/utils/connectionPolicy'
 import { useUserStore } from '@/stores/useUserStore'
 import { buildSearchIndex } from '@/features/NativeConnections/helpers'
+import { qualifyConnection } from '@/utils/cluster'
 
 /**
  * Owns "which roles exist and are natively connectable", plus the drawer's own
@@ -79,12 +80,14 @@ export const useNativeConnectionsStore = create((set, get) => ({
           type: c.type,
           status: c.status,
           resourceName: c.resource_name,
+          cluster: c.cluster ?? '',
+          qualifiedName: qualifyConnection(c),
           accessModeConnect: c.access_mode_connect,
           reviewers: c.reviewers ?? [],
           // Precomputed once so filtering is a single String.includes per row.
           searchIndex: buildSearchIndex(c),
         }))
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => a.qualifiedName.localeCompare(b.qualifiedName))
       set({ roles })
     } catch (error) {
       set({ error: error?.message || 'Failed to load resource roles' })

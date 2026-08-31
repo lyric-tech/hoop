@@ -8,6 +8,7 @@
    [webapp.components.keyboard-shortcuts :refer [detect-os]]
    [webapp.components.skip-link :as skip-link]
    [webapp.parallel-mode.components.header-button :as parallel-mode-button]
+   [webapp.formatters :as formatters]
    [webapp.webclient.components.features-indicator :as features-indicator]))
 
 
@@ -58,7 +59,9 @@
              :aria-label (cond
                            (and @primary-connection
                                 (not @parallel-mode-active?))
-                           (str "Selected a resource role: " (:name @primary-connection) ". Click to change")
+                           (str "Selected a resource role: "
+                                (formatters/qualified-connection-name @primary-connection)
+                                ". Click to change")
                            @parallel-mode-active?
                            "Resource Roles - parallel mode active"
                            :else
@@ -69,7 +72,8 @@
                           (rf/dispatch [:primary-connection/toggle-dialog true])))}
             (cond
               (and @primary-connection
-                   (not @parallel-mode-active?)) (:name @primary-connection)
+                   (not @parallel-mode-active?))
+              (formatters/qualified-connection-name @primary-connection)
               @parallel-mode-active? "Resource Roles"
               :else "Resource Role")
             [:> ChevronDown {:size 12 :aria-hidden "true"}]]

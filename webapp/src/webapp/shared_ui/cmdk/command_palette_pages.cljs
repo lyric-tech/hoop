@@ -5,6 +5,7 @@
    [clojure.string :as cs]
    [re-frame.core :as rf]
    [webapp.features.runbooks.helpers :as runbooks-helpers]
+   [webapp.formatters :as formatters]
    [webapp.shared-ui.cmdk.command-palette-constants :as constants]))
 
 (defn action-item
@@ -29,7 +30,8 @@
   [:> CommandItem
    {:key (:id connection)
     :value (str "role:" (:name connection))
-    :keywords [(:type connection) (:subtype connection) (:status connection) "connection"]
+    :keywords [(:type connection) (:subtype connection) (:status connection)
+               (:cluster connection) "connection"]
     :onSelect #(do
                  (rf/dispatch [:database-schema->clear-schema])
                  (rf/dispatch [:command-palette->navigate-to-page :connection-actions connection]))}
@@ -37,7 +39,7 @@
     [:> Rotate3d {:size 16 :class "text-gray-11"}]
     [:div {:class "flex flex-col"}
      [:span {:class "text-sm font-medium"}
-      (:name connection)]]
+      (formatters/qualified-connection-name connection)]]
     [:> ChevronRight {:size 16 :class "ml-auto text-gray-9"}]]])
 
 (defn resource-result-item

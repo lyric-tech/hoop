@@ -3,12 +3,14 @@
    [clojure.string :as cs]
    [re-frame.core :as rf]
    [reagent.core :as r]
-   [webapp.components.multiselect :as multiselect]))
+   [webapp.components.multiselect :as multiselect]
+   [webapp.formatters :as formatters]))
 
 (defn- format-connections-for-select [connections]
   (mapv (fn [connection]
+          ;; the value stays the id: it feeds stored policy references
           {:value (:id connection)
-           :label (:name connection)})
+           :label (formatters/qualified-connection-name connection)})
         connections))
 
 (defn main

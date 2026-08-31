@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/featureflag"
 	"github.com/hoophq/hoop/common/log"
 	"github.com/hoophq/hoop/common/log/bootstrap"
@@ -44,7 +45,8 @@ func (s *Server) subscribeAgent(stream *streamclient.AgentStream) (err error) {
 	defer func() { stream.Close(pluginContext, err) }()
 
 	connectionrequests.AcceptProxyConnection(stream.GetOrgID(), stream.StreamAgentID(), nil)
-	log.With("connection", stream.ConnectionName()).Debugf("agent connected: %s", stream)
+	log.With("connection", cluster.QualifyFromAgentName(stream.AgentName(), stream.ConnectionName())).
+		Debugf("agent connected: %s", stream)
 	bootstrap.AgentConnected(stream.AgentName(), stream.AgentMode())
 	_ = stream.Send(&pb.Packet{
 		Type:    pbagent.GatewayConnectOK,
@@ -68,7 +70,8 @@ func (s *Server) listenAgentMessages(pctx *plugintypes.Context, stream *streamcl
 		pkt, err := stream.Recv()
 		if err != nil {
 			if status, ok := status.FromError(err); ok && status.Code() == codes.Canceled {
-				log.With("id", stream.AgentID(), "name", stream.AgentName(), "connection", stream.ConnectionName()).
+				log.With("id", stream.AgentID(), "name", stream.AgentName(),
+					"connection", cluster.QualifyFromAgentName(stream.AgentName(), stream.ConnectionName())).
 					Warnf("agent disconnected")
 				return fmt.Errorf("agent has disconnected")
 			}

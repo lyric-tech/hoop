@@ -12238,6 +12238,12 @@ const docTemplate = `{
                     "format": "uuid",
                     "example": "1837453e-01fc-46f3-9e4c-dcf22d395393"
                 },
+                "agent_name": {
+                    "description": "The name of the agent associated with this connection",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "remix-agent"
+                },
                 "attributes": {
                     "description": "Attributes associated with this connection. Includes Lyric IAM-managed\nattributes (e.g. the active protection profile attribute); omitting a\nmanaged name on update detaches the connection from it.",
                     "type": "array",
@@ -12248,6 +12254,12 @@ const docTemplate = `{
                         "production",
                         "pii"
                     ]
+                },
+                "cluster": {
+                    "description": "Cluster is a read only field derived from the agent name by removing a\ntrailing \"-agent\". It is not stored: it groups resources for selection\nand is rendered as \"\u003ccluster\u003e/\u003cname\u003e\". Empty when no agent is assigned.",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "remix"
                 },
                 "command": {
                     "description": "Is the shell command that is going to be executed when interacting with this connection.\nThis value is required if the connection is going to be used from the Webapp.",
@@ -12934,6 +12946,12 @@ const docTemplate = `{
                         "enabled",
                         "disabled"
                     ]
+                },
+                "cluster": {
+                    "description": "Cluster is a read only field derived from the name of the agent serving\nthis connection. Rendered as \"\u003ccluster\u003e/\u003cname\u003e\".",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "remix"
                 },
                 "id": {
                     "description": "Unique ID of the resource",
@@ -18008,6 +18026,12 @@ const docTemplate = `{
                         }
                     ],
                     "readOnly": true
+                },
+                "cluster": {
+                    "description": "Cluster is a read only field derived from the name of the agent serving\nthis connection. Rendered as \"\u003ccluster\u003e/\u003cconnection\u003e\". Empty when the\nconnection has no agent.",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "remix"
                 },
                 "connection": {
                     "description": "The connection name of this resource (it will be deprecated in favor of RoleName)",

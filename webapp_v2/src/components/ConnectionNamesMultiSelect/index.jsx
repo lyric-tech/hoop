@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { usePaginatedConnections } from '@/hooks/usePaginatedConnections'
+import { qualifyConnection, qualifyName } from '@/utils/cluster'
 import PaginatedMultiSelect from '@/components/PaginatedMultiSelect'
 
 /**
@@ -7,8 +8,9 @@ import PaginatedMultiSelect from '@/components/PaginatedMultiSelect'
  * payload carries `connection_names`. The id-keyed twin is
  * `@/components/ConnectionsMultiSelect`.
  *
- * No label resolution is needed here — the value is the label — so selected
- * chips render correctly even for connections outside the loaded pages.
+ * The value is the bare name (the stored identifier); only the label carries
+ * the qualified "<cluster>/<resource>" form. A selection outside the loaded
+ * pages has no known cluster, so its chip falls back to the bare name.
  *
  * Usage:
  *   <ConnectionNamesMultiSelect value={form.connectionNames} onChange={setNames} />
@@ -25,13 +27,30 @@ export default function ConnectionNamesMultiSelect({
     usePaginatedConnections({ pageSize: 50 })
 
   const options = useMemo(
-    () => items.map((c) => ({ value: c.name, label: c.name })),
+    () =>
+      items.map((c) => ({
+        value: c.name,
+        label: qualifyConnection(c),
+        name: c.name,
+        cluster: c.cluster ?? '',
+      })),
+    [items],
+  )
+
+  const clusterByName = useMemo(
+    () => new Map(items.map((c) => [c.name, c.cluster ?? ''])),
     [items],
   )
 
   const selectedOptions = useMemo(
-    () => value.map((name) => ({ value: name, label: name })),
-    [value],
+    () =>
+      value.map((name) => ({
+        value: name,
+        label: qualifyName(clusterByName.get(name), name),
+        name,
+        cluster: clusterByName.get(name) ?? '',
+      })),
+    [value, clusterByName],
   )
 
   return (

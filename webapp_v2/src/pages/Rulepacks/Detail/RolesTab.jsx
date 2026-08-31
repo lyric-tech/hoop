@@ -15,6 +15,7 @@ import TextInput from '@/components/TextInput'
 import ValueFilter from '@/components/ValueFilter'
 import { showSnackbar } from '@/utils/snackbar'
 import { useRulepackStore } from '../store'
+import { qualifyConnection } from '@/utils/cluster'
 
 function connectionTagValues(connection) {
   const tags = connection?.connection_tags
@@ -188,7 +189,7 @@ export default function RolesTab() {
                         checked={selectedConnections.has(connection.name)}
                         onChange={() => toggleConnection(connection.name)}
                       />
-                      <Text size="sm">{connection.name}</Text>
+                      <Text size="sm">{qualifyConnection(connection)}</Text>
                     </Group>
                   </Table.Td>
                   <Table.Td>

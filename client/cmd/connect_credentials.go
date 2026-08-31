@@ -12,6 +12,7 @@ import (
 
 	"github.com/hoophq/hoop/client/cmd/styles"
 	clientconfig "github.com/hoophq/hoop/client/config"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/httpclient"
 	pb "github.com/hoophq/hoop/common/proto"
 	"github.com/hoophq/hoop/common/version"
@@ -146,7 +147,10 @@ func runPersistentCredentialFlow(connectionName string, accessDurationSec int, j
 // the raw response body and HTTP status so callers can both echo it
 // verbatim (--output json) and parse it (human rendering).
 func requestPersistentCredential(config *clientconfig.Config, connectionName string, accessDurationSec int) ([]byte, int, error) {
-	endpoint := fmt.Sprintf("%s/api/connections/%s/credentials", config.ApiURL, connectionName)
+	// a "<cluster>/<resource>" argument addresses the resource by its bare
+	// name: the REST path carries a single segment
+	_, bareName := cluster.Split(connectionName)
+	endpoint := fmt.Sprintf("%s/api/connections/%s/credentials", config.ApiURL, bareName)
 
 	body := []byte("{}")
 	if accessDurationSec > 0 {

@@ -9,6 +9,7 @@
             [webapp.components.loaders :as loaders]
             [webapp.components.infinite-scroll :refer [infinite-scroll]]
             [webapp.connections.constants :as connection-constants]
+            [webapp.formatters :as formatters]
             [webapp.resources.helpers :refer [can-open-web-terminal?
                                               can-test-connection? is-connection-testing?
                                               can-connect? can-hoop-cli? can-access-native-client?]]
@@ -164,7 +165,7 @@
                       :size "3"
                       :weight "medium"
                       :class "text-gray-12"}
-          (:name connection)]
+          (formatters/qualified-connection-name connection)]
          [:> Text {:as "p" :size "1" :class "text-gray-11"}
           (:resource_name connection)]
          [:> Text {:size "1" :class "flex items-center gap-1 text-gray-11"}

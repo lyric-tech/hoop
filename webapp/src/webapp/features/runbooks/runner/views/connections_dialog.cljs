@@ -8,6 +8,7 @@
    [re-frame.core :as rf]
    [webapp.connections.constants :as connection-constants]
    [webapp.resources.constants :refer [http-proxy-subtypes]]
+   [webapp.formatters :as formatters]
    [webapp.components.command-dialog :as command-dialog]
    [webapp.components.infinite-scroll :refer [infinite-scroll]]))
 
@@ -17,7 +18,8 @@
   [:> CommandItem
    {:key (:id connection)
     :value (:name connection)
-    :keywords [(:type connection) (:subtype connection) (:status connection) "connection"]
+    :keywords [(:type connection) (:subtype connection) (:status connection)
+               (:cluster connection) "connection"]
     :onSelect #(do
                  (rf/dispatch [:runbooks/set-selected-connection connection])
                  (rf/dispatch [:runbooks/toggle-connection-dialog false]))}
@@ -27,7 +29,7 @@
            :loading "lazy"}]
     [:> Flex {:direction "column" :class "flex-1"}
      [:> Text {:size "2" :class (if selected? "text-primary-11" "text-[--gray-11]")}
-      (:name connection)]
+      (formatters/qualified-connection-name connection)]
      (when (= (:status connection) "offline")
        [:> Text {:size "1" :color "gray"} "Offline"])]
     (when selected?

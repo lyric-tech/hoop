@@ -6,7 +6,8 @@
    [reagent.core :as r]
    [clojure.string :as cs]
    [webapp.connections.constants :as connection-constants]
-   [webapp.components.infinite-scroll :refer [infinite-scroll]]))
+   [webapp.components.infinite-scroll :refer [infinite-scroll]]
+   [webapp.formatters :as formatters]))
 
 (defn main
   "Reusable resource role filter component with Radix UI and infinite scroll.
@@ -33,6 +34,13 @@
             has-more? (or (:has-more? @connections) false)
             current-page (or (:current-page @connections) 1)
             active-search (or (:active-search @connections) "")
+            ;; :selected is the bare name (the identifier); its cluster is only
+            ;; known once the row is among the loaded pages
+            selected-label (if selected
+                             (formatters/qualified-resource-name
+                              (:cluster (first (filter #(= (:name %) selected) connections-data)))
+                              selected)
+                             nil)
             close! #(reset! open? false)]
         [:> Popover.Root {:open @open?
                           :on-open-change #(reset! open? %)}
@@ -43,7 +51,7 @@
                       :class "gap-2"}
            [:> Rotate3d {:size 14}]
            [:> Text {:size "2" :weight "medium"}
-            (if selected selected label)]
+            (if selected selected-label label)]
            (when selected
              [:<>
               [:div {:class "flex items-center justify-center rounded-full h-4 w-4 bg-[--accent-9]"}
@@ -110,7 +118,8 @@
                     [:figure {:class "w-4 h-4 flex-shrink-0"}
                      [:img {:src (connection-constants/get-connection-icon conn)
                             :class "w-full"}]]
-                    [:> Text {:size "2" :class "truncate"} (:name conn)]]
+                    [:> Text {:size "2" :class "truncate"}
+                     (formatters/qualified-connection-name conn)]]
                    (when (= (:name conn) selected)
                      [:> Check {:size 14}])]))
                (when connections-loading?

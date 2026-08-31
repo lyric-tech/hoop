@@ -181,6 +181,7 @@ type Session struct {
 	OrgID                string                  `gorm:"column:org_id"`
 	Connection           string                  `gorm:"column:connection"`
 	ResourceName         string                  `gorm:"column:resource_name;->"`
+	AgentName            string                  `gorm:"column:agent_name;->"`
 	ConnectionType       string                  `gorm:"column:connection_type"`
 	ConnectionSubtype    string                  `gorm:"column:connection_subtype"`
 	ConnectionTags       map[string]string       `gorm:"column:connection_tags;serializer:json"`
@@ -328,6 +329,7 @@ func GetSessionByID(orgID, sid string) (*Session, error) {
 		metrics->>'event_size' AS blob_stream_size, s.blob_input_id, s.ai_analysis, s.guardrails_info,
 		octet_length(b.blob_stream::text) - 4 AS blob_input_size, -- sub 4 for the db header
 		c.resource_name,
+		ag.name AS agent_name,
 		CASE
 			WHEN rv.id IS NULL THEN NULL
 			ELSE jsonb_build_object(
@@ -364,6 +366,10 @@ func GetSessionByID(orgID, sid string) (*Session, error) {
 		s.created_at, s.ended_at
 	FROM private.sessions s
 	LEFT JOIN private.connections c ON c.org_id = s.org_id AND c.name = s.connection
+	-- the agent may sit on the connection or be inherited from its
+	-- resource; its name is what the cluster label is derived from
+	LEFT JOIN private.resources cr ON cr.org_id = c.org_id AND cr.name = c.resource_name
+	LEFT JOIN private.agents ag ON ag.id = COALESCE(c.agent_id, cr.agent_id) AND ag.org_id = c.org_id
 	LEFT JOIN private.blobs b ON b.id = s.blob_input_id
 	LEFT JOIN private.reviews AS rv ON rv.session_id = s.id
 	WHERE s.org_id = ? AND s.id = ?
@@ -703,6 +709,7 @@ func ListSessions(orgID string, userId string, isAuditorOrAdmin bool, opt Sessio
 			metrics->>'event_size' AS blob_stream_size, s.blob_input_id, s.blob_stream_id, s.guardrails_info,
 			octet_length(b.blob_stream::text) - 4 AS blob_input_size,
 			c.resource_name,
+			ag.name AS agent_name,
 			CASE
 				WHEN rv.id IS NULL THEN NULL
 				ELSE jsonb_build_object(
@@ -736,6 +743,10 @@ func ListSessions(orgID string, userId string, isAuditorOrAdmin bool, opt Sessio
 		FROM page
 		INNER JOIN private.sessions s ON s.id = page.id
 		LEFT JOIN private.connections c ON c.org_id = s.org_id AND c.name = s.connection
+		-- the agent may sit on the connection or be inherited from its
+		-- resource; its name is what the cluster label is derived from
+		LEFT JOIN private.resources cr ON cr.org_id = c.org_id AND cr.name = c.resource_name
+		LEFT JOIN private.agents ag ON ag.id = COALESCE(c.agent_id, cr.agent_id) AND ag.org_id = c.org_id
 		LEFT JOIN private.blobs b ON b.org_id = s.org_id AND b.id = s.blob_input_id
 		LEFT JOIN private.reviews AS rv ON rv.org_id = s.org_id AND rv.session_id = s.id
 		ORDER BY s.created_at DESC, s.id DESC

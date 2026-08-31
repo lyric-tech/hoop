@@ -2,6 +2,7 @@ import { Group, Stack, Title, Text, Image } from '@mantine/core'
 import Button from '@/components/Button'
 import { useConnectionIconGetter } from '@/utils/connectionIcons'
 import { canTestConnection } from '@/utils/connectionPolicy'
+import { qualifyConnection } from '@/utils/cluster'
 
 // Page header. Shows "Configure" + the connection's icon and name on the
 // left, and the Test Connection action on the right.
@@ -16,7 +17,7 @@ export default function ConfigureHeader({ connection, testing, onTest }) {
         <Title order={2}>Configure</Title>
         <Group gap="sm" align="center">
           <Image src={iconUrl} w={20} h={20} alt="" />
-          <Text size="md">{connection.name}</Text>
+          <Text size="md">{qualifyConnection(connection)}</Text>
         </Group>
       </Stack>
 

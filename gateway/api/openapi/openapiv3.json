@@ -1612,6 +1612,12 @@
             "format": "uuid",
             "type": "string"
           },
+          "agent_name": {
+            "description": "The name of the agent associated with this connection",
+            "example": "remix-agent",
+            "readOnly": true,
+            "type": "string"
+          },
           "attributes": {
             "description": "Attributes associated with this connection. Includes Lyric IAM-managed\nattributes (e.g. the active protection profile attribute); omitting a\nmanaged name on update detaches the connection from it.",
             "example": [
@@ -1622,6 +1628,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "cluster": {
+            "description": "Cluster is a read only field derived from the agent name by removing a\ntrailing \"-agent\". It is not stored: it groups resources for selection\nand is rendered as \"\u003ccluster\u003e/\u003cname\u003e\". Empty when no agent is assigned.",
+            "example": "remix",
+            "readOnly": true,
+            "type": "string"
           },
           "command": {
             "description": "Is the shell command that is going to be executed when interacting with this connection.\nThis value is required if the connection is going to be used from the Webapp.",
@@ -2309,6 +2321,12 @@
               "enabled",
               "disabled"
             ],
+            "type": "string"
+          },
+          "cluster": {
+            "description": "Cluster is a read only field derived from the name of the agent serving\nthis connection. Rendered as \"\u003ccluster\u003e/\u003cname\u003e\".",
+            "example": "remix",
+            "readOnly": true,
             "type": "string"
           },
           "id": {
@@ -7391,6 +7409,12 @@
             ],
             "description": "The AI analysis of the session if it's available",
             "readOnly": true
+          },
+          "cluster": {
+            "description": "Cluster is a read only field derived from the name of the agent serving\nthis connection. Rendered as \"\u003ccluster\u003e/\u003cconnection\u003e\". Empty when the\nconnection has no agent.",
+            "example": "remix",
+            "readOnly": true,
+            "type": "string"
           },
           "connection": {
             "description": "The connection name of this resource (it will be deprecated in favor of RoleName)",

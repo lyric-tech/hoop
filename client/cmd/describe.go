@@ -10,6 +10,7 @@ import (
 
 	"github.com/hoophq/hoop/client/cmd/styles"
 	clientconfig "github.com/hoophq/hoop/client/config"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/httpclient"
 	"github.com/hoophq/hoop/common/log"
 	"github.com/hoophq/hoop/common/version"
@@ -57,6 +58,10 @@ func runDescribe(connectionName string) {
 }
 
 func fetchConnection(config *clientconfig.Config, name string) (map[string]any, error) {
+	// The REST path carries a single segment, so a "<cluster>/<resource>"
+	// argument is split here: the bare name addresses the resource and the
+	// cluster is verified against the response below.
+	wantCluster, name := cluster.Split(name)
 	url := fmt.Sprintf("%s/api/connections/%s", config.ApiURL, name)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -93,6 +98,11 @@ func fetchConnection(config *clientconfig.Config, name string) (map[string]any, 
 		return nil, fmt.Errorf("failed decoding response: %v", err)
 	}
 
+	if gotCluster, _ := connection["cluster"].(string); wantCluster != "" && gotCluster != wantCluster {
+		return nil, fmt.Errorf("resource %q belongs to cluster %q, not %q",
+			name, gotCluster, wantCluster)
+	}
+
 	return connection, nil
 }
 
@@ -101,16 +111,16 @@ func displayConnectionDetails(config *clientconfig.Config, conn map[string]any) 
 	connType := toStr(conn["type"])
 	subType := toStr(conn["subtype"])
 	status := toStr(conn["status"])
-	agentID := toStr(conn["agent_id"])
-
-	// Fetch agent information (use same approach as list)
-	allAgentInfo := fetchAllAgentInfo(config)
-	agentName := getAgentNameFromAllInfo(allAgentInfo, agentID)
+	clusterLabel, _ := conn["cluster"].(string)
+	agentName := toStr(conn["agent_name"])
 
 	// Fetch plugins for this connection
 	plugins := fetchConnectionPlugins(config, name)
 
-	fmt.Printf("name: %s\n", name)
+	fmt.Printf("name: %s\n", cluster.Qualify(clusterLabel, name))
+	if clusterLabel != "" {
+		fmt.Printf("cluster: %s\n", clusterLabel)
+	}
 
 	if subType != "-" && subType != connType {
 		fmt.Printf("type: %s (%s)\n", connType, subType)
@@ -136,66 +146,6 @@ func displayConnectionDetails(config *clientconfig.Config, conn map[string]any) 
 		}
 	}
 
-}
-
-func fetchAllAgentInfo(config *clientconfig.Config) map[string]map[string]any {
-	url := config.ApiURL + "/api/agents"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Debugf("failed creating agents request: %v", err)
-		return nil
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", config.Token))
-	if config.IsApiKey() {
-		req.Header.Set("Api-Key", config.Token)
-	}
-	req.Header.Set("User-Agent", fmt.Sprintf("hoopcli/%v", version.Get().Version))
-
-	resp, err := httpclient.NewHttpClient(config.TlsCA()).Do(req)
-	if err != nil {
-		log.Debugf("failed performing agents request: %v", err)
-		return nil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != 204 {
-		respBody, _ := io.ReadAll(resp.Body)
-		log.Debugf("failed to fetch agents, status=%v, body=%v", resp.StatusCode, string(respBody))
-		return nil
-	}
-
-	var agents []map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&agents); err != nil {
-		log.Debugf("failed decoding agents response: %v", err)
-		return nil
-	}
-
-	// Create map of ID -> agent info
-	agentMap := make(map[string]map[string]any)
-	for _, agent := range agents {
-		if id, ok := agent["id"].(string); ok {
-			agentMap[id] = agent
-		}
-	}
-
-	return agentMap
-}
-
-func getAgentNameFromAllInfo(agentInfo map[string]map[string]any, agentID string) string {
-	if agentInfo == nil {
-		return "-"
-	}
-
-	if agent, exists := agentInfo[agentID]; exists {
-		if name := toStr(agent["name"]); name != "-" {
-			return name
-		}
-	}
-
-	return "-"
 }
 
 func fetchConnectionPlugins(config *clientconfig.Config, connectionName string) []string {

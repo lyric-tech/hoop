@@ -11,6 +11,7 @@ import (
 	"github.com/hoophq/hoop/client/cmd/styles"
 	cmdutils "github.com/hoophq/hoop/client/cmd/utils"
 	clientconfig "github.com/hoophq/hoop/client/config"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/httpclient"
 	"github.com/hoophq/hoop/common/version"
 	"github.com/spf13/cobra"
@@ -111,7 +112,8 @@ type credentialsEnvelope struct {
 }
 
 func fetchActiveConnectionCredentials(config *clientconfig.Config, connectionName string) (*activeCredentials, error) {
-	url := fmt.Sprintf("%s/api/connections/%s/credentials", config.ApiURL, connectionName)
+	_, bareName := cluster.Split(connectionName)
+	url := fmt.Sprintf("%s/api/connections/%s/credentials", config.ApiURL, bareName)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

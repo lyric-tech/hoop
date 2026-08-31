@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/aws/smithy-go/ptr"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/pgtypes"
 	"github.com/hoophq/hoop/common/proto"
 	"github.com/hoophq/hoop/gateway/api/openapi"
@@ -53,6 +54,7 @@ func toOpenApiSession(s *models.Session, hasInputExpanded bool) *openapi.Session
 		ConnectionSubtype:    s.ConnectionSubtype,
 		Connection:           s.Connection, // it will be deprecated in favor of RoleName
 		ResourceName:         s.ResourceName,
+		Cluster:              cluster.FromAgentName(s.AgentName),
 		RoleName:             s.Connection,
 		ConnectionTags:       s.ConnectionTags,
 		Review:               topOpenApiReview(s.Review),

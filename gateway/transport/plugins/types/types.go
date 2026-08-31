@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/hoophq/hoop/common/cluster"
 	pb "github.com/hoophq/hoop/common/proto"
 	"github.com/hoophq/hoop/gateway/storagev2/types"
 )
@@ -132,6 +133,13 @@ func (c Context) GetOrgID() string        { return c.OrgID }
 func (c Context) GetUserID() string       { return c.UserID }
 func (c Context) GetUserGroups() []string { return c.UserGroups }
 func (c Context) IsAdmin() bool           { return slices.Contains(c.UserGroups, types.GroupAdmin) }
+
+// QualifiedConnectionName renders the connection as "<cluster>/<name>" for
+// logs and other display points. It is never an identifier: ConnectionName
+// remains the value stored in sessions and sent on the wire.
+func (c Context) QualifiedConnectionName() string {
+	return cluster.QualifyFromAgentName(c.AgentName, c.ConnectionName)
+}
 func (c *Context) Validate() error {
 	if c.SID == "" ||
 		c.ConnectionID == "" || c.ConnectionName == "" || c.ConnectionType == "" ||

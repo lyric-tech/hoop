@@ -11,6 +11,7 @@ import (
 
 	"github.com/hoophq/hoop/client/cmd/styles"
 	clientconfig "github.com/hoophq/hoop/client/config"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/log"
 	"github.com/hoophq/hoop/common/proto"
 	"github.com/spf13/cobra"
@@ -144,10 +145,10 @@ var getCmd = &cobra.Command{
 				cmd := joinCmd(cmdList, false)
 				if getShowTagsFlag {
 					fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%v\t%s\t%v\t",
-						m["name"], cmd, m["type"], agentName, m["status"], "-", enabledPlugins, joinMap(m["connection_tags"]))
+						qualifiedConnName(m), cmd, m["type"], agentName, m["status"], "-", enabledPlugins, joinMap(m["connection_tags"]))
 				} else {
 					fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%v\t%s\t",
-						m["name"], cmd, m["type"], agentName, m["status"], len(secrets), enabledPlugins)
+						qualifiedConnName(m), cmd, m["type"], agentName, m["status"], len(secrets), enabledPlugins)
 				}
 				fmt.Fprintln(w)
 			case []map[string]any:
@@ -159,10 +160,10 @@ var getCmd = &cobra.Command{
 					cmd := joinCmd(cmdList, true)
 					if getShowTagsFlag {
 						fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%v\t%s\t%v\t",
-							m["name"], cmd, m["type"], agentName, m["status"], "-", enabledPlugins, joinMap(m["connection_tags"]))
+							qualifiedConnName(m), cmd, m["type"], agentName, m["status"], "-", enabledPlugins, joinMap(m["connection_tags"]))
 					} else {
 						fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%v\t%s\t",
-							m["name"], cmd, m["type"], agentName, m["status"], "-", enabledPlugins)
+							qualifiedConnName(m), cmd, m["type"], agentName, m["status"], "-", enabledPlugins)
 					}
 					fmt.Fprintln(w)
 				}
@@ -648,4 +649,12 @@ func parseApprovers(sessionReview any) string {
 		}
 	}
 	return fmt.Sprintf("%v/%v", approved, len(approvers))
+}
+
+// qualifiedConnName renders a resource row as "<cluster>/<name>", or bare when
+// the gateway reported no cluster.
+func qualifiedConnName(m map[string]any) string {
+	clusterLabel, _ := m["cluster"].(string)
+	name, _ := m["name"].(string)
+	return cluster.Qualify(clusterLabel, name)
 }

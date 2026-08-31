@@ -56,7 +56,7 @@ const mcpOAuthResolveTimeout = 45 * time.Second
 func requestProxyConnection(stream *streamclient.ProxyStream) error {
 	pctx := stream.PluginContext()
 	if !stream.IsAgentOnline() {
-		log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.ConnectionName).
+		log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.QualifiedConnectionName()).
 			Infof("requesting connection with remote agent")
 		err := connectionrequests.RequestProxyConnection(connectionrequests.Info{
 			OrgID:          pctx.GetOrgID(),
@@ -68,16 +68,16 @@ func requestProxyConnection(stream *streamclient.ProxyStream) error {
 		switch err {
 		case connectionrequests.ErrConnTimeout:
 			if err := stream.ContextCauseError(); err != nil {
-				log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.ConnectionName).
+				log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.QualifiedConnectionName()).
 					Infof("timeout requesting connection with agent, reason=%v", err)
 				return err
 			}
-			log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.ConnectionName).Infof("agent offline")
+			log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.QualifiedConnectionName()).Infof("agent offline")
 			return pb.ErrAgentOffline
 		case nil:
-			log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.ConnectionName).Infof("connection established with agent")
+			log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.QualifiedConnectionName()).Infof("connection established with agent")
 		default:
-			log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.ConnectionName).
+			log.With("user", pctx.UserEmail, "agentname", pctx.AgentName, "connection", pctx.QualifiedConnectionName()).
 				Warnf("failed to establish connection with agent, reason=%v", err)
 			return status.Errorf(codes.Aborted, "%s", err.Error())
 		}
@@ -104,7 +104,7 @@ func (s *Server) subscribeClient(stream *streamclient.ProxyStream) (err error) {
 	}
 
 	if err := stream.Save(); err != nil {
-		log.With("connection", pctx.ConnectionName).Error(err)
+		log.With("connection", pctx.QualifiedConnectionName()).Error(err)
 		return err
 	}
 	// The webapp client must keep the stream open to be able
@@ -152,7 +152,7 @@ func (s *Server) subscribeClient(stream *streamclient.ProxyStream) (err error) {
 		"verb":                  clientVerb,
 	})
 
-	logAttrs := []any{"sid", pctx.SID, "connection", pctx.ConnectionName,
+	logAttrs := []any{"sid", pctx.SID, "connection", pctx.QualifiedConnectionName(),
 		"agent-name", pctx.AgentName, "mode", pctx.AgentMode, "ua", userAgent}
 	log.With(logAttrs...).Infof("proxy connected: %v", stream)
 	defer func() { log.With(logAttrs...).Infof("proxy disconnected, reason=%v", err) }()
@@ -438,7 +438,7 @@ func getAISessionAnalyzerParams(pctx *plugintypes.Context) (*pb.AISessionAnalyze
 	provider, err := models.GetAIProvider(orgID, models.AISessionAnalyzerFeature)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.With("sid", pctx.SID, "connection", pctx.ConnectionName).
+			log.With("sid", pctx.SID, "connection", pctx.QualifiedConnectionName()).
 				Warnf("ai session analyzer rule %q is configured but no ai provider is set; skipping analysis", rule.Name)
 			return nil, nil
 		}
@@ -536,7 +536,7 @@ func (s *Server) processClientPacket(stream *streamclient.ProxyStream, pkt *pb.P
 
 		analyzerMetricsRulesJsonData, err := getAnalyzerMetricsRulesForConnection()
 		if err != nil {
-			log.With("sid", pctx.SID, "connection", pctx.ConnectionName).Errorf("failed getting analyzer metrics rules, err=%v", err)
+			log.With("sid", pctx.SID, "connection", pctx.QualifiedConnectionName()).Errorf("failed getting analyzer metrics rules, err=%v", err)
 			return status.Errorf(codes.Internal, "failed getting analyzer metrics rules, err=%v", err)
 		}
 
@@ -546,7 +546,7 @@ func (s *Server) processClientPacket(stream *streamclient.ProxyStream, pkt *pb.P
 			guardRailRulesJsonData, err = getGuardRailsRulesForConnection(&pctx)
 
 			if err != nil {
-				log.With("sid", pctx.SID, "connection", pctx.ConnectionName).Errorf(err.Error())
+				log.With("sid", pctx.SID, "connection", pctx.QualifiedConnectionName()).Errorf(err.Error())
 				return err
 			}
 
@@ -576,7 +576,7 @@ func (s *Server) processClientPacket(stream *streamclient.ProxyStream, pkt *pb.P
 		// error we log and ship no analyzer config (analysis is skipped).
 		aiAnalyzerParams, err := getAISessionAnalyzerParams(&pctx)
 		if err != nil {
-			log.With("sid", pctx.SID, "connection", pctx.ConnectionName).
+			log.With("sid", pctx.SID, "connection", pctx.QualifiedConnectionName()).
 				Warnf("failed resolving ai session analyzer params, skipping analysis: %v", err)
 		}
 

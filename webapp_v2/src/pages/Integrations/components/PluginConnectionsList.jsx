@@ -3,6 +3,7 @@ import { Divider, Group, Stack, Text } from '@mantine/core'
 import { Cable, Search } from 'lucide-react'
 import TextInput from '@/components/TextInput'
 import Switch from '@/components/Switch'
+import { qualifyConnection } from '@/utils/cluster'
 
 /**
  * Toggle list of all workspace connections for a plugin: a connection is
@@ -46,7 +47,7 @@ function PluginConnectionsList({ plugin, connections, mutating, onToggle, render
                   <Group gap="sm">
                     <Cable size={16} />
                     <Text size="sm" fw={600}>
-                      {connection.name}
+                      {qualifyConnection(connection)}
                     </Text>
                     <Switch
                       checked={enabled}

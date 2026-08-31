@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/log"
 	"github.com/hoophq/hoop/gateway/api/openapi"
 	"github.com/hoophq/hoop/gateway/models"
@@ -131,6 +132,7 @@ func connectionToConnectionSearch(conn *models.Connection) openapi.ConnectionSea
 		ID:                 conn.ID,
 		Name:               conn.Name,
 		ResourceName:       conn.ResourceName,
+		Cluster:            cluster.FromAgentName(conn.AgentName),
 		Status:             conn.Status,
 		Type:               conn.Type,
 		SubType:            conn.SubType.String,

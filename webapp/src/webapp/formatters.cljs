@@ -263,3 +263,21 @@
   "Formats a js/Date as zero-padded 24h \"HH:mm\" local time."
   [d]
   (dfns/format d "HH:mm"))
+
+(defn qualified-resource-name
+  "Render a resource as \"<cluster>/<name>\".
+
+  The cluster is derived by the gateway from the name of the agent serving the
+  resource and arrives on the payload as :cluster. It is never part of the
+  resource's identifier, so only labels use this form — values stay the bare
+  id or name. Falls back to the bare name when no cluster is known (no agent
+  assigned, an older gateway, or a partially loaded selection)."
+  [cluster name]
+  (if (string/blank? cluster)
+    (or name "")
+    (str cluster "/" name)))
+
+(defn qualified-connection-name
+  "Render a connection map from the API as \"<cluster>/<name>\"."
+  [connection]
+  (qualified-resource-name (:cluster connection) (:name connection)))

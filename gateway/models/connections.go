@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/gateway/storagev2/types"
 	plugintypes "github.com/hoophq/hoop/gateway/transport/plugins/types"
 	"github.com/lib/pq"
@@ -541,6 +542,11 @@ func GetBareConnectionByNameOrID(ctx UserContext, nameOrID string, tx *gorm.DB) 
 	for _, group := range ctx.GetUserGroups() {
 		userGroups = append(userGroups, group)
 	}
+	// A "<cluster>/<resource>" value narrows the match to the agent serving
+	// that cluster. The cluster is never stored, so it resolves against the
+	// joined agent name. A bare value keeps the name-or-id behavior.
+	clusterLabel, nameOrID := cluster.Split(nameOrID)
+	agentNames := pq.StringArray(cluster.AgentNameCandidates(clusterLabel))
 	var conn Connection
 	err := tx.Raw(`
 	SELECT
@@ -583,9 +589,20 @@ func GetBareConnectionByNameOrID(ctx UserContext, nameOrID string, tx *gorm.DB) 
 	LEFT JOIN private.plugin_connections reviewc ON reviewc.connection_id = c.id AND reviewc.plugin_id = review.id
 	LEFT JOIN private.plugins dlp ON dlp.name = 'dlp' AND dlp.org_id = @org_id
 	LEFT JOIN private.plugin_connections dlpc ON dlpc.connection_id = c.id AND dlpc.plugin_id = dlp.id
-	LEFT JOIN private.agents a ON a.id = c.agent_id AND a.org_id = @org_id
+	-- the agent may be set on the connection or inherited from its resource;
+	-- its name is what the cluster label is derived from. Only agent_name and
+	-- the cluster read through this join: agent_id stays whatever the
+	-- connection itself stores, so the edit form round-trips unchanged.
+	LEFT JOIN private.resources r ON r.org_id = c.org_id AND r.name = c.resource_name
+	LEFT JOIN private.agents a ON a.id = COALESCE(c.agent_id, r.agent_id) AND a.org_id = @org_id
 	LEFT JOIN private.jira_issue_templates it ON it.id = c.jira_issue_template_id AND it.org_id = @org_id
-	WHERE c.org_id = @org_id AND (c.name = @nameOrID OR c.id::text = @nameOrID) AND
+	WHERE c.org_id = @org_id AND
+	CASE
+		-- unqualified: match the name or the id, as before
+		WHEN @cluster = '' THEN (c.name = @nameOrID OR c.id::text = @nameOrID)
+		-- "<cluster>/<resource>": the name must match and the agent must serve that cluster
+		ELSE c.name = @nameOrID AND a.name = ANY((@agent_names)::text[])
+	END AND
 	CASE
 		-- do not apply any access control if the plugin is not enabled or it is an admin/auditor user
 		WHEN ac.id IS NULL OR (@is_admin_or_auditor)::BOOL THEN true
@@ -604,6 +621,8 @@ func GetBareConnectionByNameOrID(ctx UserContext, nameOrID string, tx *gorm.DB) 
 	END`, map[string]any{
 		"org_id":              ctx.GetOrgID(),
 		"nameOrID":            nameOrID,
+		"cluster":             clusterLabel,
+		"agent_names":         agentNames,
 		"is_admin":            ctx.IsAdmin(),
 		"is_admin_or_auditor": ctx.IsAdmin() || isAuditorContext(ctx),
 		"user_groups":         userGroups,
@@ -675,6 +694,11 @@ func getConnectionByNameOrID(ctx UserContext, nameOrID string, tx *gorm.DB) (*Co
 	for _, group := range ctx.GetUserGroups() {
 		userGroups = append(userGroups, group)
 	}
+	// A "<cluster>/<resource>" value narrows the match to the agent serving
+	// that cluster. The cluster is never stored, so it resolves against the
+	// joined agent name. A bare value keeps the name-or-id behavior.
+	clusterLabel, nameOrID := cluster.Split(nameOrID)
+	agentNames := pq.StringArray(cluster.AgentNameCandidates(clusterLabel))
 	var conn Connection
 	err := tx.Raw(`
 	SELECT
@@ -715,7 +739,13 @@ func getConnectionByNameOrID(ctx UserContext, nameOrID string, tx *gorm.DB) (*Co
 	LEFT JOIN private.plugin_connections dlpc ON dlpc.connection_id = c.id AND dlpc.plugin_id = dlp.id
 	LEFT JOIN private.agents a ON a.id = COALESCE(c.agent_id, r.agent_id) AND a.org_id = @org_id
 	LEFT JOIN private.jira_issue_templates it ON it.id = c.jira_issue_template_id AND it.org_id = @org_id
-	WHERE c.org_id = @org_id AND (c.name = @nameOrID OR c.id::text = @nameOrID) AND
+	WHERE c.org_id = @org_id AND
+	CASE
+		-- unqualified: match the name or the id, as before
+		WHEN @cluster = '' THEN (c.name = @nameOrID OR c.id::text = @nameOrID)
+		-- "<cluster>/<resource>": the name must match and the agent must serve that cluster
+		ELSE c.name = @nameOrID AND a.name = ANY((@agent_names)::text[])
+	END AND
 	CASE
 		-- do not apply any access control if the plugin is not enabled or it is an admin/auditor user
 		WHEN ac.id IS NULL OR (@is_admin_or_auditor)::BOOL THEN true
@@ -734,6 +764,8 @@ func getConnectionByNameOrID(ctx UserContext, nameOrID string, tx *gorm.DB) (*Co
 	END`, map[string]any{
 		"org_id":              ctx.GetOrgID(),
 		"nameOrID":            nameOrID,
+		"cluster":             clusterLabel,
+		"agent_names":         agentNames,
 		"is_admin_or_auditor": ctx.IsAdmin() || isAuditorContext(ctx),
 		"user_groups":         userGroups,
 	}).
@@ -865,6 +897,7 @@ func ListConnections(ctx UserContext, opts ConnectionFilterOption) ([]Connection
 		c.id, c.org_id, c.agent_id, c.name, c.command, c.status, c.type, c.subtype, c.managed_by,
 		c.access_mode_runbooks, c.access_mode_exec, c.access_mode_connect, c.access_schema,
 		c.jira_issue_template_id, c.resource_name,
+		ag.name AS agent_name,
 		-- legacy tags
 		COALESCE(c._tags, ARRAY[]::TEXT[]) AS _tags,
 		COALESCE (
@@ -899,6 +932,10 @@ func ListConnections(ctx UserContext, opts ConnectionFilterOption) ([]Connection
 	LEFT JOIN private.plugin_connections reviewc ON reviewc.connection_id = c.id AND reviewc.plugin_id = review.id
 	LEFT JOIN private.plugins dlp ON dlp.name = 'dlp' AND dlp.org_id = ?
 	LEFT JOIN private.plugin_connections dlpc ON dlpc.connection_id = c.id AND dlpc.plugin_id = dlp.id
+	-- the agent may be set on the connection or inherited from its resource;
+	-- its name is what the cluster label is derived from
+	LEFT JOIN private.resources r ON r.org_id = c.org_id AND r.name = c.resource_name
+	LEFT JOIN private.agents ag ON ag.id = COALESCE(c.agent_id, r.agent_id) AND ag.org_id = c.org_id
 	WHERE c.org_id = ? AND
 	CASE
 		-- do not apply any access control if the plugin is not enabled or it is an admin/auditor user
@@ -1009,8 +1046,11 @@ func SearchConnectionsBySimilarity(orgID string, userGroups []string, searchTerm
 			c.resource_name,
 			c.access_mode_runbooks,
 			c.access_mode_exec,
-			c.access_mode_connect
+			c.access_mode_connect,
+			ag.name AS agent_name
 		FROM private.connections c
+		LEFT JOIN private.resources r ON r.org_id = c.org_id AND r.name = c.resource_name
+		LEFT JOIN private.agents ag ON ag.id = COALESCE(c.agent_id, r.agent_id) AND ag.org_id = c.org_id
 		LEFT JOIN private.plugins ac ON ac.name = 'access_control' AND ac.org_id = ?
 		LEFT JOIN private.plugin_connections acc ON acc.connection_id = c.id AND acc.plugin_id = ac.id
 		WHERE
@@ -1113,6 +1153,7 @@ func ListConnectionsPaginated(orgID string, userGroups []string, opts Connection
 		c.id, c.org_id, c.agent_id, c.name, c.command, c.status, c.type, c.subtype, c.managed_by,
 		c.access_mode_runbooks, c.access_mode_exec, c.access_mode_connect, c.access_schema,
 		c.resource_name,
+		ag.name AS agent_name,
 		COALESCE(c.mandatory_metadata_fields, ARRAY[]::TEXT[]) AS mandatory_metadata_fields,
 		-- legacy tags
 		COALESCE(c._tags, ARRAY[]::TEXT[]) AS _tags,
@@ -1149,6 +1190,10 @@ func ListConnectionsPaginated(orgID string, userGroups []string, opts Connection
 	LEFT JOIN private.plugin_connections reviewc ON reviewc.connection_id = c.id AND reviewc.plugin_id = review.id
 	LEFT JOIN private.plugins dlp ON dlp.name = 'dlp' AND dlp.org_id = ?
 	LEFT JOIN private.plugin_connections dlpc ON dlpc.connection_id = c.id AND dlpc.plugin_id = dlp.id
+	-- the agent may be set on the connection or inherited from its resource;
+	-- its name is what the cluster label is derived from
+	LEFT JOIN private.resources r ON r.org_id = c.org_id AND r.name = c.resource_name
+	LEFT JOIN private.agents ag ON ag.id = COALESCE(c.agent_id, r.agent_id) AND ag.org_id = c.org_id
 	WHERE c.org_id = ? AND
 	CASE
 		-- do not apply any access control if the plugin is not enabled or it is an admin user

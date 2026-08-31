@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { connectionsService } from '@/services/connections'
 import { useConnectionIconGetter } from '@/utils/connectionIcons'
+import { qualifyConnection } from '@/utils/cluster'
 
 const SEARCH_DEBOUNCE_MS = 300
 const MIN_SEARCH_LENGTH = 2
@@ -88,8 +89,18 @@ export function usePaginatedConnections({ pageSize = 50 } = {}) {
   // catalog loads; the getter identity changes then, so options recompute.
   const getIconUrl = useConnectionIconGetter()
 
+  // The label is the qualified "<cluster>/<resource>" form and `cluster` is
+  // carried through so a list can group or drill down by it. `value` stays the
+  // id: it feeds stored policy references and must not change.
   const options = useMemo(
-    () => items.map((c) => ({ value: c.id, label: c.name, iconUrl: getIconUrl(c) })),
+    () =>
+      items.map((c) => ({
+        value: c.id,
+        label: qualifyConnection(c),
+        name: c.name,
+        cluster: c.cluster ?? '',
+        iconUrl: getIconUrl(c),
+      })),
     [items, getIconUrl],
   )
 

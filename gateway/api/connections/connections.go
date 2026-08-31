@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/log"
 	pb "github.com/hoophq/hoop/common/proto"
 	"github.com/hoophq/hoop/gateway/api/apiroutes"
@@ -721,6 +722,8 @@ func ToOpenApi(conn *models.Connection, hideRoleInfo bool) openapi.Connection {
 		Secrets:                 publicEnvs,
 		DefaultDatabase:         string(defaultDB),
 		AgentId:                 conn.AgentID.String,
+		AgentName:               conn.AgentName,
+		Cluster:                 cluster.FromAgentName(conn.AgentName),
 		Status:                  conn.Status,
 		Reviewers:               conn.Reviewers,
 		RedactEnabled:           conn.RedactEnabled,

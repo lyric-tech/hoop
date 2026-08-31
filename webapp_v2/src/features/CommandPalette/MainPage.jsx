@@ -4,6 +4,7 @@ import { Package, Rotate3d, File, ChevronRight } from 'lucide-react'
 import { useUserStore } from '@/stores/useUserStore'
 import { shouldHide } from '@/layout/Sidebar/helpers'
 import { SUGGESTION_ITEMS, QUICK_ACCESS_ITEMS } from './constants'
+import { qualifyConnection } from '@/utils/cluster'
 
 function SuggestionsAndQuickAccess({ onNavigate }) {
   const { isAdmin, isSelfHosted, isFeatureFlagEnabled, isLicenseFeatureEnabled } = useUserStore()
@@ -99,7 +100,7 @@ export default function MainPage({
             {connections.map((c) => (
               <SpotlightAction
                 key={c.name}
-                label={c.name}
+                label={qualifyConnection(c)}
                 description={c.resource_name}
                 leftSection={<Rotate3d size={16} />}
                 rightSection={<ChevronRight size={16} />}

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hoophq/hoop/client/cmd/styles"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/httpclient"
 	"github.com/hoophq/hoop/common/log"
 )
@@ -67,8 +68,11 @@ func fetchFederationConsentURL(apiURL, token, tlsCA, connectionName string) (str
 	if connectionName == "" {
 		return "", fmt.Errorf("missing connection name")
 	}
+	// the REST path carries a single segment, so a "<cluster>/<resource>"
+	// argument addresses the resource by its bare name
+	_, bareName := cluster.Split(connectionName)
 	endpoint := fmt.Sprintf("%s/api/connections/%s/federation/oauth/authorize",
-		apiURL, url.PathEscape(connectionName))
+		apiURL, url.PathEscape(bareName))
 	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return "", err

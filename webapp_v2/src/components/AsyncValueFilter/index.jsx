@@ -10,9 +10,10 @@ import {
   Stack,
   Text,
 } from '@mantine/core'
-import { Check, Search, X } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import Button from '@/components/Button'
 import TextInput from '@/components/TextInput'
+import { groupByCluster, hasClusters } from '@/utils/cluster'
 import classes from './AsyncValueFilter.module.css'
 
 /**
@@ -21,6 +22,11 @@ import classes from './AsyncValueFilter.module.css'
  * (`{ value, label }`) or null; `onSelect` receives the full option. An option
  * may carry an optional `iconUrl`, rendered before its label (connection-type
  * icons come from `usePaginatedConnections`).
+ *
+ * When the options carry a `cluster` (resource pickers do), the dropdown
+ * becomes a two-step drill-down: the cluster is chosen first, then the resource
+ * within it. Searching bypasses the drill-down and lists matches across every
+ * cluster. Options without a cluster render as one flat list, unchanged.
  *
  * Usage:
  *   <AsyncValueFilter
@@ -47,7 +53,20 @@ export default function AsyncValueFilter({
 }) {
   const Icon = icon
   const [open, setOpen] = useState(false)
+  // Which cluster the drill-down is inside; null = showing the cluster list.
+  const [openCluster, setOpenCluster] = useState(null)
   const viewportRef = useRef(null)
+
+  // Only the resource pickers carry clusters. Searching flattens the list so a
+  // match in another cluster is still reachable.
+  // ponytail: clusters are derived from the pages loaded so far, so the cluster
+  // list and its counts grow as the user scrolls. Fine at one page of 50; if
+  // deployments outgrow that, have the gateway return the cluster list.
+  const searching = searchValue.trim() !== ''
+  const grouped = hasClusters(options) && !searching
+  const clusterGroups = grouped ? groupByCluster(options) : []
+  const activeGroup = clusterGroups.find((g) => g.cluster === openCluster) ?? null
+  const visibleOptions = grouped ? (activeGroup?.options ?? []) : options
 
   const handleScrollPositionChange = () => {
     if (!hasMore || loading) return
@@ -62,6 +81,7 @@ export default function AsyncValueFilter({
 
   const close = () => {
     setOpen(false)
+    setOpenCluster(null)
     onSearchChange?.('')
   }
 
@@ -125,6 +145,21 @@ export default function AsyncValueFilter({
               </Text>
             </Box>
           )}
+          {grouped && activeGroup != null && (
+            <Flex
+              align="center"
+              gap="xs"
+              px="sm"
+              py="xs"
+              className={classes.row}
+              onClick={() => setOpenCluster(null)}
+            >
+              <ChevronLeft size={14} />
+              <Text size="sm" fw={600} lineClamp={1}>
+                {activeGroup.cluster}
+              </Text>
+            </Flex>
+          )}
           <TextInput
             placeholder={placeholder}
             value={searchValue}
@@ -137,9 +172,33 @@ export default function AsyncValueFilter({
             viewportRef={viewportRef}
             onScrollPositionChange={handleScrollPositionChange}
           >
-            {options.length > 0 ? (
+            {grouped && activeGroup == null ? (
               <Stack gap={0}>
-                {options.map((option) => (
+                {clusterGroups.map((group) => (
+                  <Flex
+                    key={group.cluster}
+                    align="center"
+                    justify="space-between"
+                    px="sm"
+                    py="xs"
+                    className={classes.row}
+                    onClick={() => setOpenCluster(group.cluster)}
+                  >
+                    <Text size="sm" lineClamp={1}>
+                      {group.cluster}
+                    </Text>
+                    <Group gap="xs" wrap="nowrap">
+                      <Text size="xs" c="dimmed">
+                        {String(group.options.length)}
+                      </Text>
+                      <ChevronRight size={14} />
+                    </Group>
+                  </Flex>
+                ))}
+              </Stack>
+            ) : visibleOptions.length > 0 ? (
+              <Stack gap={0}>
+                {visibleOptions.map((option) => (
                   <Flex
                     key={option.value}
                     align="center"
@@ -164,7 +223,7 @@ export default function AsyncValueFilter({
                         />
                       )}
                       <Text size="sm" lineClamp={1}>
-                        {option.label}
+                        {grouped ? option.name : option.label}
                       </Text>
                     </Group>
                     {option.value === selected?.value && <Check size={14} />}

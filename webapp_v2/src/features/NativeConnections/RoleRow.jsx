@@ -94,7 +94,7 @@ function RowHeader({ role, state, active, iconSrc }) {
         </Box>
         <Stack gap={2} miw={0}>
           <Text fz="sm" fw={700} truncate>
-            {role.name}
+            {role.qualifiedName || role.name}
           </Text>
           <Text fz="xs" c="dimmed" truncate>
             {role.subtype || role.type}

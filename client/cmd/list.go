@@ -10,6 +10,7 @@ import (
 
 	"github.com/hoophq/hoop/client/cmd/styles"
 	clientconfig "github.com/hoophq/hoop/client/config"
+	"github.com/hoophq/hoop/common/cluster"
 	"github.com/hoophq/hoop/common/httpclient"
 	"github.com/hoophq/hoop/common/log"
 	"github.com/hoophq/hoop/common/version"
@@ -104,11 +105,7 @@ func displayConnections(connections []map[string]any) {
 		return
 	}
 
-	// Fetch agent information
-	config := clientconfig.GetClientConfigOrDie()
-	agentInfo := fetchAgentInfo(config)
-
-	// Sort connections by name
+	// Sort connections by their displayed name
 	sortConnections(connections)
 
 	var headers []string
@@ -117,13 +114,12 @@ func displayConnections(connections []map[string]any) {
 	if outputFlag == "wide" {
 		headers = []string{"NAME", "COMMAND", "TYPE", "AGENT", "STATUS", "TAGS"}
 		for _, conn := range connections {
-			agentName := getAgentName(agentInfo, toStr(conn["agent_id"]))
 			cmdList, _ := conn["command"].([]any)
 			rows = append(rows, []string{
-				toStr(conn["name"]),
+				qualifiedName(conn),
 				joinCommand(cmdList),
 				toStr(conn["type"]),
-				agentName,
+				toStr(conn["agent_name"]),
 				toStr(conn["status"]),
 				formatConnectionTags(conn["connection_tags"]),
 			})
@@ -131,11 +127,10 @@ func displayConnections(connections []map[string]any) {
 	} else {
 		headers = []string{"NAME", "TYPE", "AGENT", "STATUS"}
 		for _, conn := range connections {
-			agentName := getAgentName(agentInfo, toStr(conn["agent_id"]))
 			rows = append(rows, []string{
-				toStr(conn["name"]),
+				qualifiedName(conn),
 				toStr(conn["type"]),
-				agentName,
+				toStr(conn["agent_name"]),
 				toStr(conn["status"]),
 			})
 		}
@@ -144,72 +139,21 @@ func displayConnections(connections []map[string]any) {
 	fmt.Println(styles.RenderTable(headers, rows))
 }
 
-func fetchAgentInfo(config *clientconfig.Config) map[string]map[string]any {
-	url := config.ApiURL + "/api/agents"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Debugf("failed creating agents request: %v", err)
-		return nil
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", config.Token))
-	if config.IsApiKey() {
-		req.Header.Set("Api-Key", config.Token)
-	}
-	req.Header.Set("User-Agent", fmt.Sprintf("hoopcli/%v", version.Get().Version))
-
-	resp, err := httpclient.NewHttpClient(config.TlsCA()).Do(req)
-	if err != nil {
-		log.Debugf("failed performing agents request: %v", err)
-		return nil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != 204 {
-		respBody, _ := io.ReadAll(resp.Body)
-		log.Debugf("failed to fetch agents, status=%v, body=%v", resp.StatusCode, string(respBody))
-		return nil
-	}
-
-	var agents []map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&agents); err != nil {
-		log.Debugf("failed decoding agents response: %v", err)
-		return nil
-	}
-
-	// Create map of ID -> agent info
-	agentMap := make(map[string]map[string]any)
-	for _, agent := range agents {
-		if id, ok := agent["id"].(string); ok {
-			agentMap[id] = agent
-		}
-	}
-
-	return agentMap
-}
-
-func getAgentName(agentInfo map[string]map[string]any, agentID string) string {
-	if agentInfo == nil {
-		return "-"
-	}
-
-	if agent, exists := agentInfo[agentID]; exists {
-		if name := toStr(agent["name"]); name != "-" {
-			return name
-		}
-	}
-
-	return "-"
-}
-
 func sortConnections(connections []map[string]any) {
 	sort.Slice(connections, func(i, j int) bool {
-		nameI := toStr(connections[i]["name"])
-		nameJ := toStr(connections[j]["name"])
+		nameI := qualifiedName(connections[i])
+		nameJ := qualifiedName(connections[j])
 		return strings.ToLower(nameI) < strings.ToLower(nameJ)
 	})
+}
+
+// qualifiedName renders a resource as "<cluster>/<name>", or bare when the
+// gateway reported no cluster (no agent assigned, or an older gateway that
+// does not send the field).
+func qualifiedName(conn map[string]any) string {
+	clusterLabel, _ := conn["cluster"].(string)
+	name, _ := conn["name"].(string)
+	return cluster.Qualify(clusterLabel, name)
 }
 
 func joinCommand(cmdList []any) string {

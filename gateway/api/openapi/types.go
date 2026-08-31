@@ -420,6 +420,12 @@ type Connection struct {
 	DefaultDatabase string `json:"default_database"`
 	// The agent associated with this connection
 	AgentId string `json:"agent_id" binding:"required" format:"uuid" example:"1837453e-01fc-46f3-9e4c-dcf22d395393"`
+	// The name of the agent associated with this connection
+	AgentName string `json:"agent_name" readonly:"true" example:"remix-agent"`
+	// Cluster is a read only field derived from the agent name by removing a
+	// trailing "-agent". It is not stored: it groups resources for selection
+	// and is rendered as "<cluster>/<name>". Empty when no agent is assigned.
+	Cluster string `json:"cluster" readonly:"true" example:"remix"`
 	// Status is a read only field that informs if the connection is available for interaction
 	// * online - The agent is connected and alive
 	// * offline - The agent is not connected
@@ -989,6 +995,10 @@ type Session struct {
 	Connection string `json:"connection" example:"pgdemo"`
 	// The resource name associated with this connection
 	ResourceName string `json:"resource_name" example:"my-resource"`
+	// Cluster is a read only field derived from the name of the agent serving
+	// this connection. Rendered as "<cluster>/<connection>". Empty when the
+	// connection has no agent.
+	Cluster string `json:"cluster" readonly:"true" example:"remix"`
 	// The role name (same as connection name)
 	RoleName string `json:"role_name" example:"pgdemo"`
 	// The tags of the connection resource
@@ -2952,6 +2962,9 @@ type ConnectionSearch struct {
 	Name string `json:"name" binding:"required" example:"pgdemo"`
 	// The resource name associated with this connection
 	ResourceName string `json:"resource_name" example:"my-resource"`
+	// Cluster is a read only field derived from the name of the agent serving
+	// this connection. Rendered as "<cluster>/<name>".
+	Cluster string `json:"cluster" readonly:"true" example:"remix"`
 	// Type represents the main type of the connection:
 	// * database - Database protocols
 	// * application - Custom applications

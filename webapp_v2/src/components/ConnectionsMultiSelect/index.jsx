@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePaginatedConnections } from '@/hooks/usePaginatedConnections'
 import { connectionsService } from '@/services/connections'
 import PaginatedMultiSelect from '@/components/PaginatedMultiSelect'
+import { qualifyConnection } from '@/utils/cluster'
 
 const RESOLVE_CHUNK = 100 // /connections page_size cap
 
@@ -61,7 +62,7 @@ export default function ConnectionsMultiSelect({
           ),
         )
         batches.forEach((rows) =>
-          (rows ?? []).forEach((c) => found.set(c.id, c.name)),
+          (rows ?? []).forEach((c) => found.set(c.id, qualifyConnection(c))),
         )
       } catch {
         // fall back to the id below

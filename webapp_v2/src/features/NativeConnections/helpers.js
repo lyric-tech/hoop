@@ -1,3 +1,4 @@
+import { qualifyConnection } from '@/utils/cluster'
 import { DEFAULT_RDP_DESKTOP_SIZE, SUBTYPE_LABELS } from './constants'
 
 /**
@@ -129,6 +130,8 @@ export function buildSearchIndex(connection) {
   ])
   return [
     connection.name,
+    connection.cluster,
+    qualifyConnection(connection),
     connection.resource_name,
     connection.type,
     connection.subtype,

@@ -10,12 +10,18 @@ import {
   Text,
   useCombobox,
 } from '@mantine/core'
+import { groupByCluster, hasClusters } from '@/utils/cluster'
 import classes from './PaginatedMultiSelect.module.css'
 
 /**
  * Multi-select over a paginated, server-searched option source (infinite scroll).
  * Controlled — the caller owns fetching; `selectedOptions` supplies labels for
  * values off the current page (a `null` label renders a loading skeleton).
+ *
+ * When the options carry a `cluster` (resource pickers do), the dropdown groups
+ * them under cluster headings so the qualified "<cluster>/<resource>" identity
+ * is visible while still allowing selections across clusters. Pills keep the
+ * qualified label.
  *
  * Usage:
  *   <PaginatedMultiSelect
@@ -108,15 +114,30 @@ export default function PaginatedMultiSelect({
     )
   })
 
-  const optionNodes = mergedOptions
-    .filter((o) => o.label != null && !selectedSet.has(o.value))
-    .map((o) => (
-      <Combobox.Option value={o.value} key={o.value}>
-        {o.label}
-      </Combobox.Option>
-    ))
+  const selectableOptions = mergedOptions.filter(
+    (o) => o.label != null && !selectedSet.has(o.value),
+  )
 
-  const isEmpty = optionNodes.length === 0 && !loading && !hasMore
+  const renderOption = (o) => (
+    <Combobox.Option value={o.value} key={o.value}>
+      {o.name ?? o.label}
+    </Combobox.Option>
+  )
+
+  // Grouped under cluster headings when the concept applies, flat otherwise.
+  const optionNodes = hasClusters(selectableOptions)
+    ? groupByCluster(selectableOptions).map((group) => (
+        <Combobox.Group label={group.cluster} key={group.cluster}>
+          {group.options.map(renderOption)}
+        </Combobox.Group>
+      ))
+    : selectableOptions.map((o) => (
+        <Combobox.Option value={o.value} key={o.value}>
+          {o.label}
+        </Combobox.Option>
+      ))
+
+  const isEmpty = selectableOptions.length === 0 && !loading && !hasMore
 
   return (
     <Combobox store={combobox} onOptionSubmit={handleValueToggle} disabled={disabled}>
