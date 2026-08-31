@@ -150,7 +150,7 @@
   (let [texts (rendered)]
     (is (shows? texts "Authentication method"))
     (is (some #{"API key or personal access token"} texts))
-    (is (some #{"OAuth login (Hoop brokers the flow)"} texts))
+    (is (some #{"OAuth login (Lyric IAM brokers the flow)"} texts))
     ;; github does not accept anonymous access, so that option is absent.
     (is (not (some #{"No authentication"} texts)))))
 
@@ -166,7 +166,7 @@
   (reset-db!)
   (pick! "context7")
   (let [texts (rendered)]
-    (is (not (some #{"OAuth login (Hoop brokers the flow)"} texts)))
+    (is (not (some #{"OAuth login (Lyric IAM brokers the flow)"} texts)))
     (is (not (shows? texts "Authorize with MCP")))
     ;; Still says how it authenticates, and still asks for the credential.
     (is (some #{"API key or personal access token"} texts))
@@ -187,7 +187,7 @@
   (pick! "custom")
   (let [texts (rendered)]
     (is (shows? texts "Authentication method"))
-    (doseq [option ["OAuth login (Hoop brokers the flow)"
+    (doseq [option ["OAuth login (Lyric IAM brokers the flow)"
                     "API key or personal access token"
                     "No authentication"]]
       (is (some #{option} texts) (str "missing option: " option)))))
