@@ -956,7 +956,10 @@ func ListConnections(ctx UserContext, opts ConnectionFilterOption) ([]Connection
 	(
 		COALESCE(c.type::text, '') LIKE ? AND
 		COALESCE(c.subtype, '') LIKE ? AND
-		COALESCE(c.agent_id::text, '') LIKE ? AND
+		-- match the agent that actually serves the connection, which may be
+		-- inherited from its resource; the same source the cluster label
+		-- is derived from, so filtering by cluster cannot hide a role
+		COALESCE(COALESCE(c.agent_id, r.agent_id)::text, '') LIKE ? AND
 		COALESCE(c.managed_by, '') LIKE ? AND
 		COALESCE(c.resource_name::text, '') LIKE ? AND
 		COALESCE(c.name::text, '') LIKE ? AND
@@ -1214,7 +1217,10 @@ func ListConnectionsPaginated(orgID string, userGroups []string, opts Connection
 	(
 		COALESCE(c.type::text, '') LIKE ? AND
 		COALESCE(c.subtype, '') LIKE ? AND
-		COALESCE(c.agent_id::text, '') LIKE ? AND
+		-- match the agent that actually serves the connection, which may be
+		-- inherited from its resource; the same source the cluster label
+		-- is derived from, so filtering by cluster cannot hide a role
+		COALESCE(COALESCE(c.agent_id, r.agent_id)::text, '') LIKE ? AND
 		COALESCE(c.managed_by, '') LIKE ? AND
 		COALESCE(c.resource_name::text, '') LIKE ? AND
 		COALESCE(c.name::text, '') LIKE ? AND

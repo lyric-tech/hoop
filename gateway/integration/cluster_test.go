@@ -258,3 +258,61 @@ func TestClusterInheritedFromResourceAgent(t *testing.T) {
 		t.Fatal("expected the inherited-agent role to resolve by its qualified name")
 	}
 }
+
+// The UI picks a cluster and then filters the resource list by the agent
+// serving it. A role that inherits its agent from its resource must come back
+// from that filter, or the picker silently hides it — the filter has to read
+// the same agent the cluster label is derived from.
+func TestClusterFilterFindsInheritedAgentRole(t *testing.T) {
+	token := adminToken(t)
+	agentID := createAgentReturningID(t, token, "filter-agent")
+	defer deleteAgent(t, token, "filter-agent")
+
+	const resourceName = "cluster-filter-resource"
+	const inheritedRole = "cluster-filter-inherited-role"
+	created := testServer.Post(t, "/resources", token, openapi.ResourceRequest{
+		Name:    resourceName,
+		Type:    "database",
+		SubType: "postgres",
+		AgentID: agentID,
+		EnvVars: map[string]string{},
+		Roles: []openapi.ResourceRoleRequest{
+			{Name: inheritedRole, Type: "database", SubType: "postgres", Command: []string{"psql"}},
+		},
+	})
+	defer created.Body.Close()
+	testutil.RequireStatus(t, created, http.StatusCreated)
+	defer func() {
+		del := testServer.Delete(t, "/connections/"+inheritedRole, token)
+		del.Body.Close()
+		delRes := testServer.Delete(t, "/resources/"+resourceName, token)
+		delRes.Body.Close()
+	}()
+
+	// Both list paths are filtered separately, so both are checked.
+	list := testServer.Get(t, "/connections?agent_id="+agentID, token)
+	defer list.Body.Close()
+	testutil.RequireStatus(t, list, http.StatusOK)
+	var conns []map[string]any
+	testutil.DecodeJSON(t, list, &conns)
+	if !containsName(conns, inheritedRole) {
+		t.Errorf("agent_id filter: %q missing — an inherited-agent role was hidden", inheritedRole)
+	}
+
+	paginated := testServer.Get(t, "/connections?page=1&page_size=100&agent_id="+agentID, token)
+	defer paginated.Body.Close()
+	testutil.RequireStatus(t, paginated, http.StatusOK)
+	var page struct {
+		Data []map[string]any `json:"data"`
+	}
+	testutil.DecodeJSON(t, paginated, &page)
+	var found bool
+	for _, c := range page.Data {
+		if c["name"] == inheritedRole {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("paginated agent_id filter: %q missing — an inherited-agent role was hidden", inheritedRole)
+	}
+}
