@@ -130,45 +130,87 @@ const TIMESTAMP = /Timestamp\(\s*(\d+)\s*,\s*(\d+)\s*\)/
 // Extractors return null when the payload does not match the shape the type
 // promises. A null becomes {kind:'raw'} at the call site, which renders the
 // text with a marker instead of a wrong value.
-const EXTRACT = {
-  objectId: (s) => {
+//
+// Built from an ARRAY of [key, fn] pairs, and this is load-bearing. Two earlier
+// shapes were both broken by Closure's advanced pass and both passed every
+// dev-mode test:
+//
+//   const EXTRACT = { objectId: fn }        -> EXTRACT[kind] missed, because
+//                                             the literal's keys were renamed
+//   new Map(Object.entries({ objectId: fn })) -> Object.entries enumerated the
+//                                             RENAMED keys, so the Map was
+//                                             built with them
+//
+// Here the keys are array elements -- ordinary string values with no property
+// name in the source -- so there is nothing to rename. See "Stable keys across
+// the JS -> ClojureScript boundary" below.
+const EXTRACT = new Map([
+  ['objectId', (s) => {
     // NOTE: the literal "ObjectId" contains b, c, d and e, which are hex
     // digits. Stripping non-hex characters would prepend "becd" to the id, so
     // this matches a 24-run instead.
     const m = HEX24.exec(s)
     return m ? m[0].toLowerCase() : null
-  },
-  int64: (s) => {
-    const m = INTEGER.exec(s)
-    return m ? m[0] : null
-  },
-  int32: (s) => {
-    const m = INTEGER.exec(s)
-    return m ? m[0] : null
-  },
-  double: (s) => {
-    const m = DECIMAL.exec(s)
-    return m ? m[0] : null
-  },
-  decimal128: (s) => {
-    const m = DECIMAL.exec(s)
-    return m ? m[0] : null
-  },
-  date: (s) => (INTEGER.test(s) ? INTEGER.exec(s)[0] : null),
-  binary: (s) => {
+  }],
+  ['int64', (s) => (INTEGER.test(s) ? INTEGER.exec(s)[0] : null)],
+  ['int32', (s) => (INTEGER.test(s) ? INTEGER.exec(s)[0] : null)],
+  ['double', (s) => (DECIMAL.test(s) ? DECIMAL.exec(s)[0] : null)],
+  ['decimal128', (s) => (DECIMAL.test(s) ? DECIMAL.exec(s)[0] : null)],
+  ['date', (s) => (INTEGER.test(s) ? INTEGER.exec(s)[0] : null)],
+  ['binary', (s) => {
     const m = BINDATA.exec(s)
-    if (m) return { subtype: Number(m[1]), base64: m[2] }
+    if (m) return ['subtype', Number(m[1]), 'base64', m[2]]
     // mongosh's Binary stringifies differently; keep the text rather than
     // guessing a format.
     return null
-  },
-  timestamp: (s) => {
+  }],
+  ['timestamp', (s) => {
     const m = TIMESTAMP.exec(s)
-    return m ? { t: Number(m[1]), i: Number(m[2]) } : null
-  },
-}
+    return m ? ['t', Number(m[1]), 'i', Number(m[2])] : null
+  }],
+])
 
 const NO_PAYLOAD = new Set(['null', 'undefined', 'minKey', 'maxKey'])
+
+// ---------------------------------------------------------------------------
+// Stable keys across the JS -> ClojureScript boundary
+// ---------------------------------------------------------------------------
+//
+// Every object this module hands to ClojureScript is built with BRACKET
+// assignment and string literals, never an object literal with shorthand keys.
+//
+// This is not style. Closure's advanced pass renames properties on literals it
+// believes it owns, and it did: a release build turned `bytes` into `ag` and
+// `kind` into `k`. The CLJS side enumerates with js-keys and then reads keys BY
+// NAME, so a renamed key silently becomes nil -- correct in every dev-mode
+// test, broken only in the shipped bundle. Bracket assignment with a string
+// literal is the documented way to opt a property out of renaming.
+//
+// If you add a field to either shape, add it here the same way.
+
+function assign(o, pairs) {
+  // pairs is a FLAT array: [key, value, key, value, ...]. The keys are array
+  // ELEMENTS, i.e. ordinary string values, so there is no property name in the
+  // source for Closure to rename. An {a: 1} literal here would be renamed and
+  // a matching `'a' in extra` string check would then silently miss it -- which
+  // is exactly what happened to `bytes` before this rewrite.
+  for (let n = 0; n + 1 < pairs.length; n += 2) o[pairs[n]] = pairs[n + 1]
+  return o
+}
+
+function leaf(kind, text, pairs) {
+  const o = {}
+  o['kind'] = kind
+  o['text'] = text
+  return pairs ? assign(o, pairs) : o
+}
+
+function failure(reason, pairs) {
+  const o = {}
+  o['ok'] = false
+  o['reason'] = reason
+  return pairs ? assign(o, pairs) : o
+}
 
 /**
  * classify(v) -> a kind string for any node in a tagged result.
@@ -200,15 +242,15 @@ export function isTagged(v) {
  */
 export function value(v) {
   const kind = classify(v)
-  if (NO_PAYLOAD.has(kind)) return { kind, text: kind }
+  if (NO_PAYLOAD.has(kind)) return leaf(kind, kind)
   const raw = v && v[VAL]
-  if (typeof raw !== 'string') return { kind: 'raw', text: String(raw === undefined ? '' : raw) }
-  const extractor = EXTRACT[kind]
-  if (!extractor) return { kind, text: raw }
+  if (typeof raw !== 'string') return leaf('raw', String(raw === undefined ? '' : raw))
+  const extractor = EXTRACT.get(kind)
+  if (!extractor) return leaf(kind, raw)
   const got = extractor(raw)
-  if (got === null) return { kind: 'raw', text: raw, expected: kind }
-  if (typeof got === 'object') return { kind, text: raw, ...got }
-  return { kind, text: got }
+  if (got === null) return leaf('raw', raw, ['expected', kind])
+  if (Array.isArray(got)) return leaf(kind, raw, got)
+  return leaf(kind, got)
 }
 
 /**
@@ -219,9 +261,9 @@ export function value(v) {
  */
 export function dateMillis(v) {
   if (classify(v) !== 'date') return null
-  const { kind, text } = value(v)
-  if (kind !== 'date') return null
-  const n = Number(text)
+  const leafValue = value(v)
+  if (leafValue['kind'] !== 'date') return null
+  const n = Number(leafValue['text'])
   if (!Number.isFinite(n)) return null
   // Date's representable range is +/- 8.64e15 ms from the epoch.
   if (Math.abs(n) > 8.64e15) return null
@@ -230,13 +272,11 @@ export function dateMillis(v) {
 
 /** uuidFromBinary(v) -> a hyphenated UUID for subtype 4, else null. */
 export function uuidFromBinary(v) {
-  // `leaf` is this module's own object literal, not external data, so dotted
-  // access is safe here -- Closure renames the literal and the read together.
-  const leaf = value(v)
-  if (leaf.kind !== 'binary' || leaf.subtype !== 4 || !leaf.base64) return null
+  const parsedLeaf = value(v)
+  if (parsedLeaf['kind'] !== 'binary' || parsedLeaf['subtype'] !== 4 || !parsedLeaf['base64']) return null
   let bytes
   try {
-    const bin = atob(leaf.base64)
+    const bin = atob(parsedLeaf['base64'])
     bytes = Array.from(bin, (ch) => ch.charCodeAt(0).toString(16).padStart(2, '0'))
   } catch (e) {
     return null
@@ -261,16 +301,16 @@ export function readEnvelope(raw) {
   // An opening sentinel with no closing one means the output was cut, not that
   // it was malformed. The two need different messages: one says "reduce the
   // limit", the other says "this looks like a bug".
-  if (j === -1) return { ok: false, reason: 'truncated' }
+  if (j === -1) return failure('truncated')
   const body = raw.slice(i + SENTINEL_OPEN.length, j)
-  if (body.length > MAX_PARSE_BYTES) return { ok: false, reason: 'too-large', bytes: body.length }
+  if (body.length > MAX_PARSE_BYTES) return failure('too-large', ['bytes', body.length])
   let parsed
   try {
     parsed = JSON.parse(body)
   } catch (e) {
-    return { ok: false, reason: 'malformed' }
+    return failure('malformed')
   }
-  if (parsed === null || typeof parsed !== 'object') return { ok: false, reason: 'malformed' }
+  if (parsed === null || typeof parsed !== 'object') return failure('malformed')
   // An unrecognized version must say so. Rendering an empty table for a
   // resource running a newer gateway is the failure mode this guard exists to
   // prevent.
@@ -282,8 +322,10 @@ export function readEnvelope(raw) {
   // release build. Every read of externally-created keys in this file uses
   // brackets for that reason.
   const version = parsed['v']
-  if (version !== 1) return { ok: false, reason: 'unsupported-version', version }
-  return { ok: true, ...parsed }
+  if (version !== 1) return failure('unsupported-version', ['version', version])
+  const env = { ...parsed }
+  env['ok'] = true
+  return env
 }
 
 /**

@@ -12,6 +12,7 @@
   See mongo_types.js for why the tagger is shell-agnostic and why an
   unrecognized payload degrades to :raw instead of a plausible wrong value."
   (:require
+   [goog.object :as gobj]
    ["./mongo_types.js" :as mt]))
 
 ;; --- constants ------------------------------------------------------------
@@ -68,6 +69,23 @@
 
 ;; --- envelope -------------------------------------------------------------
 
+(def ^:private payload-keys
+  "Envelope keys whose values are user data, passed through as raw JS rather
+  than converted to CLJS.
+
+  Two reasons, both load-bearing:
+
+  * js->clj with :keywordize-keys would turn document FIELD NAMES into
+    keywords. A MongoDB field name is an arbitrary string -- a space, a
+    leading dollar and an embedded dot are all legal -- so keywordizing is
+    lossy, and for a name containing a dot it is ambiguous.
+  * The renderers walk these with gobj/get, js-keys and js/Array.isArray. They
+    want JS objects; handing them CLJS maps would render nothing.
+
+  Envelope metadata (count, page, ns, warnings) IS converted, because that is
+  a fixed vocabulary this code owns."
+  #{"documents" "previews" "explain" "sample" "indexes" "index_stats"})
+
 (defn read-envelope
   "Reads the sentinel-delimited envelope out of raw command output.
 
@@ -85,7 +103,14 @@
   Never throws."
   [raw]
   (when-let [env (mt/readEnvelope raw)]
-    (let [m (js->clj env :keywordize-keys true)]
+    (let [m (reduce (fn [acc k]
+                      (assoc acc (keyword k)
+                             (if (contains? payload-keys k)
+                               ;; Left as a raw JS value on purpose.
+                               (gobj/get env k)
+                               (js->clj (gobj/get env k) :keywordize-keys true))))
+                    {}
+                    (array-seq (js-keys env)))]
       (cond-> m
         (contains? m :reason) (update :reason keyword)))))
 

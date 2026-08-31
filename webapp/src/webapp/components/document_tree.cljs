@@ -8,26 +8,67 @@
    ["lucide-react" :refer [ChevronDown ChevronRight]]
    [clojure.string :as cs]
    [goog.object :as gobj]
-   [reagent.core :as r]))
+   [reagent.core :as r]
+   [webapp.components.document-value :as dv]
+   [webapp.components.mongo-types :as mt]))
 
 ;; ── Normalization ─────────────────────────────────────────────────────────
 ;; Turns raw command output into a seq of JS document values, or nil when the
 ;; output isn't parseable as documents (caller falls back to the raw Logs tab).
 
+(defn- parse-mongo-legacy
+  "The pre-tagger path: mongo_shell.js scans the shell's default pseudo-JSON.
+  Still reached by a Shell-tab run and by every session recorded before the
+  Compass surfaces existed."
+  [output]
+  (if (mongo/looksLikeMongo output)
+    (when-let [res (mongo/parseOutput output)]
+      (seq (map (fn [d] (if (.-ok d) (.-value d) (.-raw d)))
+                (array-seq (.-documents res)))))
+    ;; A find that matched nothing prints only the `use <db>` preamble.
+    ;; That is a real empty result, not unparseable output, so hand back
+    ;; an empty vector: the viewer then says "No results found" instead
+    ;; of dropping the user into a bare "switched to db <name>".
+    (when (cs/blank? (mongo/stripPreamble (or output "")))
+      [])))
+
+(defn parse-result
+  "Turns raw command output into
+  {:docs seq :reader :tagged|:legacy :meta {...}} or, when the envelope itself
+  is unreadable, {:error <keyword> ...}. nil means \"not document output\".
+
+  The tagged envelope is tried FIRST and wins whenever it is present, even if
+  the body would also scan as pseudo-JSON. That precedence is pinned by a test:
+  when the legacy reader is finally deleted, that test is the thing that goes
+  red, so the removal is a deliberate act rather than a silent drift.
+
+  :reader is carried so the viewer can mark a legacy result -- an old path that
+  is invisible never gets retired."
+  [connection-type output]
+  (let [t (or connection-type "")]
+    (when (= t "mongodb")
+      (if-let [env (mt/read-envelope output)]
+        (if (:ok env)
+          {:reader :tagged
+           ;; A CLJS vector of RAW JS documents: the same contract
+           ;; parse-documents has always had, which is what docs-cards maps
+           ;; over and what the renderers walk with gobj/get. The elements stay
+           ;; JS so field names survive verbatim.
+           :docs (if-let [d (:documents env)] (vec (array-seq d)) [])
+           :meta (dissoc env :documents :ok :v)}
+          {:reader :tagged :error (:reason env) :meta (dissoc env :ok)})
+        (when-let [docs (parse-mongo-legacy output)]
+          {:reader :legacy :docs docs})))))
+
 (defn parse-documents [connection-type output]
   (let [t (or connection-type "")]
     (cond
       (= t "mongodb")
-      (if (mongo/looksLikeMongo output)
-        (when-let [res (mongo/parseOutput output)]
-          (seq (map (fn [d] (if (.-ok d) (.-value d) (.-raw d)))
-                    (array-seq (.-documents res)))))
-        ;; A find that matched nothing prints only the `use <db>` preamble.
-        ;; That is a real empty result, not unparseable output, so hand back
-        ;; an empty vector: the viewer then says "No results found" instead
-        ;; of dropping the user into a bare "switched to db <name>".
-        (when (cs/blank? (mongo/stripPreamble (or output "")))
-          []))
+      ;; Signature and return shape are unchanged for existing callers
+      ;; (rich_output, the session-detail modal): a seq of documents, [] for a
+      ;; real empty result, nil for output that is not documents.
+      (let [{:keys [docs error]} (parse-result t output)]
+        (when-not error docs))
 
       (or (= t "dynamodb") (= t "cloudwatch"))
       (try
@@ -46,54 +87,12 @@
 
 ;; ── Rendering ─────────────────────────────────────────────────────────────
 
-(defn- value-kind [v]
-  (cond
-    (nil? v) :null
-    (js/Array.isArray v) :array
-    (and (object? v) (some? (gobj/get v mongo/MONGO_TYPE))) :mongo
-    (object? v) :object
-    (string? v) :string
-    (number? v) :number
-    (boolean? v) :boolean
-    :else :other))
-
-(defn- mongo-str
-  "Compact shell-style text for a mongo-typed node (shared by the tree leaf
-  and the Table view cells)."
-  [node]
-  (let [t (gobj/get node mongo/MONGO_TYPE)]
-    (case t
-      "ObjectId" (str "ObjectId('" (gobj/get node "value") "')")
-      "ISODate" (str (or (gobj/get node "value") "ISODate()"))
-      ("NumberLong" "NumberInt" "NumberDecimal") (str (gobj/get node "value"))
-      "Timestamp" (str "Timestamp(" (gobj/get node "t") ", " (gobj/get node "i") ")")
-      "Regex" (str (gobj/get node "value"))
-      "Call" (str (gobj/get node "raw"))
-      (str (or (gobj/get node "name") t)))))
-
-;; Type colors ride the Radix scale vars (step 11 = high-contrast text), so
-;; they hold up in both light and dark themes without dark: variants.
-(defn- mongo-leaf [node]
-  (let [t (gobj/get node mongo/MONGO_TYPE)
-        cls (case t
-              "ObjectId" "text-[var(--purple-11)]"
-              "ISODate" "text-[var(--teal-11)]"
-              ("NumberLong" "NumberInt" "NumberDecimal" "Timestamp") "text-info-11"
-              "Regex" "text-[var(--pink-11)]"
-              "text-gray-10")]
-    [:span.font-mono.whitespace-nowrap {:class cls} (mongo-str node)]))
-
-(defn- leaf [v]
-  (case (value-kind v)
-    :mongo (mongo-leaf v)
-    :null [:span.font-mono.italic {:class "text-gray-9"} "null"]
-    :string [:span.font-mono {:class "text-success-11"} (str "\"" v "\"")]
-    :number [:span.font-mono {:class "text-info-11"} (str v)]
-    :boolean [:span.font-mono {:class "text-warning-11"} (str v)]
-    [:span.font-mono.text-gray-11 (str v)]))
-
-(defn- branch? [v]
-  (contains? #{:array :object} (value-kind v)))
+;; Kind, colour, compact text and the leaf renderer all live in
+;; webapp.components.document-value, which is shared with the table cells and
+;; understands both node shapes: the tagged nodes the Compass surfaces produce
+;; and the legacy MONGO_TYPE nodes mongo_shell.js produces.
+(def ^:private leaf dv/leaf)
+(def ^:private branch? dv/branch?)
 
 (defn- entries-of [v]
   (if (js/Array.isArray v)
@@ -230,19 +229,9 @@
 ;; document lacks the column (Compass wording).
 
 (defn- plain-object? [d]
-  (and (object? d) (not (js/Array.isArray d)) (not (gobj/get d mongo/MONGO_TYPE))))
+  (= :object (dv/kind d)))
 
-(defn- type-name [v]
-  (case (value-kind v)
-    :mongo (let [t (gobj/get v mongo/MONGO_TYPE)]
-             (if (contains? #{"NumberLong" "NumberInt" "NumberDecimal"} t) "Number" t))
-    :null "Null"
-    :array "Array"
-    :object "Object"
-    :string "String"
-    :number "Number"
-    :boolean "Boolean"
-    ""))
+(def ^:private type-name dv/type-name)
 
 (defn- table-model
   "One pass over the docs: column order (first appearance) and the dominant
@@ -267,12 +256,9 @@
                        order)})))
 
 (defn- cell-str [v]
-  (case (value-kind v)
-    :mongo (mongo-str v)
-    :null "null"
-    :string (str "\"" v "\"")
-    (:array :object) (summary v)
-    (str v)))
+  (if (dv/branch? v)
+    (summary v)
+    (dv/display-string v)))
 
 (defn table-main
   "Compass-style table: row numbers, `field Type` headers, type-colored

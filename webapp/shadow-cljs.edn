@@ -56,4 +56,15 @@
                  :test-dir "target/browser-test"}
   :karma-test {:target :karma
                :ns-regexp "-test$"
-               :output-to "target/karma-test.js"}}}
+               :output-to "target/karma-test.js"}
+
+  ;; Runs webapp.release-guard.boundary under :advanced. Exists because a
+  ;; dev-mode test cannot see Closure property renaming, and grepping the
+  ;; release bundle for the key names gives a false pass -- see the namespace
+  ;; docstring. Not part of the app build.
+  :release-guard {:target :node-script
+                  :main webapp.release-guard.boundary/-main
+                  :output-to "target/release-guard.js"
+                  :compiler-options {:optimizations :advanced
+                                     :pretty-print false
+                                     :pseudo-names false}}}}
