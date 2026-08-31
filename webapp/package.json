@@ -7,7 +7,7 @@
     "download-connection-metadata": "bash scripts/download-connection-metadata.sh",
     "shadow:watch:hoop-ui": "npx shadow-cljs watch hoop-ui browser-test karma-test",
     "postcss:watch": "cross-env postcss src/css/tailwind.css -o ./resources/public/css/site.css --verbose -w",
-    "_comment:dev": "postcss:build runs ONCE, serially, and postcss:watch is deliberately not in the parallel group. run-p spawns children with stdio[0]='ignore' (npm-run-all lib/run-task.js detectStreamKind returns 'ignore' for a null stream, and its CLI has no way to pass stdin), and postcss-cli exits on stdin end (postcss-cli/index.js: process.stdin.on('end', () => process.exit(0))). So the watcher died on startup with code 0 and no message, run-p reported success, and resources/public/css/ — which is gitignored in full — was never created: every ClojureScript route rendered unstyled until some other command happened to build the file. Run postcss:watch directly in a second terminal if you are editing Tailwind classes in .cljs; it works there, because a terminal gives it a real stdin.",
+    "_comment:dev": "postcss:build runs ONCE, serially, and postcss:watch is deliberately not in the parallel group. run-p spawns children with stdio[0]='ignore' (npm-run-all lib/run-task.js detectStreamKind returns 'ignore' for a null stream, and its CLI has no way to pass stdin), and postcss-cli exits on stdin end (postcss-cli/index.js: process.stdin.on('end', () => process.exit(0))). So the watcher died on startup with code 0 and no message, run-p reported success, and resources/public/css/ \u2014 which is gitignored in full \u2014 was never created: every ClojureScript route rendered unstyled until some other command happened to build the file. Run postcss:watch directly in a second terminal if you are editing Tailwind classes in .cljs; it works there, because a terminal gives it a real stdin.",
     "dev:hoop-ui": "{ [ -f .env ] && set -a && . ./.env && set +a; true; } && npm run postcss:build && run-p -l genversion shadow:watch:hoop-ui",
     "dev": "{ [ -f .env ] && set -a && . ./.env && set +a; true; } && npm run download-connection-metadata && npm run postcss:build && run-p -l genversion shadow:watch:hoop-ui",
     "shadow:release:hoop-ui": "npx shadow-cljs release hoop-ui",
@@ -17,6 +17,7 @@
     "build-report:hoop-ui": "npx shadow-cljs run shadow.cljs.build-report hoop-ui target/hoop-ui-build-report.html"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.11.1",
     "@codemirror/commands": "^6.3.2",
     "@codemirror/lang-javascript": "^6.2.1",
     "@codemirror/lang-sql": "^6.5.4",
