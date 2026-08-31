@@ -35,6 +35,26 @@
 // The consequence worth knowing: this works today on the legacy train and
 // keeps working after INCLUDE_LEGACY_MONGO flips to mongosh, with no
 // migration, no feature flag and no agent coordination.
+//
+// STATUS: NOT WIRED UP YET.
+// No generated script embeds TAGGER_JS, so nothing in the app produces an
+// envelope and this reader's tagged path is currently unreachable -- the
+// Documents view still goes through mongo_shell.js. Verified against a real
+// mongo:5 container (both shells), where four shapes still differ from what
+// the tagger assumes and must be fixed before anything emits an envelope:
+//
+//   legacy shell  MinKey()/MaxKey() have typeof 'function', so they are tagged
+//                 'unsupported' instead of minKey/maxKey.
+//   legacy shell  BinData stringifies as UUID("...") for subtype 4, so the
+//                 BinData(sub, "b64") extraction misses. The display text
+//                 happens to be right, but subtype/base64 come back empty.
+//   mongosh       Timestamp stringifies as a single int64 ("7454730068007321607"),
+//                 not Timestamp(t, i), so t/i are lost.
+//   mongosh       a stored regex arrives as neither a JS RegExp nor a
+//                 BSONRegExp, so it falls through to {} and the pattern is lost.
+//
+// The reader degrades visibly rather than lying in each case, which is why
+// leaving this unwired is safe -- but do not treat it as verified.
 
 export const TAG = '__ht' // hoop type
 export const VAL = '__hv' // hoop value, as the shell's own string form
