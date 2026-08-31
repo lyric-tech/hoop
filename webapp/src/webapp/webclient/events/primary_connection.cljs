@@ -3,6 +3,41 @@
    [clojure.edn :refer [read-string]]
    [re-frame.core :as rf]))
 
+;; Kubernetes-flavored connections open the React cluster dashboard instead of
+;; the terminal editor. Mirrors NATIVE_CLIENT_KUBERNETES_SUBTYPES in
+;; webapp_v2/src/utils/connectionPolicy.js — keep the two sets in sync.
+(def k8s-subtypes #{"kubernetes" "kubernetes-eks" "kubernetes-token"})
+
+(defn- terminal-view?
+  ;; ?view=terminal is the dashboard's "Open in terminal" escape hatch. It
+  ;; suppresses the auto-redirect for this visit only — the terminal
+  ;; re-persists the selection, so the next plain /client visit redirects
+  ;; again. That is intentional; do not "fix" it by persisting the flag.
+  []
+  (= "terminal" (.get (js/URLSearchParams. (.. js/window -location -search)) "view")))
+
+(defn k8s-dashboard-redirect? [connection]
+  (and (contains? k8s-subtypes (:subtype connection))
+       (not (terminal-view?))))
+
+(rf/reg-event-fx
+ :primary-connection/redirect-to-cluster-dashboard
+ (fn [_ [_ connection-name]]
+   ;; Leave no editor state behind: strip ?role so the back button doesn't
+   ;; bounce through /client into the dashboard again, and drop the persisted
+   ;; selection only when it names this connection (another tab may have
+   ;; persisted a different one).
+   (let [url (js/URL. (.. js/window -location -href))]
+     (.delete (.-searchParams url) "role")
+     (.replaceState js/history nil "" (.toString url)))
+   (let [saved (.getItem js/localStorage "selected-connection")
+         parsed (when (and saved (not= saved "null"))
+                  (read-string saved))]
+     (when (= (:name parsed) connection-name)
+       (.removeItem js/localStorage "selected-connection")))
+   {:fx [[:dispatch [:navigate :cluster-dashboard {}
+                     :connection-name connection-name :view "overview"]]]}))
+
 ;; Events
 (rf/reg-event-fx
  :primary-connection/initialize-from-query-or-persistence
@@ -27,37 +62,47 @@
  (fn [db [_ filter-text]]
    (assoc-in db [:editor :connections :filter] filter-text)))
 
+(defn- set-selected-editor [db new-primary]
+  (let [current-multiples (get-in db [:editor :multi-connections :selected] [])
+        compatible-multiples (filter #(and (= (:type %) (:type new-primary))
+                                           (= (:subtype %) (:subtype new-primary))
+                                           (not= (:name %) (:name new-primary)))
+                                     current-multiples)]
+    {:db (update-in db [:editor]
+                    merge
+                    {:connections {:selected new-primary}
+                     :execution-requirements-callout {:dismissed? false}
+                     :multi-connections {:selected compatible-multiples}})
+     :fx [[:dispatch [:editor-plugin/clear-language]]
+          [:dispatch [:primary-connection/persist-selected]]
+          [:dispatch [:primary-connection/update-url-with-role (:name new-primary)]]
+          [:dispatch [:database-schema->clear-schema]]
+          [:dispatch [:ai-session-analyzer/get-role-rule (:name new-primary)]]
+          ;; The dialog hands us a row from the paginated list, which carries
+          ;; only the stored columns. Fetch the detail so the selection ends up
+          ;; being the same enriched object the URL and persistence paths
+          ;; produce — effective_features only exists on the detail endpoint,
+          ;; and anything reading it off a list row would silently see nothing.
+          [:dispatch [:connections->get-connection-details
+                      (:name new-primary)
+                      [:primary-connection/set-from-details]]]
+          ;; BigQuery is the only federation-capable subtype today; fetch the
+          ;; user's per-user OAuth status so the editor can prompt them to
+          ;; connect their Google account before running (gcp_oauth).
+          (when (= (:subtype new-primary) "bigquery")
+            [:dispatch [:federation/oauth-status (:name new-primary)]])]}))
+
 (rf/reg-event-fx
  :primary-connection/set-selected
  (fn [{:keys [db]} [_ new-primary]]
-   (let [current-multiples (get-in db [:editor :multi-connections :selected] [])
-         compatible-multiples (filter #(and (= (:type %) (:type new-primary))
-                                            (= (:subtype %) (:subtype new-primary))
-                                            (not= (:name %) (:name new-primary)))
-                                      current-multiples)]
-     {:db (update-in db [:editor]
-                     merge
-                     {:connections {:selected new-primary}
-                      :execution-requirements-callout {:dismissed? false}
-                      :multi-connections {:selected compatible-multiples}})
-      :fx [[:dispatch [:editor-plugin/clear-language]]
-           [:dispatch [:primary-connection/persist-selected]]
-           [:dispatch [:primary-connection/update-url-with-role (:name new-primary)]]
-           [:dispatch [:database-schema->clear-schema]]
-           [:dispatch [:ai-session-analyzer/get-role-rule (:name new-primary)]]
-           ;; The dialog hands us a row from the paginated list, which carries
-           ;; only the stored columns. Fetch the detail so the selection ends up
-           ;; being the same enriched object the URL and persistence paths
-           ;; produce — effective_features only exists on the detail endpoint,
-           ;; and anything reading it off a list row would silently see nothing.
-           [:dispatch [:connections->get-connection-details
-                       (:name new-primary)
-                       [:primary-connection/set-from-details]]]
-           ;; BigQuery is the only federation-capable subtype today; fetch the
-           ;; user's per-user OAuth status so the editor can prompt them to
-           ;; connect their Google account before running (gcp_oauth).
-           (when (= (:subtype new-primary) "bigquery")
-             [:dispatch [:federation/oauth-status (:name new-primary)]])]})))
+   (if (k8s-dashboard-redirect? new-primary)
+     ;; Short-circuit BEFORE any db write, localStorage persist or ?role= URL
+     ;; write: the editor never flashes and the back button never lands on a
+     ;; /client?role= entry that would redirect forward again.
+     {:fx [[:dispatch [:primary-connection/toggle-dialog false]]
+           [:dispatch [:primary-connection/redirect-to-cluster-dashboard
+                       (:name new-primary)]]]}
+     (set-selected-editor db new-primary))))
 
 (rf/reg-event-fx
  :primary-connection/persist-selected
@@ -104,12 +149,24 @@
    (let [connection (get-in db [:connections :details connection-name])
          enabled? (and connection
                        (not= "disabled" (:access_mode_exec connection)))]
-     (if enabled?
+     (cond
+       ;; Safety net for the paths where subtype only arrives with the detail
+       ;; fetch (?role= deep link, localStorage restore, onboarding). Checked
+       ;; BEFORE enabled?: a kubernetes connection with exec disabled must
+       ;; still land on the dashboard — it renders its own "execution
+       ;; disabled" state, while a cleared editor selection explains nothing.
+       (k8s-dashboard-redirect? connection)
+       {:fx [[:dispatch [:primary-connection/redirect-to-cluster-dashboard
+                         (or (:name connection) connection-name)]]]}
+
+       enabled?
        {:db (assoc-in db [:editor :connections :selected] connection)
         :fx [[:dispatch [:ai-session-analyzer/get-role-rule (or (:name connection) (:id connection))]]
              [:dispatch [:primary-connection/update-url-with-role (or (:name connection) (:id connection))]]
              (when (= (:subtype connection) "bigquery")
                [:dispatch [:federation/oauth-status (:name connection)]])]}
+
+       :else
        {:db (assoc-in db [:editor :connections :selected] nil)
         :fx [[:dispatch [:primary-connection/clear-selected]]]}))))
 
