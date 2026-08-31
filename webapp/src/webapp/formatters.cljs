@@ -264,6 +264,30 @@
   [d]
   (dfns/format d "HH:mm"))
 
+(defn utc-long
+  "Epoch millis -> \"January 25, 2026 at 5:50:39 AM UTC\".
+
+  Always UTC, never the viewer's zone: a MongoDB date is stored as an instant
+  and Compass renders it in UTC, so a document opened in two timezones must
+  read the same. Uses Intl rather than date-fns because date-fns formats in
+  local time and the tz-aware variant is a separate package.
+
+  Returns nil for a non-finite value, so the caller omits the humanized form
+  rather than printing \"Invalid Date\"."
+  [ms]
+  (when (and (number? ms) (js/isFinite ms))
+    (let [d (js/Date. ms)
+          date-part (.format (js/Intl.DateTimeFormat.
+                              "en-US"
+                              #js {:timeZone "UTC" :month "long" :day "numeric" :year "numeric"})
+                             d)
+          time-part (.format (js/Intl.DateTimeFormat.
+                              "en-US"
+                              #js {:timeZone "UTC" :hour "numeric" :minute "2-digit"
+                                   :second "2-digit" :hour12 true})
+                             d)]
+      (str date-part " at " time-part " UTC"))))
+
 (defn qualified-resource-name
   "Render a resource as \"<cluster>/<name>\".
 

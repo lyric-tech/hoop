@@ -213,6 +213,16 @@ func ListTables(c *gin.Context) {
 		}
 	}
 
+	// The schema name is interpolated into the generated query for every SQL
+	// dialect, on a path that loads no plugins. Validate it before it gets
+	// there.
+	if schemaName != "" {
+		if err := validateObjectName(schemaName, objectNameDialectFor(currentConnectionType)); err != nil {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+			return
+		}
+	}
+
 	script := getTablesQuery(currentConnectionType, dbName)
 	if script == "" {
 		// Check for DynamoDB
@@ -381,6 +391,21 @@ func GetTableColumns(c *gin.Context) {
 		}
 	}
 
+	// tableName and schemaName are interpolated into generated SQL, generated
+	// JavaScript (MongoDB) or a shell command line (DynamoDB), on a path that
+	// loads no plugins. Neither was validated before; both are now.
+	dialect := objectNameDialectFor(currentConnectionType)
+	if err := validateObjectName(tableName, dialect); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+		return
+	}
+	if schemaName != "" {
+		if err := validateObjectName(schemaName, dialect); err != nil {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+			return
+		}
+	}
+
 	script := getColumnsQuery(currentConnectionType, dbName, tableName, schemaName)
 	if script == "" {
 		// Check for DynamoDB
@@ -396,11 +421,12 @@ func GetTableColumns(c *gin.Context) {
 
 	userAgent := apiutils.NormalizeUserAgent(c.Request.Header.Values)
 	client, err := clientexec.New(&clientexec.Options{
-		OrgID:          ctx.GetOrgID(),
-		ConnectionName: conn.Name,
-		BearerToken:    apiroutes.GetAccessTokenFromRequest(c),
-		UserAgent:      userAgent,
-		Verb:           pb.ClientVerbPlainExec,
+		OrgID:                     ctx.GetOrgID(),
+		ConnectionName:            conn.Name,
+		ConnectionCommandOverride: getConnectionCommandOverride(currentConnectionType, conn.Command),
+		BearerToken:               apiroutes.GetAccessTokenFromRequest(c),
+		UserAgent:                 userAgent,
+		Verb:                      pb.ClientVerbPlainExec,
 	})
 	if err != nil {
 		httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed to create client: %v", err)

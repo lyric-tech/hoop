@@ -8,11 +8,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- xterm vendored as plain globals: shadow-cljs's Closure pass cannot
-         convert the npm bundle, so the CLJS terminal component reads
-         window.Terminal / window.FitAddon instead. -->
-    <script src="/data/vendor/xterm.js"></script>
-    <script src="/data/vendor/xterm-addon-fit.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

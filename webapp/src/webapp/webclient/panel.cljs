@@ -35,6 +35,7 @@
    [webapp.webclient.components.header :as header]
    [webapp.webclient.components.language-select :as language-select]
    [webapp.webclient.components.mongo-query-bar :as mongo-query-bar]
+   [webapp.webclient.components.mongo-autocomplete :as mongo-autocomplete]
    [webapp.webclient.components.panels.database-schema :as database-schema-panel]
    [webapp.webclient.components.panels.metadata :as metadata-panel]
    [webapp.webclient.components.side-panel :refer [with-panel]]
@@ -145,7 +146,12 @@
                            "command-line" [(.define cm-language/StreamLanguage cm-shell/shell)]
                            "javascript" [(.define cm-language/StreamLanguage cm-javascript/javascript)]
                            "nodejs" [(.define cm-language/StreamLanguage cm-javascript/javascript)]
-                           "mongodb" [(.define cm-language/StreamLanguage cm-javascript/javascript)]
+                           ;; MongoDB gets the real Lezer JavaScript grammar plus
+                           ;; Compass-style suggestions. The suggestions attach
+                           ;; through this language's own languageData, so no
+                           ;; other dialect is affected.
+                           "mongodb" (mongo-autocomplete/language-extensions
+                                      :query mongo-autocomplete/editor-fields)
                            "ruby-on-rails" [(.define cm-language/StreamLanguage cm-ruby/ruby)]
                            "python" [(.define cm-language/StreamLanguage cm-python/python)]
                            "clojure" [(.define cm-language/StreamLanguage cm-clojure/clojure)]

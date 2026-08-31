@@ -378,6 +378,87 @@ func validateDatabaseName(dbName string) error {
 	return nil
 }
 
+// nameDialect selects how strictly validateObjectName treats a table,
+// collection or schema name. The two policies differ because the two paths
+// have different safety properties, not because one is a relaxed version of
+// the other.
+type nameDialect int
+
+const (
+	// dialectInterpolated is for names spliced into a SQL string literal or a
+	// shell word (every connection type whose introspection query is built
+	// with fmt.Sprintf). Nothing stands between the input and the query text,
+	// so only an allowlist is safe.
+	dialectInterpolated nameDialect = iota
+	// dialectData is for names that travel as a JSON value inside a params
+	// document (MongoDB, via gateway/mongoscript). Structure already prevents
+	// injection there, so the check only bounds length and rejects characters
+	// that would break the transport.
+	dialectData
+)
+
+const objectNameMaxLen = 120
+
+// objectNameInterpolatedRe mirrors validateDatabaseName's spirit but also
+// allows spaces, which real table names use. It deliberately does NOT allow a
+// quote, a backslash, a backtick, a semicolon or a parenthesis: those are the
+// characters that let a name escape a SQL string literal or a shell word.
+var objectNameInterpolatedRe = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9_.\- ]{0,119}$`)
+
+// objectNameDialectFor reports how a table/collection/schema name reaches the
+// generated script for a connection type.
+//
+// MongoDB is the only type whose introspection scripts carry the name as JSON
+// data (gateway/mongoscript); every other type interpolates it into SQL or a
+// shell word, so it gets the strict allowlist.
+func objectNameDialectFor(connType pb.ConnectionType) nameDialect {
+	// Every type interpolates today, MongoDB included: getMongoDBColumnsQuery
+	// still splices the name into generated JavaScript. MongoDB flips to
+	// dialectData only when its scripts move to the gateway/mongoscript params
+	// layer, where the name travels as a JSON value. Flipping it earlier would
+	// leave the JS interpolation unguarded, which is the hole this function
+	// exists to close.
+	_ = connType
+	return dialectInterpolated
+}
+
+// validateObjectName returns an error if a table, collection or schema name
+// cannot be safely carried to the agent by the given dialect.
+//
+// A rejection here makes an oddly-named object unbrowsable in the schema
+// explorer. That is deliberate: the alternative is interpolating an
+// attacker-chosen string into generated SQL, JavaScript or a shell command on
+// a path that loads no plugins (no review, no audit, no DLP, no guardrails --
+// see gateway/transport/streamclient/pluginruntime.go). A user who needs such
+// an object can still query it from the editor, which runs through the full
+// plugin chain.
+func validateObjectName(name string, d nameDialect) error {
+	if name == "" {
+		return fmt.Errorf("invalid name: must not be empty")
+	}
+	if len(name) > objectNameMaxLen {
+		return fmt.Errorf("invalid name: must be at most %d characters", objectNameMaxLen)
+	}
+	switch d {
+	case dialectData:
+		// MongoDB permits almost any byte in a collection name. Only reject
+		// what would break the JSON params document or the log line: control
+		// characters, and the two line terminators that are legal inside a
+		// JSON string but terminate a JavaScript string literal in ES5.
+		for _, r := range name {
+			if r < 0x20 || r == 0x7f || r == '\u2028' || r == '\u2029' {
+				return fmt.Errorf("invalid name: must not contain control characters")
+			}
+		}
+		return nil
+	default:
+		if !objectNameInterpolatedRe.MatchString(name) {
+			return fmt.Errorf("invalid name. Only alphanumeric characters, underscore, hyphen, dot and space are allowed, starting with an alphanumeric or underscore, with length between 1 and %d characters", objectNameMaxLen)
+		}
+		return nil
+	}
+}
+
 func cleanMongoOutput(output string) string {
 	// If the string is empty,
 	if len(output) == 0 {

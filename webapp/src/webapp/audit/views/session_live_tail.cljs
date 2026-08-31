@@ -19,7 +19,6 @@
    [webapp.audit.views.empty-event-stream :as empty-event-stream]
    [webapp.audit.views.pg-wire :as pg-wire]
    [webapp.components.error-boundary :as error-boundary]
-   [webapp.components.xterm-terminal :as xterm-terminal]
    [webapp.utilities :as utilities]))
 
 ;; ─── Helpers ───────────────────────────────────────────────────────────────
@@ -235,21 +234,24 @@
       "Waiting for the next query…"
       "Waiting for events…")]])
 
-;; ANSI-to-HTML fallback: no cursor addressing, but it always renders. Used
-;; when the vendored xterm bundle is missing, and as the error boundary's
-;; fallback so a terminal crash can never white-screen the session page.
+(def ^:private terminal-classes
+  (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
+       "whitespace-pre text-gray-200 text-sm"))
+
+;; ANSI-to-HTML tail. No cursor addressing: output that repaints in place
+;; (progress bars, TUIs) stacks instead of updating. That is the accepted
+;; tradeoff for a renderer with no terminal emulator to go wrong.
 (defn- ansi-output [text]
-  [:section {:class (str "bg-gray-900 font-mono p-radix-4 min-h-[200px] "
-                         "whitespace-pre text-gray-200 text-sm")}
+  [:section {:class terminal-classes}
    [:> AnsiHtml {:text text
                  :className "font-mono whitespace-pre text-sm"}]])
 
+;; AnsiHtml parses arbitrary PTY bytes, so a throw in there would otherwise
+;; take the whole session page down with it. Fall back to the same block,
+;; undecorated.
 (defn- terminal-output [text]
-  (if (xterm-terminal/available?)
-    [error-boundary/main {:fallback [ansi-output text]}
-     [:section {:class "bg-[#111827]"}
-      [xterm-terminal/main {:text text}]]]
-    [ansi-output text]))
+  [error-boundary/main {:fallback [:section {:class terminal-classes} text]}
+   [ansi-output text]])
 
 (defn- jump-to-latest-button [on-click]
   [:> Box {:class "absolute bottom-3 right-3"}
