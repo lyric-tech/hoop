@@ -8,6 +8,7 @@ import { searchAll } from '@/services/search';
 import { useBridgeStore } from '@/stores/useBridgeStore';
 import { useNativeAccessStore } from '@/stores/useNativeAccessStore';
 import { showSnackbar } from '@/utils/snackbar';
+import { isKubernetesSubtype } from '@/utils/connectionPolicy';
 import CommandPaletteRoot from './CommandPaletteRoot';
 import MainPage from './MainPage';
 import ResourceRolesPage from './ResourceRolesPage';
@@ -69,6 +70,12 @@ function ConnectedCommandPalette() {
 
     switch (actionType) {
       case ACTION_TYPES.WEB_TERMINAL:
+        // Kubernetes connections get the cluster dashboard, not the editor —
+        // navigating straight there skips the CLJS bundle boot entirely.
+        if (isKubernetesSubtype(connection)) {
+          navigate(`/cluster-dashboard/${encodeURIComponent(connection?.name)}/overview`);
+          break;
+        }
         // The CLJS editor only reads ?role= on panel mount — nudge an already
         // mounted/parked editor to re-read the URL after navigating.
         navigate(`/client?role=${connection?.name}`);

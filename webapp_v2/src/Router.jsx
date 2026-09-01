@@ -52,10 +52,11 @@ import JiraTemplateForm from '@/pages/JiraTemplates/Form'
 import IntegrationsSlack from '@/pages/Integrations/Slack'
 import IntegrationsWebhooks from '@/pages/Integrations/Webhooks'
 
-// The only lazily-loaded page. Every other route is imported eagerly, but the
-// Dashboard pulls in recharts + d3 (~150KB gzipped) and is reachable by admins
-// only — no reason to put that in the bundle every user downloads.
+// Lazily-loaded pages. Every other route is imported eagerly, but these two
+// pull in recharts + d3 (~150KB gzipped) — no reason to put that in the
+// bundle every user downloads on every visit.
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const ClusterDashboard = lazy(() => import('@/pages/ClusterDashboard'))
 
 /**
  * Routing strategy:
@@ -95,6 +96,23 @@ function Router() {
               <PageLayout>
                 <Suspense fallback={<PageLoader h={400} />}>
                   <Dashboard />
+                </Suspense>
+              </PageLayout>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Kubernetes cluster dashboard — auto-opened when a kubernetes-subtype
+          connection is selected anywhere (picker, palette, resources). Not
+          admin-only: regular users with connection access are the audience. */}
+      <Route
+        path="/cluster-dashboard/:connectionName/:view?"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PageLayout>
+                <Suspense fallback={<PageLoader h={400} />}>
+                  <ClusterDashboard />
                 </Suspense>
               </PageLayout>
             </Layout>

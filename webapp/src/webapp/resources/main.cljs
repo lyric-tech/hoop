@@ -12,7 +12,8 @@
             [webapp.formatters :as formatters]
             [webapp.resources.helpers :refer [can-open-web-terminal?
                                               can-test-connection? is-connection-testing?
-                                              can-connect? can-hoop-cli? can-access-native-client?]]
+                                              can-connect? can-hoop-cli? can-access-native-client?
+                                              cluster-dashboard-connection?]]
             [webapp.connections.views.hoop-cli-modal :as lyric-iam-cli-modal]
             [webapp.connections.views.tag-selector :as tag-selector]
             [webapp.connections.views.test-connection-modal :as test-connection-modal]
@@ -219,7 +220,18 @@
              "Connect"
              [:> DropdownMenu.TriggerIcon]]]
            [:> DropdownMenu.Content
-            (when (can-open-web-terminal? connection)
+            ;; Kubernetes connections navigate straight to the React cluster
+            ;; dashboard — never through /client, so the CLJS editor doesn't
+            ;; boot just to redirect away.
+            (when (cluster-dashboard-connection? connection)
+              [:> DropdownMenu.Item {:on-click
+                                     #(rf/dispatch [:navigate :cluster-dashboard {}
+                                                    :connection-name (:name connection)
+                                                    :view "overview"])}
+               "Open Cluster Dashboard"])
+
+            (when (and (can-open-web-terminal? connection)
+                       (not (cluster-dashboard-connection? connection)))
               [:> DropdownMenu.Item {:on-click
                                      (fn []
                                        (rf/dispatch [:database-schema->clear-schema])

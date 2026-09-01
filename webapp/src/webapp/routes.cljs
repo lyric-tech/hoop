@@ -31,6 +31,10 @@
                    [["/" :resource-id "/add-role"] :add-role-to-resource]]
      ["/roles/" :connection-name "/configure"] :configure-role
      "/client" :editor-plugin
+     ;; Rendered by the React shell (webapp_v2) — the bidi entry exists only so
+     ;; the kubernetes auto-redirect (primary-connection events, resources
+     ;; Connect menu) can navigate to it. Same pattern as /guardrails below.
+     ["/cluster-dashboard/" :connection-name "/" :view] :cluster-dashboard
      "/runbooks" :runbooks
      "/features" [["/machine-identities" :machine-identities]
                   ["/machine-identities/new" :machine-identities-new]
