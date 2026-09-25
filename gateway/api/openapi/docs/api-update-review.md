@@ -83,14 +83,14 @@ These states are managed automatically by the gateway:
 
 ### Revoke
 
-- Only an `APPROVED` review of type `jit` can be `REVOKED`; anything else returns `404`.
+- Only an `APPROVED` review of type `jit` can be `REVOKED`. A review in any other state returns `400`; an `APPROVED` review that is not `jit` returns `404`.
 - A revoke adds one `REVOKED` entry to `review_groups_data` for the caller. The approval entries stay as they were, so the history shows who approved and who revoked.
 - `rejection_reason` holds the reason given on `REJECTED` or `REVOKED`.
 - `revoke_at` keeps the planned expiry of the access window. The revoke time is the `review_date` of the `REVOKED` entry.
 
 ### Errors
 
-- `404` - unknown review, or a revoke on a review that is not an approved `jit` review
+- `404` - unknown review, or a revoke on an approved review that is not `jit`
 - `400` - unknown status, self approval, not eligible, wrong state, or the group already decided
 
 ### Final States
