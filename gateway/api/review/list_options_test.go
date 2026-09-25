@@ -127,3 +127,24 @@ func TestToOpenApiReviewOwnerConnectionVerb(t *testing.T) {
 		t.Errorf("connection %q verb %q", got.ConnectionName, got.Verb)
 	}
 }
+
+func TestCanAccessReview(t *testing.T) {
+	rev := &models.Review{OwnerID: "owner", ReviewGroups: []models.ReviewGroups{{GroupName: "sre"}, {GroupName: "dba"}}}
+	for _, tc := range []struct {
+		name   string
+		userID string
+		groups []string
+		want   bool
+	}{
+		{"owner", "owner", nil, true},
+		{"admin", "x", []string{"admin"}, true},
+		{"auditor", "x", []string{"auditor"}, true},
+		{"group member", "x", []string{"engineering", "dba"}, true},
+		{"stranger", "x", []string{"finance"}, false},
+		{"no groups", "x", nil, false},
+	} {
+		if got := canAccessReview(newFakeContext(tc.userID, tc.userID+"@test.local", tc.groups), rev); got != tc.want {
+			t.Errorf("%s: got %v, want %v", tc.name, got, tc.want)
+		}
+	}
+}

@@ -51,24 +51,45 @@ func NewHandler(transportReleaseConnectionFn TransportReleaseConnectionFunc) *ha
 //	@Tags			Reviews
 //	@Param			id	path	string	true	"Resource identifier of the review"
 //	@Produce		json
-//	@Success		200		{object}	openapi.Review
-//	@Failure		404,500	{object}	openapi.HTTPError
+//	@Success		200			{object}	openapi.Review
+//	@Failure		403,404,500	{object}	openapi.HTTPError
 //	@Router			/reviews/{id} [get]
 func (h *handler) GetByIdOrSid(c *gin.Context) {
 	ctx := storagev2.ParseContext(c)
 
 	id := c.Param("id")
+	if _, err := uuid.Parse(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": models.ErrNotFound.Error()})
+		return
+	}
 	review, err := models.GetReviewByIdOrSid(ctx.GetOrgID(), id)
 	switch err {
 	case models.ErrNotFound:
 		c.JSON(http.StatusNotFound, gin.H{"message": models.ErrNotFound.Error()})
 		return
 	case nil:
+		if !canAccessReview(ctx, review) {
+			c.JSON(http.StatusForbidden, gin.H{"message": "user is not allowed to access this review"})
+			return
+		}
 		c.JSON(http.StatusOK, toOpenApiReview(review))
 	default:
 		httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching review: %v", err)
 		return
 	}
+}
+
+// canAccessReview mirrors the session rule: the requester, admins and
+// auditors, and members of a group that can decide the review may read it.
+func canAccessReview(ctx *storagev2.Context, rev *models.Review) bool {
+	if rev.OwnerID == ctx.UserID || ctx.IsAuditorOrAdminUser() {
+		return true
+	}
+	groups := make([]string, 0, len(rev.ReviewGroups))
+	for _, rg := range rev.ReviewGroups {
+		groups = append(groups, rg.GroupName)
+	}
+	return utils.SlicesHasIntersection(ctx.UserGroups, groups)
 }
 
 // List
@@ -99,7 +120,7 @@ func (h *handler) List(c *gin.Context) {
 	caller := models.ReviewListCaller{
 		UserID:           ctx.UserID,
 		UserGroups:       ctx.UserGroups,
-		IsAuditorOrAdmin: ctx.IsAdmin() || ctx.IsAuditor(),
+		IsAuditorOrAdmin: ctx.IsAuditorOrAdminUser(),
 	}
 	reviews, err := models.ListReviewsFiltered(models.DB, ctx.GetOrgID(), caller, opt)
 	if err != nil {
