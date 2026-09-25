@@ -680,6 +680,12 @@ func (api *Api) buildRoutes(r *apiroutes.Router) {
 		api.TrackRequest(analytics.EventFetchReviews),
 		reviewHandler.GetByIdOrSid,
 	)
+	r.GET("/reviews/:id/timeline",
+		apiroutes.ReadOnlyAccessRole,
+		r.AuthMiddleware,
+		api.TrackRequest(analytics.EventFetchReviews),
+		reviewHandler.Timeline,
+	)
 	r.PUT("/reviews/:id",
 		r.AuthMiddleware,
 		api.AuditMiddleware(),
