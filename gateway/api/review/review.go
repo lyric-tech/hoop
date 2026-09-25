@@ -73,26 +73,43 @@ func (h *handler) GetByIdOrSid(c *gin.Context) {
 
 // List
 //
-//	@Summary		Get Review List,
-//	@Description	Get all reviews resource
+//	@Summary		Get Review List
+//	@Description	List the reviews the caller can see, newest first. Admins and auditors see every review; other users see the reviews they filed and the reviews one of their groups can decide. Without limit, every matching review is returned.
 //	@Tags			Reviews
 //	@Produce		json
-//	@Success		200		{object}	[]openapi.Review
-//	@Failure		404,500	{object}	openapi.HTTPError
+//	@Param			status		query		string	false	"Comma separated statuses"	example(PENDING,APPROVED)
+//	@Param			type		query		string	false	"Review type"	Enums(jit, onetime)
+//	@Param			connection	query		string	false	"Connection name"
+//	@Param			user		query		string	false	"me, or the email of the user who filed the review"
+//	@Param			start_date	query		string	false	"Created at or after (RFC3339)"	Format(date-time)
+//	@Param			end_date	query		string	false	"Created at or before (RFC3339)"	Format(date-time)
+//	@Param			limit		query		int		false	"Page size (max: 100)"
+//	@Param			offset		query		int		false	"Offset to paginate through resources (max: 10000)"
+//	@Success		200			{object}	[]openapi.Review
+//	@Failure		422,500		{object}	openapi.HTTPError
 //	@Router			/reviews [get]
 func (h *handler) List(c *gin.Context) {
 	ctx := storagev2.ParseContext(c)
 
-	reviews, err := models.ListReviews(ctx.GetOrgID())
-
+	opt, err := parseReviewListOptions(c.Request.URL.Query(), ctx.UserID)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+		return
+	}
+	caller := models.ReviewListCaller{
+		UserID:           ctx.UserID,
+		UserGroups:       ctx.UserGroups,
+		IsAuditorOrAdmin: ctx.IsAdmin() || ctx.IsAuditor(),
+	}
+	reviews, err := models.ListReviewsFiltered(models.DB, ctx.GetOrgID(), caller, opt)
 	if err != nil {
 		httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching reviews: %v", err)
 		return
 	}
 
-	openapiReviews := []openapi.Review{}
-	for _, r := range *reviews {
-		openapiReviews = append(openapiReviews, *toOpenApiReview(&r))
+	openapiReviews := make([]openapi.Review, 0, len(reviews))
+	for i := range reviews {
+		openapiReviews = append(openapiReviews, *toOpenApiReview(&reviews[i]))
 	}
 
 	c.JSON(http.StatusOK, openapiReviews)
@@ -553,5 +570,13 @@ func toOpenApiReview(r *models.Review) *openapi.Review {
 		MinApprovals:          r.MinApprovals,
 		ForceApprovalGroups:   r.ForceApprovalGroups,
 		RejectionReason:       r.RejectionReason,
+		Owner: &openapi.ReviewOwner{
+			ID:      r.OwnerID,
+			Name:    ptr.ToString(r.OwnerName),
+			Email:   r.OwnerEmail,
+			SlackID: ptr.ToString(r.OwnerSlackID),
+		},
+		ConnectionName: r.ConnectionName,
+		Verb:           r.Verb,
 	}
 }

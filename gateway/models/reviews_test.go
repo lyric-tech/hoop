@@ -119,3 +119,115 @@ func TestReviewGroupsOrderedByDecisionTime(t *testing.T) {
 		}
 	}
 }
+
+func TestListReviewsFiltered(t *testing.T) {
+	orgID := modelstest.StartDB(t)
+	admin := models.ReviewListCaller{UserID: "admin", IsAuditorOrAdmin: true}
+	list := func(t *testing.T, caller models.ReviewListCaller, opt models.ReviewListOptions) []models.Review {
+		t.Helper()
+		got, err := models.ListReviewsFiltered(models.DB, orgID, caller, opt)
+		if err != nil {
+			t.Fatalf("list: %v", err)
+		}
+		return got
+	}
+
+	// alice: 1 pending jit on pg (group sre), 1 approved onetime on mongo (group dba)
+	// bob:   1 rejected jit on pg (group dba)
+	a1 := newTestReview(orgID, "alice", "sre")
+	a1.ConnectionName = "pg"
+	a2 := newTestReview(orgID, "alice", "dba")
+	a2.ConnectionName, a2.Type, a2.Status = "mongo", models.ReviewTypeOneTime, models.ReviewStatusApproved
+	a2.CreatedAt = a1.CreatedAt.Add(time.Second)
+	b1 := newTestReview(orgID, "bob", "dba")
+	b1.ConnectionName, b1.Status, b1.OwnerEmail = "pg", models.ReviewStatusRejected, "Bob@Test.Local"
+	b1.CreatedAt = a1.CreatedAt.Add(2 * time.Second)
+	for _, r := range []*models.Review{a1, a2, b1} {
+		mustCreateReview(t, r)
+	}
+	modelstest.SeedSession(t, orgID, a1.SessionID, "exec", "alice")
+
+	t.Run("filters", func(t *testing.T) {
+		if got := list(t, admin, models.ReviewListOptions{Statuses: []models.ReviewStatusType{models.ReviewStatusPending, models.ReviewStatusRejected}}); len(got) != 2 {
+			t.Errorf("status filter: got %d, want 2", len(got))
+		}
+		if got := list(t, admin, models.ReviewListOptions{Type: models.ReviewTypeOneTime}); len(got) != 1 || got[0].ID != a2.ID {
+			t.Errorf("type filter: got %v", ids(got))
+		}
+		if got := list(t, admin, models.ReviewListOptions{ConnectionName: "pg"}); len(got) != 2 {
+			t.Errorf("connection filter: got %d, want 2", len(got))
+		}
+		if got := list(t, admin, models.ReviewListOptions{OwnerID: "alice"}); len(got) != 2 {
+			t.Errorf("owner id filter: got %d, want 2", len(got))
+		}
+		if got := list(t, admin, models.ReviewListOptions{OwnerEmail: "bob@test.local"}); len(got) != 1 || got[0].ID != b1.ID {
+			t.Errorf("owner email filter must ignore case, got %v", ids(got))
+		}
+		future := time.Now().Add(time.Hour)
+		if got := list(t, admin, models.ReviewListOptions{StartDate: &future}); len(got) != 0 {
+			t.Errorf("start date filter: got %d, want 0", len(got))
+		}
+	})
+
+	t.Run("newest first and paging", func(t *testing.T) {
+		got := list(t, admin, models.ReviewListOptions{})
+		if len(got) != 3 || got[0].ID != b1.ID || got[2].ID != a1.ID {
+			t.Fatalf("order: got %v, want newest first", ids(got))
+		}
+		page := list(t, admin, models.ReviewListOptions{Limit: 2, Offset: 2})
+		if len(page) != 1 || page[0].ID != a1.ID {
+			t.Errorf("second page: got %v", ids(page))
+		}
+	})
+
+	t.Run("visibility", func(t *testing.T) {
+		alice := models.ReviewListCaller{UserID: "alice", UserGroups: []string{"engineering"}}
+		if got := list(t, alice, models.ReviewListOptions{}); len(got) != 2 {
+			t.Errorf("owner sees own reviews: got %v", ids(got))
+		}
+		dba := models.ReviewListCaller{UserID: "carol", UserGroups: []string{"dba"}}
+		if got := list(t, dba, models.ReviewListOptions{}); len(got) != 2 {
+			t.Errorf("group member sees reviews for her group: got %v", ids(got))
+		}
+		stranger := models.ReviewListCaller{UserID: "dave", UserGroups: []string{"finance"}}
+		if got := list(t, stranger, models.ReviewListOptions{}); len(got) != 0 {
+			t.Errorf("stranger must see nothing: got %v", ids(got))
+		}
+		nogroups := models.ReviewListCaller{UserID: "erin"}
+		if got := list(t, nogroups, models.ReviewListOptions{}); len(got) != 0 {
+			t.Errorf("caller without groups must see nothing: got %v", ids(got))
+		}
+	})
+
+	t.Run("verb", func(t *testing.T) {
+		for _, r := range list(t, admin, models.ReviewListOptions{}) {
+			want := ""
+			if r.ID == a1.ID {
+				want = "exec"
+			}
+			if r.Verb != want {
+				t.Errorf("review %s: verb %q, want %q", r.ID, r.Verb, want)
+			}
+		}
+	})
+
+	t.Run("bounds", func(t *testing.T) {
+		for _, opt := range []models.ReviewListOptions{
+			{Limit: -1}, {Limit: models.MaxReviewListLimit + 1},
+			{Offset: -1}, {Offset: models.MaxReviewListOffset + 1},
+			{Statuses: []models.ReviewStatusType{"bogus"}},
+		} {
+			if _, err := models.ListReviewsFiltered(models.DB, orgID, admin, opt); err == nil {
+				t.Errorf("options %+v: expected an error", opt)
+			}
+		}
+	})
+}
+
+func ids(reviews []models.Review) []string {
+	out := make([]string, 0, len(reviews))
+	for _, r := range reviews {
+		out = append(out, r.OwnerID+"/"+r.ConnectionName)
+	}
+	return out
+}

@@ -1225,6 +1225,12 @@ type Review struct {
 	ForceApprovalGroups []string `json:"force_approval_groups" readonly:"true" example:"sre-team"`
 	// The reason provided by the reviewer when rejecting this review
 	RejectionReason *string `json:"rejection_reason,omitempty" readonly:"true" example:"This command is not allowed in production."`
+	// The user who filed the review
+	Owner *ReviewOwner `json:"owner,omitempty" readonly:"true"`
+	// The name of the connection the review is for
+	ConnectionName string `json:"connection_name" readonly:"true" example:"pgdemo"`
+	// The verb of the session that filed the review, empty when that session no longer exists
+	Verb string `json:"verb" readonly:"true" example:"exec"`
 }
 
 type ReviewOwner struct {
