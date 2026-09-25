@@ -109,6 +109,31 @@ var Catalog = map[string]EventType{
 			"occurred_at": "2026-05-04T14:50:00Z",
 		},
 	},
+	"access.jit_revoked": {
+		Name:     "access.jit_revoked",
+		Category: "Access",
+		Description: "Fires when an approved time-based review is revoked via the API or MCP, before it " +
+			"expires. `reviewer` is the email of whoever revoked it; `reason` is the free-form text " +
+			"supplied at revoke time (empty when none was given). Does not fire on expiration.",
+		Schema: []SchemaField{
+			{Name: "session_id", Type: "string", Required: true},
+			{Name: "user", Type: "string(email)", Required: true},
+			{Name: "connection", Type: "string", Required: true},
+			{Name: "reviewer", Type: "string(email)", Required: true},
+			{Name: "review_id", Type: "string", Required: true},
+			{Name: "reason", Type: "string", Required: false},
+			{Name: "occurred_at", Type: "string(ISO 8601)", Required: true},
+		},
+		SamplePayload: map[string]any{
+			"session_id":  "ses_01HX9C3MNO",
+			"user":        "drew.k@acme.com",
+			"connection":  "conn-prod-pg",
+			"reviewer":    "alex.morgan@acme.com",
+			"review_id":   "rev_01HX9C3MNP",
+			"reason":      "incident closed",
+			"occurred_at": "2026-05-04T15:10:00Z",
+		},
+	},
 	"session.guardrail_violation": {
 		Name:     "session.guardrail_violation",
 		Category: "Session",

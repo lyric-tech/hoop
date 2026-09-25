@@ -71,6 +71,18 @@ func PublishJITApproved(orgID string, base SessionEventBase, reviewerEmail, revi
 	}, "review.status_change", reviewID+":access.jit_approved")
 }
 
+func PublishJITRevoked(orgID string, base SessionEventBase, revokerEmail, reviewID, reason string) {
+	Publish(orgID, "access.jit_revoked", map[string]any{
+		"session_id":  base.SessionID,
+		"user":        base.User,
+		"connection":  base.Connection,
+		"reviewer":    revokerEmail,
+		"review_id":   reviewID,
+		"reason":      reason,
+		"occurred_at": base.OccurredAt.UTC().Format(time.RFC3339),
+	}, "review.status_change", reviewID+":access.jit_revoked")
+}
+
 func PublishJITDenied(orgID string, base SessionEventBase, reviewerEmail, reviewID, reason string) {
 	Publish(orgID, "access.jit_denied", map[string]any{
 		"session_id":  base.SessionID,

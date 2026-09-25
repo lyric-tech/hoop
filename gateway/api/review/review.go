@@ -358,7 +358,10 @@ func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.Review
 		defer trackClient.Close()
 
 		trackClient.TrackSessionUsageData(analytics.EventSessionReviewed, ctx.OrgID, ctx.UserID, rev.SessionID)
+	}
 
+	if rev.Status == models.ReviewStatusApproved || rev.Status == models.ReviewStatusRejected ||
+		rev.Status == models.ReviewStatusRevoked {
 		go func() {
 			session, err := models.GetSessionByID(ctx.OrgID, rev.SessionID)
 			if err != nil {
