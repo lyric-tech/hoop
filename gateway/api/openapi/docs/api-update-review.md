@@ -81,6 +81,18 @@ These states are managed automatically by the gateway:
 - `APPROVED` reviews can still be changed to `REJECTED` or `REVOKED` at any time by the resource owner or administrators
 - Once a review reaches `REJECTED` or `REVOKED` the resource is considered as immutable and it cannot be updated again
 
+### Revoke
+
+- Only an `APPROVED` review of type `jit` can be `REVOKED`; anything else returns `404`.
+- A revoke adds one `REVOKED` entry to `review_groups_data` for the caller. The approval entries stay as they were, so the history shows who approved and who revoked.
+- `rejection_reason` holds the reason given on `REJECTED` or `REVOKED`.
+- `revoke_at` keeps the planned expiry of the access window. The revoke time is the `review_date` of the `REVOKED` entry.
+
+### Errors
+
+- `404` - unknown review, or a revoke on a review that is not an approved `jit` review
+- `400` - unknown status, self approval, not eligible, wrong state, or the group already decided
+
 ### Final States
 
 Reviews in `PROCESSING`, `EXECUTED`, or `UNKNOWN` states are immutable and cannot be modified.
