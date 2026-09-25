@@ -34,6 +34,23 @@ var (
 	ErrUnknownStatus        = errors.New("unknown status")
 )
 
+// HTTPStatusForReviewError maps a DoReview error to the status the API
+// answers with. Callers outside HTTP (Slack) use it to record the outcome.
+func HTTPStatusForReviewError(err error) int {
+	switch err {
+	case nil:
+		return http.StatusOK
+	case ErrNotFound:
+		return http.StatusNotFound
+	case ErrUnknownStatus, ErrNotEligible, ErrSelfApproval, ErrWrongState, ErrGroupAlreadyReviewed:
+		return http.StatusBadRequest
+	case ErrForbidden:
+		return http.StatusForbidden
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 type TransportReleaseConnectionFunc func(orgID, sid, reviewOwnerSlackID, reviewStatus, rejectReason, rejectedBy string)
 
 type handler struct {
@@ -200,12 +217,12 @@ func (h *handler) ReviewByIdOrSid(c *gin.Context) {
 
 	req.Status = openapi.ReviewRequestStatusType(strings.ToUpper(string(req.Status)))
 	rev, err := DoReview(ctx, reviewIdOrSid, models.ReviewStatusType(req.Status), reviewTimeWindow, req.ForceReview, req.RejectionReason)
-	switch err {
-	case ErrNotEligible, ErrSelfApproval, ErrWrongState:
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-	case ErrForbidden:
+	switch code := HTTPStatusForReviewError(err); code {
+	case http.StatusBadRequest, http.StatusNotFound:
+		c.JSON(code, gin.H{"message": err.Error()})
+	case http.StatusForbidden:
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "access denied"})
-	case nil:
+	case http.StatusOK:
 		if rev.Status == models.ReviewStatusApproved || rev.Status == models.ReviewStatusRejected {
 			// release any gRPC connection waiting for a review
 			h.TransportReleaseConnection(
@@ -286,6 +303,10 @@ func UpdateSlackMessage(rev *models.Review) error {
 // same transaction as the status change, so any downstream consumers (events, API responses,
 // Slack/MCP flows) observe a consistent state.
 func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.ReviewStatusType, timeWindow *models.ReviewTimeWindow, hasForced bool, rejectionReason string) (*models.Review, error) {
+	// Both ids are uuids; anything else would fail the cast in Postgres.
+	if _, err := uuid.Parse(reviewIdOrSid); err != nil {
+		return nil, ErrNotFound
+	}
 	rev, err := models.GetReviewByIdOrSid(ctx.OrgID, reviewIdOrSid)
 	switch err {
 	case models.ErrNotFound:

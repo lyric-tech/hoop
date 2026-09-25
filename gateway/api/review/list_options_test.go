@@ -148,3 +148,29 @@ func TestCanAccessReview(t *testing.T) {
 		}
 	}
 }
+
+func TestHTTPStatusForReviewError(t *testing.T) {
+	for err, want := range map[error]int{
+		nil:                     200,
+		ErrNotFound:             404,
+		ErrUnknownStatus:        400,
+		ErrNotEligible:          400,
+		ErrSelfApproval:         400,
+		ErrWrongState:           400,
+		ErrGroupAlreadyReviewed: 400,
+		ErrForbidden:            403,
+		errors.New("db down"):   500,
+	} {
+		if got := HTTPStatusForReviewError(err); got != want {
+			t.Errorf("%v: got %d, want %d", err, got, want)
+		}
+	}
+}
+
+// A malformed id must not reach the database; it is simply not found.
+func TestDoReviewRejectsNonUUID(t *testing.T) {
+	_, err := DoReview(newFakeContext("u", "u@test.local", nil), "not-a-uuid", models.ReviewStatusApproved, nil, false, "")
+	if err != ErrNotFound {
+		t.Fatalf("got %v, want ErrNotFound", err)
+	}
+}
