@@ -1250,7 +1250,7 @@ type ReviewTimelineEvent struct {
 	By string `json:"by" example:"venkat@lyric.tech"`
 	// A short human readable description
 	Detail string `json:"detail" example:"group admin"`
-	// The session, for kind session
+	// The session that filed the review (kind requested) or that ran under it (kind session)
 	SessionID string `json:"session_id,omitempty" format:"uuid"`
 }
 

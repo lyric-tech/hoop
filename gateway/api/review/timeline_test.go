@@ -15,7 +15,8 @@ func TestBuildTimeline(t *testing.T) {
 
 	t.Run("approved, session, revoked", func(t *testing.T) {
 		rev := &models.Review{
-			Type: models.ReviewTypeJit, Status: models.ReviewStatusRevoked, ConnectionName: "pg",
+			SessionID: "carrier",
+			Type:      models.ReviewTypeJit, Status: models.ReviewStatusRevoked, ConnectionName: "pg",
 			AccessDurationSec: 3600, OwnerEmail: "owner@test.local", CreatedAt: *at(-60),
 			RevokedAt: at(0), RejectionReason: ptr.String("done for today"),
 			ReviewGroups: []models.ReviewGroups{
@@ -40,8 +41,8 @@ func TestBuildTimeline(t *testing.T) {
 				t.Errorf("event %d: got %s/%s/%q, want %s/%s/%q", i, got[i].Kind, got[i].By, got[i].Detail, w.kind, w.by, w.detail)
 			}
 		}
-		if got[2].SessionID != "s1" {
-			t.Errorf("session id %q", got[2].SessionID)
+		if got[0].SessionID != "carrier" || got[2].SessionID != "s1" {
+			t.Errorf("session ids: requested %q, session %q", got[0].SessionID, got[2].SessionID)
 		}
 	})
 

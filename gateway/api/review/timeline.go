@@ -57,32 +57,23 @@ func (h *handler) Timeline(c *gin.Context) {
 		return
 	}
 
-	var sessions []models.Session
-	session, err := models.GetSessionByID(ctx.GetOrgID(), rev.SessionID)
-	switch err {
-	case nil:
-		sessions = append(sessions, *session)
-	case models.ErrNotFound:
-	default:
-		httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching review session: %v", err)
-		return
-	}
-
 	c.JSON(http.StatusOK, openapi.ReviewTimeline{
 		Review: *toOpenApiReview(rev),
-		Events: buildTimeline(rev, sessions, time.Now().UTC()),
+		Events: buildTimeline(rev, nil, time.Now().UTC()),
 	})
 }
 
-// buildTimeline turns a review, its group rows and the sessions it covered
-// into events ordered by time.
+// buildTimeline turns a review, its group rows and the sessions that ran
+// under it into events ordered by time. The session that filed the review is
+// the request itself, so it rides on the requested event instead of being a
+// session event of its own.
 func buildTimeline(rev *models.Review, sessions []models.Session, now time.Time) []openapi.ReviewTimelineEvent {
 	requested := fmt.Sprintf("command on %s", rev.ConnectionName)
 	if rev.Type == models.ReviewTypeJit {
 		requested = fmt.Sprintf("%s on %s", formatAccessDuration(rev.AccessDurationSec), rev.ConnectionName)
 	}
 	events := []openapi.ReviewTimelineEvent{{
-		At: rev.CreatedAt, Kind: TimelineRequested, By: rev.OwnerEmail, Detail: requested,
+		At: rev.CreatedAt, Kind: TimelineRequested, By: rev.OwnerEmail, Detail: requested, SessionID: rev.SessionID,
 	}}
 
 	for _, rg := range rev.ReviewGroups {
