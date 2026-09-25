@@ -27,7 +27,7 @@ func DeriveFromSessionStart(orgID string, session *models.Session, conn *models.
 	}
 }
 
-// DeriveFromReview is called when a review transitions to APPROVED or REJECTED.
+// DeriveFromReview is called when a review transitions to APPROVED, REJECTED or REVOKED.
 func DeriveFromReview(orgID string, review *models.Review, session *models.Session) {
 	if review == nil || session == nil {
 		return
@@ -45,6 +45,12 @@ func DeriveFromReview(orgID string, review *models.Review, session *models.Sessi
 			reason = *review.RejectionReason
 		}
 		PublishJITDenied(orgID, base, reviewerEmail, review.ID, reason)
+	case models.ReviewStatusRevoked:
+		reason := ""
+		if review.RejectionReason != nil {
+			reason = *review.RejectionReason
+		}
+		PublishJITRevoked(orgID, base, review.RevokedByEmail(), review.ID, reason)
 	}
 }
 

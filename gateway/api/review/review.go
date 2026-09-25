@@ -34,6 +34,23 @@ var (
 	ErrUnknownStatus        = errors.New("unknown status")
 )
 
+// HTTPStatusForReviewError maps a DoReview error to the status the API
+// answers with. Callers outside HTTP (Slack) use it to record the outcome.
+func HTTPStatusForReviewError(err error) int {
+	switch err {
+	case nil:
+		return http.StatusOK
+	case ErrNotFound:
+		return http.StatusNotFound
+	case ErrUnknownStatus, ErrNotEligible, ErrSelfApproval, ErrWrongState, ErrGroupAlreadyReviewed:
+		return http.StatusBadRequest
+	case ErrForbidden:
+		return http.StatusForbidden
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 type TransportReleaseConnectionFunc func(orgID, sid, reviewOwnerSlackID, reviewStatus, rejectReason, rejectedBy string)
 
 type handler struct {
@@ -51,19 +68,27 @@ func NewHandler(transportReleaseConnectionFn TransportReleaseConnectionFunc) *ha
 //	@Tags			Reviews
 //	@Param			id	path	string	true	"Resource identifier of the review"
 //	@Produce		json
-//	@Success		200		{object}	openapi.Review
-//	@Failure		404,500	{object}	openapi.HTTPError
+//	@Success		200			{object}	openapi.Review
+//	@Failure		403,404,500	{object}	openapi.HTTPError
 //	@Router			/reviews/{id} [get]
 func (h *handler) GetByIdOrSid(c *gin.Context) {
 	ctx := storagev2.ParseContext(c)
 
 	id := c.Param("id")
+	if _, err := uuid.Parse(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": models.ErrNotFound.Error()})
+		return
+	}
 	review, err := models.GetReviewByIdOrSid(ctx.GetOrgID(), id)
 	switch err {
 	case models.ErrNotFound:
 		c.JSON(http.StatusNotFound, gin.H{"message": models.ErrNotFound.Error()})
 		return
 	case nil:
+		if !canAccessReview(ctx, review) {
+			c.JSON(http.StatusForbidden, gin.H{"message": "user is not allowed to access this review"})
+			return
+		}
 		c.JSON(http.StatusOK, toOpenApiReview(review))
 	default:
 		httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching review: %v", err)
@@ -71,28 +96,58 @@ func (h *handler) GetByIdOrSid(c *gin.Context) {
 	}
 }
 
+// canAccessReview mirrors the session rule: the requester, admins and
+// auditors, and members of a group that can decide the review may read it.
+func canAccessReview(ctx *storagev2.Context, rev *models.Review) bool {
+	if rev.OwnerID == ctx.UserID || ctx.IsAuditorOrAdminUser() {
+		return true
+	}
+	groups := make([]string, 0, len(rev.ReviewGroups))
+	for _, rg := range rev.ReviewGroups {
+		groups = append(groups, rg.GroupName)
+	}
+	return utils.SlicesHasIntersection(ctx.UserGroups, groups)
+}
+
 // List
 //
-//	@Summary		Get Review List,
-//	@Description	Get all reviews resource
+//	@Summary		Get Review List
+//	@Description	List the reviews the caller can see, newest first. Admins and auditors see every review; other users see the reviews they filed and the reviews one of their groups can decide. Without limit, every matching review is returned.
 //	@Tags			Reviews
 //	@Produce		json
-//	@Success		200		{object}	[]openapi.Review
-//	@Failure		404,500	{object}	openapi.HTTPError
+//	@Param			status		query		string	false	"Comma separated statuses"	example(PENDING,APPROVED)
+//	@Param			type		query		string	false	"Review type"	Enums(jit, onetime)
+//	@Param			connection	query		string	false	"Connection name"
+//	@Param			user		query		string	false	"me, or the email of the user who filed the review"
+//	@Param			start_date	query		string	false	"Created at or after (RFC3339)"	Format(date-time)
+//	@Param			end_date	query		string	false	"Created at or before (RFC3339)"	Format(date-time)
+//	@Param			limit		query		int		false	"Page size (max: 100)"
+//	@Param			offset		query		int		false	"Offset to paginate through resources (max: 10000)"
+//	@Success		200			{object}	[]openapi.Review
+//	@Failure		422,500		{object}	openapi.HTTPError
 //	@Router			/reviews [get]
 func (h *handler) List(c *gin.Context) {
 	ctx := storagev2.ParseContext(c)
 
-	reviews, err := models.ListReviews(ctx.GetOrgID())
-
+	opt, err := parseReviewListOptions(c.Request.URL.Query(), ctx.UserID)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+		return
+	}
+	caller := models.ReviewListCaller{
+		UserID:           ctx.UserID,
+		UserGroups:       ctx.UserGroups,
+		IsAuditorOrAdmin: ctx.IsAuditorOrAdminUser(),
+	}
+	reviews, err := models.ListReviewsFiltered(models.DB, ctx.GetOrgID(), caller, opt)
 	if err != nil {
 		httputils.AbortWithErr(c, http.StatusInternalServerError, err, "failed fetching reviews: %v", err)
 		return
 	}
 
-	openapiReviews := []openapi.Review{}
-	for _, r := range *reviews {
-		openapiReviews = append(openapiReviews, *toOpenApiReview(&r))
+	openapiReviews := make([]openapi.Review, 0, len(reviews))
+	for i := range reviews {
+		openapiReviews = append(openapiReviews, *toOpenApiReview(&reviews[i]))
 	}
 
 	c.JSON(http.StatusOK, openapiReviews)
@@ -162,12 +217,12 @@ func (h *handler) ReviewByIdOrSid(c *gin.Context) {
 
 	req.Status = openapi.ReviewRequestStatusType(strings.ToUpper(string(req.Status)))
 	rev, err := DoReview(ctx, reviewIdOrSid, models.ReviewStatusType(req.Status), reviewTimeWindow, req.ForceReview, req.RejectionReason)
-	switch err {
-	case ErrNotEligible, ErrSelfApproval, ErrWrongState:
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-	case ErrForbidden:
+	switch code := HTTPStatusForReviewError(err); code {
+	case http.StatusBadRequest, http.StatusNotFound:
+		c.JSON(code, gin.H{"message": err.Error()})
+	case http.StatusForbidden:
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "access denied"})
-	case nil:
+	case http.StatusOK:
 		if rev.Status == models.ReviewStatusApproved || rev.Status == models.ReviewStatusRejected {
 			// release any gRPC connection waiting for a review
 			h.TransportReleaseConnection(
@@ -244,10 +299,14 @@ func UpdateSlackMessage(rev *models.Review) error {
 // DoReview updates the status of a review identified by reviewIdOrSid. The hasForced parameter
 // indicates whether the review status change was forced by an administrator or privileged user,
 // bypassing normal review validation rules or approval workflows. When the resulting status is
-// ReviewStatusRejected, a non-empty rejectionReason is persisted on the review record in the
+// ReviewStatusRejected or ReviewStatusRevoked, a non-empty rejectionReason is persisted on the review record in the
 // same transaction as the status change, so any downstream consumers (events, API responses,
 // Slack/MCP flows) observe a consistent state.
 func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.ReviewStatusType, timeWindow *models.ReviewTimeWindow, hasForced bool, rejectionReason string) (*models.Review, error) {
+	// Both ids are uuids; anything else would fail the cast in Postgres.
+	if _, err := uuid.Parse(reviewIdOrSid); err != nil {
+		return nil, ErrNotFound
+	}
 	rev, err := models.GetReviewByIdOrSid(ctx.OrgID, reviewIdOrSid)
 	switch err {
 	case models.ErrNotFound:
@@ -280,7 +339,8 @@ func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.Review
 		return nil, err
 	}
 
-	if rev.Status == models.ReviewStatusRejected && rejectionReason != "" {
+	// The column holds the reason of the decision that ended the review.
+	if (rev.Status == models.ReviewStatusRejected || rev.Status == models.ReviewStatusRevoked) && rejectionReason != "" {
 		rev.RejectionReason = &rejectionReason
 	}
 
@@ -298,7 +358,10 @@ func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.Review
 		defer trackClient.Close()
 
 		trackClient.TrackSessionUsageData(analytics.EventSessionReviewed, ctx.OrgID, ctx.UserID, rev.SessionID)
+	}
 
+	if rev.Status == models.ReviewStatusApproved || rev.Status == models.ReviewStatusRejected ||
+		rev.Status == models.ReviewStatusRevoked {
 		go func() {
 			session, err := models.GetSessionByID(ctx.OrgID, rev.SessionID)
 			if err != nil {
@@ -316,6 +379,10 @@ func doReview(ctx *storagev2.Context, rev *models.Review, connection *models.Con
 	err := validateReviewStatusTransition(ctx, rev, status)
 	if err != nil {
 		return nil, err
+	}
+
+	if status == models.ReviewStatusRevoked {
+		return doRevoke(ctx, rev, connection, force)
 	}
 
 	if force {
@@ -471,6 +538,59 @@ func doIndividualReview(ctx *storagev2.Context, rev *models.Review, connection *
 	return rev, nil
 }
 
+// doRevoke appends one REVOKED row for the actor and never touches the
+// existing rows, so the approvals stay in the history next to the revoke. The
+// row's reviewed_at is when access was revoked; revoked_at on the review keeps
+// the planned expiry.
+func doRevoke(ctx *storagev2.Context, rev *models.Review, connection *models.Connection, force bool) (*models.Review, error) {
+	var groupName string
+	var forced bool
+	for _, rg := range rev.ReviewGroups {
+		if slices.Contains(ctx.UserGroups, rg.GroupName) {
+			groupName = rg.GroupName
+			break
+		}
+	}
+	if groupName == "" && force {
+		forceApproveGroups := connection.ForceApproveGroups
+		if rev.AccessRequestRuleName != nil && rev.ForceApprovalGroups != nil {
+			forceApproveGroups = rev.ForceApprovalGroups
+		}
+		if g := utils.SlicesFindFirstIntersection(ctx.UserGroups, forceApproveGroups); g != nil {
+			groupName, forced = *g, true
+		}
+	}
+	if groupName == "" {
+		switch {
+		case ctx.IsAdmin():
+			groupName = types.GroupAdmin
+		case rev.OwnerID == ctx.UserID:
+			if len(ctx.UserGroups) > 0 {
+				groupName = ctx.UserGroups[0]
+			}
+		default:
+			return nil, ErrNotEligible
+		}
+	}
+
+	revokedAt := time.Now().UTC()
+	rev.ReviewGroups = append(rev.ReviewGroups, models.ReviewGroups{
+		ID:           uuid.NewString(),
+		OrgID:        ctx.OrgID,
+		ReviewID:     rev.ID,
+		GroupName:    groupName,
+		Status:       models.ReviewStatusRevoked,
+		OwnerID:      ptr.String(ctx.UserID),
+		OwnerEmail:   ptr.String(ctx.UserEmail),
+		OwnerName:    ptr.String(ctx.UserName),
+		OwnerSlackID: ptr.String(ctx.SlackID),
+		ReviewedAt:   &revokedAt,
+		ForcedReview: forced,
+	})
+	rev.Status = models.ReviewStatusRevoked
+	return rev, nil
+}
+
 func validateReviewStatusTransition(ctx *storagev2.Context, rev *models.Review, status models.ReviewStatusType) error {
 	// user can only approve, reject or revoke a review
 	switch status {
@@ -553,5 +673,13 @@ func toOpenApiReview(r *models.Review) *openapi.Review {
 		MinApprovals:          r.MinApprovals,
 		ForceApprovalGroups:   r.ForceApprovalGroups,
 		RejectionReason:       r.RejectionReason,
+		Owner: &openapi.ReviewOwner{
+			ID:      r.OwnerID,
+			Name:    ptr.ToString(r.OwnerName),
+			Email:   r.OwnerEmail,
+			SlackID: ptr.ToString(r.OwnerSlackID),
+		},
+		ConnectionName: r.ConnectionName,
+		Verb:           r.Verb,
 	}
 }

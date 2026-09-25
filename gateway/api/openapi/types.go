@@ -1225,6 +1225,33 @@ type Review struct {
 	ForceApprovalGroups []string `json:"force_approval_groups" readonly:"true" example:"sre-team"`
 	// The reason provided by the reviewer when rejecting this review
 	RejectionReason *string `json:"rejection_reason,omitempty" readonly:"true" example:"This command is not allowed in production."`
+	// The user who filed the review
+	Owner *ReviewOwner `json:"owner,omitempty" readonly:"true"`
+	// The name of the connection the review is for
+	ConnectionName string `json:"connection_name" readonly:"true" example:"pgdemo"`
+	// The verb of the session that filed the review, empty when that session no longer exists
+	Verb string `json:"verb" readonly:"true" example:"exec"`
+}
+
+// ReviewTimeline is the history of one review, oldest first.
+type ReviewTimeline struct {
+	Review Review                `json:"review"`
+	Events []ReviewTimelineEvent `json:"events"`
+	// True when more sessions ran under the review than the timeline lists
+	SessionsTruncated bool `json:"sessions_truncated"`
+}
+
+type ReviewTimelineEvent struct {
+	// When it happened
+	At time.Time `json:"at" example:"2026-09-24T08:36:29Z"`
+	// What happened
+	Kind string `json:"kind" enums:"requested,approved,rejected,forced,revoked,expired,session" example:"approved"`
+	// The email of who did it; empty for an expiry
+	By string `json:"by" example:"venkat@lyric.tech"`
+	// A short human readable description
+	Detail string `json:"detail" example:"group admin"`
+	// The session that filed the review (kind requested) or that ran under it (kind session)
+	SessionID string `json:"session_id,omitempty" format:"uuid"`
 }
 
 type ReviewOwner struct {

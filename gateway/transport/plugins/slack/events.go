@@ -1,12 +1,15 @@
 package slack
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"slices"
 
 	"github.com/aws/smithy-go/ptr"
 	"github.com/hoophq/hoop/common/log"
 	reviewapi "github.com/hoophq/hoop/gateway/api/review"
+	"github.com/hoophq/hoop/gateway/audit"
 	"github.com/hoophq/hoop/gateway/models"
 	slackservice "github.com/hoophq/hoop/gateway/slack"
 	"github.com/hoophq/hoop/gateway/storagev2"
@@ -89,6 +92,15 @@ func (p *slackPlugin) performReview(ev *event, ctx *storagev2.Context, status mo
 	// with a stale version where only the clicked block changed.
 	tracked := ev.ss.HasTrackedReviewMessages(ev.msg.ID)
 	rev, err := reviewapi.DoReview(ctx, ev.msg.ID, status, nil, false, ev.msg.RejectionReason)
+	// A Slack decision never goes through the HTTP audit middleware, so it is
+	// recorded here with the path the equivalent API call would use.
+	var auditErr string
+	if err != nil {
+		auditErr = err.Error()
+	}
+	audit.LogFromMiddleware(ctx, http.MethodPut, reviewapi.HTTPStatusForReviewError(err),
+		"/api/reviews/"+ev.msg.ID, "", audit.ResourceReview, audit.ActionUpdate,
+		slackDecisionAuditBody(status, ev.msg.RejectionReason), auditErr)
 	var msg string
 	switch err {
 	case reviewapi.ErrNotFound:
@@ -176,4 +188,15 @@ func (p *slackPlugin) notifyOwnerRejected(ev *event, ctx *storagev2.Context, rev
 	if err := ev.ss.PostMessage(ownerSlackID, text); err != nil {
 		log.With("sid", ev.msg.SessionID).Warnf("failed sending rejection DM to session owner, err=%v", err)
 	}
+}
+
+// slackDecisionAuditBody is the audit payload of a Slack decision, shaped like
+// the PUT /reviews/:id body plus its source.
+func slackDecisionAuditBody(status models.ReviewStatusType, rejectionReason string) []byte {
+	body := map[string]string{"status": string(status), "source": "slack"}
+	if rejectionReason != "" {
+		body["rejection_reason"] = rejectionReason
+	}
+	out, _ := json.Marshal(body)
+	return out
 }

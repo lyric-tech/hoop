@@ -7249,14 +7249,71 @@ const docTemplate = `{
         },
         "/reviews": {
             "get": {
-                "description": "Get all reviews resource",
+                "description": "List the reviews the caller can see, newest first. Admins and auditors see every review; other users see the reviews they filed and the reviews one of their groups can decide. Without limit, every matching review is returned.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Reviews"
                 ],
-                "summary": "Get Review List,",
+                "summary": "Get Review List",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "PENDING,APPROVED",
+                        "description": "Comma separated statuses",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "jit",
+                            "onetime"
+                        ],
+                        "type": "string",
+                        "description": "Review type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Connection name",
+                        "name": "connection",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "me, or the email of the user who filed the review",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Created at or after (RFC3339)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Created at or before (RFC3339)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset to paginate through resources (max: 10000)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7267,8 +7324,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/openapi.HTTPError"
                         }
@@ -7308,6 +7365,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/openapi.Review"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -7323,7 +7386,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update the status of a review resource by its resource ID or session ID. This endpoint is used to approve, reject, or revoke reviews for session execution requests.\n\n## Overview\n\nWhen a user interacts with a session, a review resource is automatically created containing the configured review groups, each initially set to ` + "`" + `PENDING` + "`" + ` status. **All groups must be approved before the session can be executed.**\n\nThe review status updates affect each review group based on the caller's context. Once all groups are ` + "`" + `APPROVED` + "`" + `, or if any group becomes ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + `, the overall resource status updates accordingly.\n\n## Review Groups\n\nReview groups contain individual review entries that must be completed by authorized users from specific groups. Each entry represents a required approval from a designated reviewer group.\n\n### Initial State\n\nWhen a review is created, each group entry is populated with the following structure:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"aaa257be-5cc9-401d-ae7e-18ae806d366a\",\n    \"group\": \"banking\",\n    \"status\": \"PENDING\",\n    \"reviewed_by\": null,\n    \"review_date\": null\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n### Completed Review State\n\nAfter a review is completed, the entry includes the status, review timestamp, and reviewer information:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"a546dfba-d917-4c2b-bc38-7852a7932573\",\n    \"group\": \"banking\",\n    \"status\": \"REJECTED\",\n    \"reviewed_by\": {\n        \"id\": \"17e4ff1a-104c-482c-be68-3c01bfc7028e\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@domain.tld\",\n        \"slack_id\": \"\"\n    },\n    \"review_date\": \"2025-05-27T16:40:05.519754143Z\"\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n## Review States\n\n### User-Controlled States\n\nThese states are set directly by reviewers:\n\n- **` + "`" + `APPROVED` + "`" + `** - The resource has been approved by the reviewer\n- **` + "`" + `REJECTED` + "`" + `** - The resource is rejected and cannot be updated further\n- **` + "`" + `REVOKED` + "`" + `** - The resource is revoked and cannot be updated further\n\n### System-Controlled States\n\nThese states are managed automatically by the gateway:\n\n- **` + "`" + `PENDING` + "`" + `** - Initial state when the review is created\n- **` + "`" + `PROCESSING` + "`" + `** - Session is being executed; review cannot be updated\n- **` + "`" + `EXECUTED` + "`" + `** - Session completed successfully; review cannot be updated\n- **` + "`" + `UNKNOWN` + "`" + `** - Session executed but outcome is indeterminate\n\n## General Rules\n\n### Review Permissions\n\n- Reviews can only be performed when the resource status is ` + "`" + `PENDING` + "`" + ` or ` + "`" + `APPROVED` + "`" + `\n- **Resource owners cannot self-approve** - approval requires another member of the same group\n- Users are only eligible to review if they are **not the resource owner** or are **administrators**\n\n### Multi-Group Reviews\n\n- If a user belongs to multiple groups, separate review entries are updated for each group\n- All group reviews must be completed before session execution\n\n### Status Transitions\n\n- Setting any review to ` + "`" + `REJECTED` + "`" + ` immediately changes the overall resource status and prevents further updates\n- ` + "`" + `APPROVED` + "`" + ` reviews can still be changed to ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` at any time by the resource owner or administrators\n- Once a review reaches ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` the resource is considered as immutable and it cannot be updated again\n\n### Final States\n\nReviews in ` + "`" + `PROCESSING` + "`" + `, ` + "`" + `EXECUTED` + "`" + `, or ` + "`" + `UNKNOWN` + "`" + ` states are immutable and cannot be modified.",
+                "description": "Update the status of a review resource by its resource ID or session ID. This endpoint is used to approve, reject, or revoke reviews for session execution requests.\n\n## Overview\n\nWhen a user interacts with a session, a review resource is automatically created containing the configured review groups, each initially set to ` + "`" + `PENDING` + "`" + ` status. **All groups must be approved before the session can be executed.**\n\nThe review status updates affect each review group based on the caller's context. Once all groups are ` + "`" + `APPROVED` + "`" + `, or if any group becomes ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + `, the overall resource status updates accordingly.\n\n## Review Groups\n\nReview groups contain individual review entries that must be completed by authorized users from specific groups. Each entry represents a required approval from a designated reviewer group.\n\n### Initial State\n\nWhen a review is created, each group entry is populated with the following structure:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"aaa257be-5cc9-401d-ae7e-18ae806d366a\",\n    \"group\": \"banking\",\n    \"status\": \"PENDING\",\n    \"reviewed_by\": null,\n    \"review_date\": null\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n### Completed Review State\n\nAfter a review is completed, the entry includes the status, review timestamp, and reviewer information:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"a546dfba-d917-4c2b-bc38-7852a7932573\",\n    \"group\": \"banking\",\n    \"status\": \"REJECTED\",\n    \"reviewed_by\": {\n        \"id\": \"17e4ff1a-104c-482c-be68-3c01bfc7028e\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@domain.tld\",\n        \"slack_id\": \"\"\n    },\n    \"review_date\": \"2025-05-27T16:40:05.519754143Z\"\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n## Review States\n\n### User-Controlled States\n\nThese states are set directly by reviewers:\n\n- **` + "`" + `APPROVED` + "`" + `** - The resource has been approved by the reviewer\n- **` + "`" + `REJECTED` + "`" + `** - The resource is rejected and cannot be updated further\n- **` + "`" + `REVOKED` + "`" + `** - The resource is revoked and cannot be updated further\n\n### System-Controlled States\n\nThese states are managed automatically by the gateway:\n\n- **` + "`" + `PENDING` + "`" + `** - Initial state when the review is created\n- **` + "`" + `PROCESSING` + "`" + `** - Session is being executed; review cannot be updated\n- **` + "`" + `EXECUTED` + "`" + `** - Session completed successfully; review cannot be updated\n- **` + "`" + `UNKNOWN` + "`" + `** - Session executed but outcome is indeterminate\n\n## General Rules\n\n### Review Permissions\n\n- Reviews can only be performed when the resource status is ` + "`" + `PENDING` + "`" + ` or ` + "`" + `APPROVED` + "`" + `\n- **Resource owners cannot self-approve** - approval requires another member of the same group\n- Users are only eligible to review if they are **not the resource owner** or are **administrators**\n\n### Multi-Group Reviews\n\n- If a user belongs to multiple groups, separate review entries are updated for each group\n- All group reviews must be completed before session execution\n\n### Status Transitions\n\n- Setting any review to ` + "`" + `REJECTED` + "`" + ` immediately changes the overall resource status and prevents further updates\n- ` + "`" + `APPROVED` + "`" + ` reviews can still be changed to ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` at any time by the resource owner or administrators\n- Once a review reaches ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` the resource is considered as immutable and it cannot be updated again\n\n### Revoke\n\n- Only an ` + "`" + `APPROVED` + "`" + ` review of type ` + "`" + `jit` + "`" + ` can be ` + "`" + `REVOKED` + "`" + `. A review in any other state returns ` + "`" + `400` + "`" + `; an ` + "`" + `APPROVED` + "`" + ` review that is not ` + "`" + `jit` + "`" + ` returns ` + "`" + `404` + "`" + `.\n- A revoke adds one ` + "`" + `REVOKED` + "`" + ` entry to ` + "`" + `review_groups_data` + "`" + ` for the caller. The approval entries stay as they were, so the history shows who approved and who revoked.\n- ` + "`" + `rejection_reason` + "`" + ` holds the reason given on ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + `.\n- ` + "`" + `revoke_at` + "`" + ` keeps the planned expiry of the access window. The revoke time is the ` + "`" + `review_date` + "`" + ` of the ` + "`" + `REVOKED` + "`" + ` entry.\n\n### Errors\n\n- ` + "`" + `404` + "`" + ` - unknown review, or a revoke on an approved review that is not ` + "`" + `jit` + "`" + `\n- ` + "`" + `400` + "`" + ` - unknown status, self approval, not eligible, wrong state, or the group already decided\n\n### Final States\n\nReviews in ` + "`" + `PROCESSING` + "`" + `, ` + "`" + `EXECUTED` + "`" + `, or ` + "`" + `UNKNOWN` + "`" + ` states are immutable and cannot be modified.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7363,6 +7426,53 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews/{id}/timeline": {
+            "get": {
+                "description": "The history of a review, oldest first: the request, each group decision, a revoke or expiry, and the sessions it covered.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Get Review Timeline",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource identifier of the review",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.ReviewTimeline"
                         }
                     },
                     "403": {
@@ -9745,7 +9855,7 @@ const docTemplate = `{
         },
         "/sessions/{session_id}/review": {
             "put": {
-                "description": "Update the status of a review resource by its resource ID or session ID. This endpoint is used to approve, reject, or revoke reviews for session execution requests.\n\n## Overview\n\nWhen a user interacts with a session, a review resource is automatically created containing the configured review groups, each initially set to ` + "`" + `PENDING` + "`" + ` status. **All groups must be approved before the session can be executed.**\n\nThe review status updates affect each review group based on the caller's context. Once all groups are ` + "`" + `APPROVED` + "`" + `, or if any group becomes ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + `, the overall resource status updates accordingly.\n\n## Review Groups\n\nReview groups contain individual review entries that must be completed by authorized users from specific groups. Each entry represents a required approval from a designated reviewer group.\n\n### Initial State\n\nWhen a review is created, each group entry is populated with the following structure:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"aaa257be-5cc9-401d-ae7e-18ae806d366a\",\n    \"group\": \"banking\",\n    \"status\": \"PENDING\",\n    \"reviewed_by\": null,\n    \"review_date\": null\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n### Completed Review State\n\nAfter a review is completed, the entry includes the status, review timestamp, and reviewer information:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"a546dfba-d917-4c2b-bc38-7852a7932573\",\n    \"group\": \"banking\",\n    \"status\": \"REJECTED\",\n    \"reviewed_by\": {\n        \"id\": \"17e4ff1a-104c-482c-be68-3c01bfc7028e\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@domain.tld\",\n        \"slack_id\": \"\"\n    },\n    \"review_date\": \"2025-05-27T16:40:05.519754143Z\"\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n## Review States\n\n### User-Controlled States\n\nThese states are set directly by reviewers:\n\n- **` + "`" + `APPROVED` + "`" + `** - The resource has been approved by the reviewer\n- **` + "`" + `REJECTED` + "`" + `** - The resource is rejected and cannot be updated further\n- **` + "`" + `REVOKED` + "`" + `** - The resource is revoked and cannot be updated further\n\n### System-Controlled States\n\nThese states are managed automatically by the gateway:\n\n- **` + "`" + `PENDING` + "`" + `** - Initial state when the review is created\n- **` + "`" + `PROCESSING` + "`" + `** - Session is being executed; review cannot be updated\n- **` + "`" + `EXECUTED` + "`" + `** - Session completed successfully; review cannot be updated\n- **` + "`" + `UNKNOWN` + "`" + `** - Session executed but outcome is indeterminate\n\n## General Rules\n\n### Review Permissions\n\n- Reviews can only be performed when the resource status is ` + "`" + `PENDING` + "`" + ` or ` + "`" + `APPROVED` + "`" + `\n- **Resource owners cannot self-approve** - approval requires another member of the same group\n- Users are only eligible to review if they are **not the resource owner** or are **administrators**\n\n### Multi-Group Reviews\n\n- If a user belongs to multiple groups, separate review entries are updated for each group\n- All group reviews must be completed before session execution\n\n### Status Transitions\n\n- Setting any review to ` + "`" + `REJECTED` + "`" + ` immediately changes the overall resource status and prevents further updates\n- ` + "`" + `APPROVED` + "`" + ` reviews can still be changed to ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` at any time by the resource owner or administrators\n- Once a review reaches ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` the resource is considered as immutable and it cannot be updated again\n\n### Final States\n\nReviews in ` + "`" + `PROCESSING` + "`" + `, ` + "`" + `EXECUTED` + "`" + `, or ` + "`" + `UNKNOWN` + "`" + ` states are immutable and cannot be modified.",
+                "description": "Update the status of a review resource by its resource ID or session ID. This endpoint is used to approve, reject, or revoke reviews for session execution requests.\n\n## Overview\n\nWhen a user interacts with a session, a review resource is automatically created containing the configured review groups, each initially set to ` + "`" + `PENDING` + "`" + ` status. **All groups must be approved before the session can be executed.**\n\nThe review status updates affect each review group based on the caller's context. Once all groups are ` + "`" + `APPROVED` + "`" + `, or if any group becomes ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + `, the overall resource status updates accordingly.\n\n## Review Groups\n\nReview groups contain individual review entries that must be completed by authorized users from specific groups. Each entry represents a required approval from a designated reviewer group.\n\n### Initial State\n\nWhen a review is created, each group entry is populated with the following structure:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"aaa257be-5cc9-401d-ae7e-18ae806d366a\",\n    \"group\": \"banking\",\n    \"status\": \"PENDING\",\n    \"reviewed_by\": null,\n    \"review_date\": null\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n### Completed Review State\n\nAfter a review is completed, the entry includes the status, review timestamp, and reviewer information:\n\n` + "`" + `` + "`" + `` + "`" + `json\n{\n    \"id\": \"a546dfba-d917-4c2b-bc38-7852a7932573\",\n    \"group\": \"banking\",\n    \"status\": \"REJECTED\",\n    \"reviewed_by\": {\n        \"id\": \"17e4ff1a-104c-482c-be68-3c01bfc7028e\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@domain.tld\",\n        \"slack_id\": \"\"\n    },\n    \"review_date\": \"2025-05-27T16:40:05.519754143Z\"\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n## Review States\n\n### User-Controlled States\n\nThese states are set directly by reviewers:\n\n- **` + "`" + `APPROVED` + "`" + `** - The resource has been approved by the reviewer\n- **` + "`" + `REJECTED` + "`" + `** - The resource is rejected and cannot be updated further\n- **` + "`" + `REVOKED` + "`" + `** - The resource is revoked and cannot be updated further\n\n### System-Controlled States\n\nThese states are managed automatically by the gateway:\n\n- **` + "`" + `PENDING` + "`" + `** - Initial state when the review is created\n- **` + "`" + `PROCESSING` + "`" + `** - Session is being executed; review cannot be updated\n- **` + "`" + `EXECUTED` + "`" + `** - Session completed successfully; review cannot be updated\n- **` + "`" + `UNKNOWN` + "`" + `** - Session executed but outcome is indeterminate\n\n## General Rules\n\n### Review Permissions\n\n- Reviews can only be performed when the resource status is ` + "`" + `PENDING` + "`" + ` or ` + "`" + `APPROVED` + "`" + `\n- **Resource owners cannot self-approve** - approval requires another member of the same group\n- Users are only eligible to review if they are **not the resource owner** or are **administrators**\n\n### Multi-Group Reviews\n\n- If a user belongs to multiple groups, separate review entries are updated for each group\n- All group reviews must be completed before session execution\n\n### Status Transitions\n\n- Setting any review to ` + "`" + `REJECTED` + "`" + ` immediately changes the overall resource status and prevents further updates\n- ` + "`" + `APPROVED` + "`" + ` reviews can still be changed to ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` at any time by the resource owner or administrators\n- Once a review reaches ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + ` the resource is considered as immutable and it cannot be updated again\n\n### Revoke\n\n- Only an ` + "`" + `APPROVED` + "`" + ` review of type ` + "`" + `jit` + "`" + ` can be ` + "`" + `REVOKED` + "`" + `. A review in any other state returns ` + "`" + `400` + "`" + `; an ` + "`" + `APPROVED` + "`" + ` review that is not ` + "`" + `jit` + "`" + ` returns ` + "`" + `404` + "`" + `.\n- A revoke adds one ` + "`" + `REVOKED` + "`" + ` entry to ` + "`" + `review_groups_data` + "`" + ` for the caller. The approval entries stay as they were, so the history shows who approved and who revoked.\n- ` + "`" + `rejection_reason` + "`" + ` holds the reason given on ` + "`" + `REJECTED` + "`" + ` or ` + "`" + `REVOKED` + "`" + `.\n- ` + "`" + `revoke_at` + "`" + ` keeps the planned expiry of the access window. The revoke time is the ` + "`" + `review_date` + "`" + ` of the ` + "`" + `REVOKED` + "`" + ` entry.\n\n### Errors\n\n- ` + "`" + `404` + "`" + ` - unknown review, or a revoke on an approved review that is not ` + "`" + `jit` + "`" + `\n- ` + "`" + `400` + "`" + ` - unknown status, self approval, not eligible, wrong state, or the group already decided\n\n### Final States\n\nReviews in ` + "`" + `PROCESSING` + "`" + `, ` + "`" + `EXECUTED` + "`" + `, or ` + "`" + `UNKNOWN` + "`" + ` states are immutable and cannot be modified.",
                 "consumes": [
                     "application/json"
                 ],
@@ -16198,6 +16308,12 @@ const docTemplate = `{
                     "readOnly": true,
                     "example": "default-access-request-rule"
                 },
+                "connection_name": {
+                    "description": "The name of the connection the review is for",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "pgdemo"
+                },
                 "created_at": {
                     "description": "The time the resource was created",
                     "type": "string",
@@ -16227,6 +16343,15 @@ const docTemplate = `{
                     "type": "integer",
                     "readOnly": true,
                     "example": 2
+                },
+                "owner": {
+                    "description": "The user who filed the review",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/openapi.ReviewOwner"
+                        }
+                    ],
+                    "readOnly": true
                 },
                 "rejection_reason": {
                     "description": "The reason provided by the reviewer when rejecting this review",
@@ -16284,6 +16409,12 @@ const docTemplate = `{
                         }
                     ],
                     "readOnly": true
+                },
+                "verb": {
+                    "description": "The verb of the session that filed the review, empty when that session no longer exists",
+                    "type": "string",
+                    "readOnly": true,
+                    "example": "exec"
                 }
             }
         },
@@ -16464,6 +16595,63 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "ReviewTimeWindowTypeTimeRange"
             ]
+        },
+        "openapi.ReviewTimeline": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/openapi.ReviewTimelineEvent"
+                    }
+                },
+                "review": {
+                    "$ref": "#/definitions/openapi.Review"
+                },
+                "sessions_truncated": {
+                    "description": "True when more sessions ran under the review than the timeline lists",
+                    "type": "boolean"
+                }
+            }
+        },
+        "openapi.ReviewTimelineEvent": {
+            "type": "object",
+            "properties": {
+                "at": {
+                    "description": "When it happened",
+                    "type": "string",
+                    "example": "2026-09-24T08:36:29Z"
+                },
+                "by": {
+                    "description": "The email of who did it; empty for an expiry",
+                    "type": "string",
+                    "example": "venkat@lyric.tech"
+                },
+                "detail": {
+                    "description": "A short human readable description",
+                    "type": "string",
+                    "example": "group admin"
+                },
+                "kind": {
+                    "description": "What happened",
+                    "type": "string",
+                    "enum": [
+                        "requested",
+                        "approved",
+                        "rejected",
+                        "forced",
+                        "revoked",
+                        "expired",
+                        "session"
+                    ],
+                    "example": "approved"
+                },
+                "session_id": {
+                    "description": "The session that filed the review (kind requested) or that ran under it (kind session)",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
         },
         "openapi.ReviewType": {
             "type": "string",

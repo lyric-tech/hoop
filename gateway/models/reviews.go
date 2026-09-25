@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -78,6 +79,10 @@ type Review struct {
 	RevokedAt       *time.Time        `gorm:"column:revoked_at"`
 	TimeWindow      *ReviewTimeWindow `gorm:"column:time_window;serializer:json;"`
 	RejectionReason *string           `gorm:"column:rejection_reason"`
+
+	// Verb is the verb of the session that filed the review. Read only: it
+	// lives on private.sessions and is joined by the loaders.
+	Verb string `gorm:"column:verb;->"`
 }
 
 type ReviewTimeWindow struct {
@@ -109,6 +114,21 @@ func (r *Review) RejectedByEmail() string {
 	}
 	for _, rg := range r.ReviewGroups {
 		if rg.Status == ReviewStatusRejected && rg.OwnerEmail != nil {
+			return *rg.OwnerEmail
+		}
+	}
+	return ""
+}
+
+// RevokedByEmail returns the email of whoever revoked the review, from the
+// latest REVOKED group row, or "" when none is recorded.
+func (r *Review) RevokedByEmail() string {
+	if r == nil {
+		return ""
+	}
+	for i := len(r.ReviewGroups) - 1; i >= 0; i-- {
+		rg := r.ReviewGroups[i]
+		if rg.Status == ReviewStatusRevoked && rg.OwnerEmail != nil {
 			return *rg.OwnerEmail
 		}
 	}
@@ -155,33 +175,46 @@ func (r *Review) GetBlobInput() (string, error) {
 	return result[0], nil
 }
 
+// reviewGroupsJSONSQL aggregates the group rows of the review aliased rv, in
+// decision order. forced_review must stay in the object: UpdateReview saves
+// every loaded group row with all of its columns, so a row loaded without it
+// would be written back as false and erase a forced approval.
+const reviewGroupsJSONSQL = `(
+	SELECT jsonb_agg(
+		jsonb_build_object(
+			'id', rg.id,
+			'org_id', rg.org_id,
+			'review_id', rg.review_id,
+			'group_name', rg.group_name,
+			'status', rg.status,
+			'owner_id', rg.owner_id,
+			'owner_email', rg.owner_email,
+			'owner_name', rg.owner_name,
+			'owner_slack_id', rg.owner_slack_id,
+			'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+			'forced_review', rg.forced_review
+		) ORDER BY rg.reviewed_at ASC NULLS LAST, rg.id
+	)
+	FROM private.review_groups AS rg
+	WHERE rg.review_id = rv.id
+)`
+
+// reviewColumnsSQL is the column list every review loader selects from
+// private.reviews aliased rv.
+const reviewColumnsSQL = `
+	rv.id, rv.org_id, rv.session_id, rv.connection_name, rv.connection_id, rv.type,
+	rv.access_duration_sec, rv.status, rv.blob_input_id, rv.input_env_vars, rv.input_client_args,
+	rv.time_window, rv.access_request_rule_name, rv.force_approval_groups, rv.min_approvals,
+	rv.owner_id, rv.owner_email, rv.owner_name, rv.owner_slack_id,
+	` + reviewGroupsJSONSQL + ` AS review_groups,
+	(SELECT s.verb FROM private.sessions s WHERE s.org_id = rv.org_id AND s.id = rv.session_id) AS verb,
+	rv.created_at, rv.revoked_at, rv.rejection_reason`
+
 func GetReviewByIdOrSid(orgID, id string) (*Review, error) {
 	var review Review
-	err := DB.Raw(`
-	SELECT
-		id, org_id, session_id, connection_name, type, access_duration_sec, status,
-		blob_input_id, input_env_vars, input_client_args, time_window, access_request_rule_name,
-		force_approval_groups, min_approvals, owner_id, owner_email, owner_name, owner_slack_id,
-		( SELECT jsonb_agg(
-				jsonb_build_object(
-					'id', rg.id,
-					'org_id', rg.org_id,
-					'review_id', rg.review_id,
-					'group_name', rg.group_name,
-					'status', rg.status,
-					'owner_id', rg.owner_id,
-					'owner_email', rg.owner_email,
-					'owner_name', rg.owner_name,
-					'owner_slack_id', rg.owner_slack_id,
-					'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-				)
-			)
-			FROM private.review_groups AS rg
-			WHERE rg.review_id = rv.id
-		) AS review_groups,
-	created_at, revoked_at, rejection_reason
+	err := DB.Raw(`SELECT `+reviewColumnsSQL+`
 	FROM private.reviews rv
-	WHERE org_id = ? AND (id = ? OR session_id = ?)`, orgID, id, id).
+	WHERE rv.org_id = ? AND (rv.id = ? OR rv.session_id = ?)`, orgID, id, id).
 		First(&review).
 		Error
 	if err == gorm.ErrRecordNotFound {
@@ -192,31 +225,9 @@ func GetReviewByIdOrSid(orgID, id string) (*Review, error) {
 
 func ListReviews(orgID string) (*[]Review, error) {
 	var reviews []Review
-	err := DB.Raw(`
-	SELECT
-		id, org_id, session_id, connection_name, type, access_duration_sec, status,
-		blob_input_id, input_env_vars, input_client_args, access_request_rule_name,
-		force_approval_groups, min_approvals, owner_id, owner_email, owner_name, owner_slack_id,
-		( SELECT jsonb_agg(
-				jsonb_build_object(
-					'id', rg.id,
-					'org_id', rg.org_id,
-					'review_id', rg.review_id,
-					'group_name', rg.group_name,
-					'status', rg.status,
-					'owner_id', rg.owner_id,
-					'owner_email', rg.owner_email,
-					'owner_name', rg.owner_name,
-					'owner_slack_id', rg.owner_slack_id,
-					'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-				)
-			)
-			FROM private.review_groups AS rg
-			WHERE rg.review_id = rv.id
-		) AS review_groups,
-	created_at, revoked_at, rejection_reason
+	err := DB.Raw(`SELECT `+reviewColumnsSQL+`
 	FROM private.reviews rv
-	WHERE org_id = ?`, orgID).
+	WHERE rv.org_id = ?`, orgID).
 		Find(&reviews).
 		Error
 	if err != nil {
@@ -224,6 +235,119 @@ func ListReviews(orgID string) (*[]Review, error) {
 	}
 
 	return &reviews, nil
+}
+
+const (
+	MaxReviewListLimit  = 100
+	MaxReviewListOffset = 10000
+)
+
+// ReviewListOptions narrows ListReviewsFiltered. Zero values mean no filter;
+// Limit 0 means every matching review, which keeps the unpaged callers
+// working.
+type ReviewListOptions struct {
+	Statuses       []ReviewStatusType
+	Type           ReviewType
+	ConnectionName string
+	OwnerID        string
+	OwnerEmail     string
+	StartDate      *time.Time
+	EndDate        *time.Time
+	Limit          int
+	Offset         int
+}
+
+// ReviewListCaller is who is listing. A caller that is neither admin nor
+// auditor sees the reviews they own and the reviews one of their groups can
+// decide, the same rule GET /reviews/:id applies.
+type ReviewListCaller struct {
+	UserID           string
+	UserGroups       []string
+	IsAuditorOrAdmin bool
+}
+
+// reviewListWhere builds the WHERE clause for ListReviewsFiltered. Only the
+// predicates whose option is set are emitted; every value is a named
+// parameter.
+func reviewListWhere(caller ReviewListCaller, opt ReviewListOptions) string {
+	preds := []string{"rv.org_id = @org_id"}
+	if len(opt.Statuses) > 0 {
+		preds = append(preds, "rv.status = ANY(CAST(@statuses AS private.enum_reviews_status[]))")
+	}
+	if opt.Type != "" {
+		preds = append(preds, "rv.type = CAST(@type AS private.enum_reviews_type)")
+	}
+	if opt.ConnectionName != "" {
+		preds = append(preds, "rv.connection_name = @connection")
+	}
+	if opt.OwnerID != "" {
+		preds = append(preds, "rv.owner_id = @owner_id")
+	}
+	if opt.OwnerEmail != "" {
+		preds = append(preds, "LOWER(rv.owner_email) = LOWER(@owner_email)")
+	}
+	if opt.StartDate != nil {
+		preds = append(preds, "rv.created_at >= @start_date")
+	}
+	if opt.EndDate != nil {
+		preds = append(preds, "rv.created_at <= @end_date")
+	}
+	if !caller.IsAuditorOrAdmin {
+		preds = append(preds, `(rv.owner_id = @user_id OR EXISTS (
+		SELECT 1 FROM private.review_groups rg
+		WHERE rg.review_id = rv.id AND rg.group_name = ANY(CAST(@user_groups AS TEXT[]))))`)
+	}
+	return strings.Join(preds, "\n\tAND ")
+}
+
+// ListReviewsFiltered returns the reviews of an org visible to caller,
+// newest first.
+func ListReviewsFiltered(db *gorm.DB, orgID string, caller ReviewListCaller, opt ReviewListOptions) ([]Review, error) {
+	if opt.Limit < 0 || opt.Limit > MaxReviewListLimit {
+		return nil, fmt.Errorf("limit must be between 0 and %d, got %d", MaxReviewListLimit, opt.Limit)
+	}
+	if opt.Offset < 0 || opt.Offset > MaxReviewListOffset {
+		return nil, fmt.Errorf("offset must be between 0 and %d, got %d", MaxReviewListOffset, opt.Offset)
+	}
+	statuses := make([]string, 0, len(opt.Statuses))
+	for _, st := range opt.Statuses {
+		if !IsValidReviewStatus(string(st)) {
+			return nil, fmt.Errorf("invalid review status %q", st)
+		}
+		statuses = append(statuses, string(st))
+	}
+	userGroups := caller.UserGroups
+	if userGroups == nil {
+		userGroups = []string{}
+	}
+	params := map[string]any{
+		"org_id":      orgID,
+		"statuses":    pq.StringArray(statuses),
+		"type":        string(opt.Type),
+		"connection":  opt.ConnectionName,
+		"owner_id":    opt.OwnerID,
+		"owner_email": opt.OwnerEmail,
+		"start_date":  opt.StartDate,
+		"end_date":    opt.EndDate,
+		"user_id":     caller.UserID,
+		"user_groups": pq.StringArray(userGroups),
+		"offset":      opt.Offset,
+	}
+	query := `SELECT ` + reviewColumnsSQL + `
+	FROM private.reviews rv
+	WHERE ` + reviewListWhere(caller, opt) + `
+	ORDER BY rv.created_at DESC, rv.id DESC`
+	if opt.Limit > 0 {
+		query += "\n\tLIMIT @limit"
+		params["limit"] = opt.Limit
+	}
+	query += "\n\tOFFSET @offset"
+
+	reviews := []Review{}
+	if err := db.Raw(query, params).Find(&reviews).Error; err != nil {
+		return nil, err
+	}
+	return reviews, nil
 }
 
 // Create the review object, when input is not empty it generates a blob id
