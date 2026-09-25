@@ -682,6 +682,7 @@ func (api *Api) buildRoutes(r *apiroutes.Router) {
 	)
 	r.PUT("/reviews/:id",
 		r.AuthMiddleware,
+		api.AuditMiddleware(),
 		api.TrackRequest(analytics.EventUpdateReview),
 		reviewHandler.ReviewByIdOrSid,
 	)
@@ -892,6 +893,7 @@ func (api *Api) buildRoutes(r *apiroutes.Router) {
 		sessionapi.Kill)
 	r.PUT("/sessions/:session_id/review",
 		r.AuthMiddleware,
+		api.AuditMiddleware(),
 		reviewHandler.ReviewBySid,
 	)
 	r.PATCH("/sessions/:session_id/metadata",

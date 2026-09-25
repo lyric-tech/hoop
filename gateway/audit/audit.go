@@ -34,6 +34,7 @@ const (
 	ResourceAISessionAnalyzerProvider ResourceType = "ai_session_analyzer_providers"
 	ResourceAttribute                 ResourceType = "attributes"
 	ResourceOrgFeature                ResourceType = "org_features"
+	ResourceReview                    ResourceType = "reviews"
 )
 
 // Action is the operation performed.
