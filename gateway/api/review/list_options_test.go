@@ -4,9 +4,12 @@ import (
 	"errors"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/aws/smithy-go/ptr"
 	"github.com/hoophq/hoop/gateway/models"
+	"github.com/hoophq/hoop/gateway/storagev2"
+	"github.com/hoophq/hoop/gateway/storagev2/types"
 )
 
 func TestParseReviewListOptions(t *testing.T) {
@@ -172,5 +175,62 @@ func TestDoReviewRejectsNonUUID(t *testing.T) {
 	_, err := DoReview(newFakeContext("u", "u@test.local", nil), "not-a-uuid", models.ReviewStatusApproved, nil, false, "")
 	if err != ErrNotFound {
 		t.Fatalf("got %v, want ErrNotFound", err)
+	}
+}
+
+func TestDoRevokeAppendsHistory(t *testing.T) {
+	approvedAt := time.Now().UTC().Add(-time.Hour)
+	approvedGroups := func() []models.ReviewGroups {
+		return []models.ReviewGroups{{
+			ID: "g1", GroupName: "sre", Status: models.ReviewStatusApproved,
+			OwnerEmail: ptr.String("approver@test.local"), ReviewedAt: &approvedAt,
+		}}
+	}
+	rule := &models.AccessRequestRule{MinApprovals: ptr.Int(1), ForceApprovalGroups: []string{"oncall"}}
+	for _, tc := range []struct {
+		name      string
+		ctx       *storagev2.Context
+		force     bool
+		wantGroup string
+		wantForce bool
+		wantErr   error
+	}{
+		{"member of a review group", newFakeContext("x", "x@test.local", []string{"sre"}), false, "sre", false, nil},
+		{"owner outside the groups", newFakeContext("owner", "owner@test.local", []string{"engineering"}), false, "engineering", false, nil},
+		{"admin", newFakeContext("x", "x@test.local", []string{types.GroupAdmin}), false, types.GroupAdmin, false, nil},
+		{"force group member", newFakeContext("x", "x@test.local", []string{"oncall"}), true, "oncall", true, nil},
+		{"stranger", newFakeContext("x", "x@test.local", []string{"finance"}), false, "", false, ErrNotEligible},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rev := newFakeReview("owner", "APPROVED", "jit", approvedGroups(), rule)
+			got, err := doReview(tc.ctx, rev, &models.Connection{}, models.ReviewStatusRevoked, tc.force)
+			if tc.wantErr != nil {
+				if err != tc.wantErr {
+					t.Fatalf("got %v, want %v", err, tc.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Status != models.ReviewStatusRevoked {
+				t.Errorf("status %s, want REVOKED", got.Status)
+			}
+			if len(got.ReviewGroups) != 2 {
+				t.Fatalf("got %d group rows, want the approval plus one revoke row", len(got.ReviewGroups))
+			}
+			first := got.ReviewGroups[0]
+			if first.Status != models.ReviewStatusApproved || *first.OwnerEmail != "approver@test.local" || !first.ReviewedAt.Equal(approvedAt) {
+				t.Errorf("the approval row was changed: %+v", first)
+			}
+			last := got.ReviewGroups[1]
+			if last.Status != models.ReviewStatusRevoked || last.GroupName != tc.wantGroup || last.ForcedReview != tc.wantForce ||
+				*last.OwnerEmail != tc.ctx.UserEmail || last.ReviewedAt == nil {
+				t.Errorf("revoke row: %+v", last)
+			}
+			if got.RevokedByEmail() != tc.ctx.UserEmail {
+				t.Errorf("RevokedByEmail %q, want %q", got.RevokedByEmail(), tc.ctx.UserEmail)
+			}
+		})
 	}
 }

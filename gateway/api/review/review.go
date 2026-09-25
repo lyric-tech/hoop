@@ -299,7 +299,7 @@ func UpdateSlackMessage(rev *models.Review) error {
 // DoReview updates the status of a review identified by reviewIdOrSid. The hasForced parameter
 // indicates whether the review status change was forced by an administrator or privileged user,
 // bypassing normal review validation rules or approval workflows. When the resulting status is
-// ReviewStatusRejected, a non-empty rejectionReason is persisted on the review record in the
+// ReviewStatusRejected or ReviewStatusRevoked, a non-empty rejectionReason is persisted on the review record in the
 // same transaction as the status change, so any downstream consumers (events, API responses,
 // Slack/MCP flows) observe a consistent state.
 func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.ReviewStatusType, timeWindow *models.ReviewTimeWindow, hasForced bool, rejectionReason string) (*models.Review, error) {
@@ -339,7 +339,8 @@ func DoReview(ctx *storagev2.Context, reviewIdOrSid string, status models.Review
 		return nil, err
 	}
 
-	if rev.Status == models.ReviewStatusRejected && rejectionReason != "" {
+	// The column holds the reason of the decision that ended the review.
+	if (rev.Status == models.ReviewStatusRejected || rev.Status == models.ReviewStatusRevoked) && rejectionReason != "" {
 		rev.RejectionReason = &rejectionReason
 	}
 
@@ -375,6 +376,10 @@ func doReview(ctx *storagev2.Context, rev *models.Review, connection *models.Con
 	err := validateReviewStatusTransition(ctx, rev, status)
 	if err != nil {
 		return nil, err
+	}
+
+	if status == models.ReviewStatusRevoked {
+		return doRevoke(ctx, rev, connection, force)
 	}
 
 	if force {
@@ -527,6 +532,59 @@ func doIndividualReview(ctx *storagev2.Context, rev *models.Review, connection *
 		rev.Status = status
 	}
 
+	return rev, nil
+}
+
+// doRevoke appends one REVOKED row for the actor and never touches the
+// existing rows, so the approvals stay in the history next to the revoke. The
+// row's reviewed_at is when access was revoked; revoked_at on the review keeps
+// the planned expiry.
+func doRevoke(ctx *storagev2.Context, rev *models.Review, connection *models.Connection, force bool) (*models.Review, error) {
+	var groupName string
+	var forced bool
+	for _, rg := range rev.ReviewGroups {
+		if slices.Contains(ctx.UserGroups, rg.GroupName) {
+			groupName = rg.GroupName
+			break
+		}
+	}
+	if groupName == "" && force {
+		forceApproveGroups := connection.ForceApproveGroups
+		if rev.AccessRequestRuleName != nil && rev.ForceApprovalGroups != nil {
+			forceApproveGroups = rev.ForceApprovalGroups
+		}
+		if g := utils.SlicesFindFirstIntersection(ctx.UserGroups, forceApproveGroups); g != nil {
+			groupName, forced = *g, true
+		}
+	}
+	if groupName == "" {
+		switch {
+		case ctx.IsAdmin():
+			groupName = types.GroupAdmin
+		case rev.OwnerID == ctx.UserID:
+			if len(ctx.UserGroups) > 0 {
+				groupName = ctx.UserGroups[0]
+			}
+		default:
+			return nil, ErrNotEligible
+		}
+	}
+
+	revokedAt := time.Now().UTC()
+	rev.ReviewGroups = append(rev.ReviewGroups, models.ReviewGroups{
+		ID:           uuid.NewString(),
+		OrgID:        ctx.OrgID,
+		ReviewID:     rev.ID,
+		GroupName:    groupName,
+		Status:       models.ReviewStatusRevoked,
+		OwnerID:      ptr.String(ctx.UserID),
+		OwnerEmail:   ptr.String(ctx.UserEmail),
+		OwnerName:    ptr.String(ctx.UserName),
+		OwnerSlackID: ptr.String(ctx.SlackID),
+		ReviewedAt:   &revokedAt,
+		ForcedReview: forced,
+	})
+	rev.Status = models.ReviewStatusRevoked
 	return rev, nil
 }
 

@@ -231,3 +231,50 @@ func ids(reviews []models.Review) []string {
 	}
 	return out
 }
+
+// UpdateReview must insert a group row it has not seen before (revoke appends
+// one) and leave the existing rows as they were.
+func TestUpdateReviewInsertsAppendedGroupRow(t *testing.T) {
+	orgID := modelstest.StartDB(t)
+	rev := newTestReview(orgID, "owner-1", "sre")
+	approvedAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Millisecond)
+	rev.Status = models.ReviewStatusApproved
+	rev.ReviewGroups[0].Status = models.ReviewStatusApproved
+	rev.ReviewGroups[0].ReviewedAt = &approvedAt
+	approver := "approver@test.local"
+	rev.ReviewGroups[0].OwnerEmail = &approver
+	mustCreateReview(t, rev)
+	modelstest.SeedSession(t, orgID, rev.SessionID, "connect", "owner-1")
+
+	loaded := mustGetReview(t, orgID, rev.ID)
+	revokedAt := time.Now().UTC().Truncate(time.Millisecond)
+	revoker, reason := "revoker@test.local", "done for today"
+	loaded.ReviewGroups = append(loaded.ReviewGroups, models.ReviewGroups{
+		ID: uuid.NewString(), OrgID: orgID, ReviewID: rev.ID, GroupName: "sre",
+		Status: models.ReviewStatusRevoked, OwnerEmail: &revoker, ReviewedAt: &revokedAt,
+	})
+	loaded.Status = models.ReviewStatusRevoked
+	loaded.RejectionReason = &reason
+	if err := models.UpdateReview(loaded); err != nil {
+		t.Fatalf("update review: %v", err)
+	}
+
+	got := mustGetReview(t, orgID, rev.ID)
+	if len(got.ReviewGroups) != 2 {
+		t.Fatalf("got %d group rows, want 2", len(got.ReviewGroups))
+	}
+	first, last := got.ReviewGroups[0], got.ReviewGroups[1]
+	if first.Status != models.ReviewStatusApproved || !first.ReviewedAt.Equal(approvedAt) || *first.OwnerEmail != approver {
+		t.Errorf("approval row changed: %+v", first)
+	}
+	if last.Status != models.ReviewStatusRevoked || *last.OwnerEmail != revoker {
+		t.Errorf("revoke row: %+v", last)
+	}
+	if got.RejectionReason == nil || *got.RejectionReason != reason || got.RevokedByEmail() != revoker {
+		t.Errorf("reason %v revoked by %q", got.RejectionReason, got.RevokedByEmail())
+	}
+	var status string
+	if err := models.DB.Raw(`SELECT status FROM private.sessions WHERE id = ?`, rev.SessionID).Scan(&status).Error; err != nil || status != "done" {
+		t.Errorf("session status %q (err %v), want done", status, err)
+	}
+}

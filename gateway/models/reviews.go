@@ -120,6 +120,21 @@ func (r *Review) RejectedByEmail() string {
 	return ""
 }
 
+// RevokedByEmail returns the email of whoever revoked the review, from the
+// latest REVOKED group row, or "" when none is recorded.
+func (r *Review) RevokedByEmail() string {
+	if r == nil {
+		return ""
+	}
+	for i := len(r.ReviewGroups) - 1; i >= 0; i-- {
+		rg := r.ReviewGroups[i]
+		if rg.Status == ReviewStatusRevoked && rg.OwnerEmail != nil {
+			return *rg.OwnerEmail
+		}
+	}
+	return ""
+}
+
 type ReviewJit struct {
 	ID                string     `gorm:"column:id"`
 	OrgID             string     `gorm:"column:org_id"`
