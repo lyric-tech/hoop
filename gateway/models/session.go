@@ -356,7 +356,7 @@ func GetSessionByID(orgID, sid string) (*Session, error) {
 							'owner_slack_id', rg.owner_slack_id,
 							'forced_review', rg.forced_review,
 							'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-						)
+						) ORDER BY rg.reviewed_at ASC NULLS LAST, rg.id
 					)
 					FROM private.review_groups AS rg
 					WHERE rg.review_id = rv.id
@@ -732,7 +732,7 @@ func ListSessions(orgID string, userId string, isAuditorOrAdmin bool, opt Sessio
 								'owner_slack_id', rg.owner_slack_id,
 								'forced_review', rg.forced_review,
 								'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-							)
+							) ORDER BY rg.reviewed_at ASC NULLS LAST, rg.id
 						)
 						FROM private.review_groups AS rg
 						WHERE rg.review_id = rv.id

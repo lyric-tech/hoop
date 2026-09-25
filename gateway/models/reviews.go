@@ -155,33 +155,45 @@ func (r *Review) GetBlobInput() (string, error) {
 	return result[0], nil
 }
 
+// reviewGroupsJSONSQL aggregates the group rows of the review aliased rv, in
+// decision order. forced_review must stay in the object: UpdateReview saves
+// every loaded group row with all of its columns, so a row loaded without it
+// would be written back as false and erase a forced approval.
+const reviewGroupsJSONSQL = `(
+	SELECT jsonb_agg(
+		jsonb_build_object(
+			'id', rg.id,
+			'org_id', rg.org_id,
+			'review_id', rg.review_id,
+			'group_name', rg.group_name,
+			'status', rg.status,
+			'owner_id', rg.owner_id,
+			'owner_email', rg.owner_email,
+			'owner_name', rg.owner_name,
+			'owner_slack_id', rg.owner_slack_id,
+			'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+			'forced_review', rg.forced_review
+		) ORDER BY rg.reviewed_at ASC NULLS LAST, rg.id
+	)
+	FROM private.review_groups AS rg
+	WHERE rg.review_id = rv.id
+)`
+
+// reviewColumnsSQL is the column list every review loader selects from
+// private.reviews aliased rv.
+const reviewColumnsSQL = `
+	rv.id, rv.org_id, rv.session_id, rv.connection_name, rv.connection_id, rv.type,
+	rv.access_duration_sec, rv.status, rv.blob_input_id, rv.input_env_vars, rv.input_client_args,
+	rv.time_window, rv.access_request_rule_name, rv.force_approval_groups, rv.min_approvals,
+	rv.owner_id, rv.owner_email, rv.owner_name, rv.owner_slack_id,
+	` + reviewGroupsJSONSQL + ` AS review_groups,
+	rv.created_at, rv.revoked_at, rv.rejection_reason`
+
 func GetReviewByIdOrSid(orgID, id string) (*Review, error) {
 	var review Review
-	err := DB.Raw(`
-	SELECT
-		id, org_id, session_id, connection_name, type, access_duration_sec, status,
-		blob_input_id, input_env_vars, input_client_args, time_window, access_request_rule_name,
-		force_approval_groups, min_approvals, owner_id, owner_email, owner_name, owner_slack_id,
-		( SELECT jsonb_agg(
-				jsonb_build_object(
-					'id', rg.id,
-					'org_id', rg.org_id,
-					'review_id', rg.review_id,
-					'group_name', rg.group_name,
-					'status', rg.status,
-					'owner_id', rg.owner_id,
-					'owner_email', rg.owner_email,
-					'owner_name', rg.owner_name,
-					'owner_slack_id', rg.owner_slack_id,
-					'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-				)
-			)
-			FROM private.review_groups AS rg
-			WHERE rg.review_id = rv.id
-		) AS review_groups,
-	created_at, revoked_at, rejection_reason
+	err := DB.Raw(`SELECT `+reviewColumnsSQL+`
 	FROM private.reviews rv
-	WHERE org_id = ? AND (id = ? OR session_id = ?)`, orgID, id, id).
+	WHERE rv.org_id = ? AND (rv.id = ? OR rv.session_id = ?)`, orgID, id, id).
 		First(&review).
 		Error
 	if err == gorm.ErrRecordNotFound {
@@ -192,31 +204,9 @@ func GetReviewByIdOrSid(orgID, id string) (*Review, error) {
 
 func ListReviews(orgID string) (*[]Review, error) {
 	var reviews []Review
-	err := DB.Raw(`
-	SELECT
-		id, org_id, session_id, connection_name, type, access_duration_sec, status,
-		blob_input_id, input_env_vars, input_client_args, access_request_rule_name,
-		force_approval_groups, min_approvals, owner_id, owner_email, owner_name, owner_slack_id,
-		( SELECT jsonb_agg(
-				jsonb_build_object(
-					'id', rg.id,
-					'org_id', rg.org_id,
-					'review_id', rg.review_id,
-					'group_name', rg.group_name,
-					'status', rg.status,
-					'owner_id', rg.owner_id,
-					'owner_email', rg.owner_email,
-					'owner_name', rg.owner_name,
-					'owner_slack_id', rg.owner_slack_id,
-					'reviewed_at', to_char(rg.reviewed_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
-				)
-			)
-			FROM private.review_groups AS rg
-			WHERE rg.review_id = rv.id
-		) AS review_groups,
-	created_at, revoked_at, rejection_reason
+	err := DB.Raw(`SELECT `+reviewColumnsSQL+`
 	FROM private.reviews rv
-	WHERE org_id = ?`, orgID).
+	WHERE rv.org_id = ?`, orgID).
 		Find(&reviews).
 		Error
 	if err != nil {
