@@ -39,6 +39,7 @@ import DataMaskingForm from '@/pages/Features/DataMasking/Create'
 import AccessControl from '@/pages/Features/AccessControl'
 import AccessControlForm from '@/pages/Features/AccessControl/Create'
 import AccessRequest from '@/pages/Features/AccessRequest'
+import AccessRequests from '@/pages/AccessRequests'
 import AccessRequestForm from '@/pages/Features/AccessRequest/Create'
 import AiSessionAnalyzer from '@/pages/Features/AiSessionAnalyzer'
 import AiSessionAnalyzerRuleForm from '@/pages/Features/AiSessionAnalyzer/Create'
@@ -473,6 +474,21 @@ function Router() {
             <Layout>
               <PageLayout>
                 <AccessControlForm />
+              </PageLayout>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Requesting access. Not admin-only: this is the page every user opens to
+          ask for a time window over a group of resources. */}
+      <Route
+        path="/access-requests"
+        element={
+          <ProtectedRoute licenseFeature="access-requests">
+            <Layout>
+              <PageLayout>
+                <AccessRequests />
               </PageLayout>
             </Layout>
           </ProtectedRoute>

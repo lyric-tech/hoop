@@ -947,6 +947,30 @@
         },
         "type": "object"
       },
+      "openapi.AccessRequestRequest": {
+        "properties": {
+          "duration_sec": {
+            "description": "How long the access window should last, in seconds",
+            "example": 3600,
+            "type": "integer"
+          },
+          "justification": {
+            "description": "Why the access is needed. Shown to the reviewers",
+            "example": "Investigating INC-4821",
+            "type": "string"
+          },
+          "rule_name": {
+            "description": "The name of the access request rule to request access against",
+            "example": "prod-dbs",
+            "type": "string"
+          }
+        },
+        "required": [
+          "duration_sec",
+          "rule_name"
+        ],
+        "type": "object"
+      },
       "openapi.AccessRequestRule": {
         "properties": {
           "access_max_duration": {
@@ -1186,6 +1210,22 @@
           "name",
           "reviewers_groups"
         ],
+        "type": "object"
+      },
+      "openapi.ActiveAccessGrant": {
+        "properties": {
+          "expires_at": {
+            "description": "The moment the access window closes",
+            "example": "2024-07-25T17:56:35.317601Z",
+            "type": "string"
+          },
+          "review_id": {
+            "description": "The review that granted the access",
+            "example": "9F9745B4-C77B-4D52-84D3-E24F67E3623C",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "openapi.AgentCreateResponse": {
@@ -5072,6 +5112,56 @@
         },
         "type": "object"
       },
+      "openapi.RequestableAccessRule": {
+        "properties": {
+          "access_max_duration": {
+            "description": "Maximum access duration in seconds. Null means the 48 hour ceiling applies",
+            "example": 3600,
+            "type": "integer"
+          },
+          "active_grant": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/openapi.ActiveAccessGrant"
+              }
+            ],
+            "description": "The grant the caller already holds on this rule, null when there is none"
+          },
+          "description": {
+            "description": "The description of the access request rule",
+            "example": "Production databases",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the access request rule",
+            "example": "prod-dbs",
+            "type": "string"
+          },
+          "resources": {
+            "description": "The connections one approval on this rule grants access to",
+            "example": [
+              "pg-prod",
+              "mysql-prod"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reviewers_groups": {
+            "description": "The groups that review requests raised against this rule",
+            "example": [
+              "sre",
+              "dba"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "openapi.ResourcHealthCheckResponse": {
         "properties": {
           "output": {
@@ -5624,6 +5714,15 @@
             },
             "readOnly": true,
             "type": "array"
+          },
+          "review_owner": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/openapi.ReviewOwner"
+              }
+            ],
+            "description": "The user that raised this review",
+            "readOnly": true
           },
           "revoke_at": {
             "description": "The time when this review was revoked",
@@ -8639,6 +8738,123 @@
         "summary": "Get MCP OAuth Authorization Server Metadata",
         "tags": [
           "Server Management"
+        ]
+      }
+    },
+    "/access-requests": {
+      "post": {
+        "description": "Request a time window over every resource an access request rule covers. Creates a pending review the rule's reviewers approve once, instead of one approval per command",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/openapi.AccessRequestRequest"
+              }
+            }
+          },
+          "description": "The request body resource",
+          "required": true,
+          "x-originalParamName": "request"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.Review"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.HTTPError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.HTTPError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.HTTPError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.HTTPError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.HTTPError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Create Access Request",
+        "tags": [
+          "Access Requests"
+        ]
+      }
+    },
+    "/access-requests/requestable": {
+      "get": {
+        "description": "List the access request rules the caller may request a time window against, each expanded into the resources one approval covers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/openapi.RequestableAccessRule"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/openapi.HTTPError"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List Requestable Access Rules",
+        "tags": [
+          "Access Requests"
         ]
       }
     },

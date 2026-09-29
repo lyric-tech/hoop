@@ -1225,6 +1225,8 @@ type Review struct {
 	ForceApprovalGroups []string `json:"force_approval_groups" readonly:"true" example:"sre-team"`
 	// The reason provided by the reviewer when rejecting this review
 	RejectionReason *string `json:"rejection_reason,omitempty" readonly:"true" example:"This command is not allowed in production."`
+	// The user that raised this review
+	ReviewOwner *ReviewOwner `json:"review_owner" readonly:"true"`
 }
 
 type ReviewOwner struct {
@@ -3546,6 +3548,41 @@ type AccessRequestRule struct {
 	CreatedAt time.Time `json:"created_at" readonly:"true" example:"2024-07-25T15:56:35.317601Z"`
 	// The time the resource was updated
 	UpdatedAt time.Time `json:"updated_at" readonly:"true" example:"2024-07-25T15:56:35.317601Z"`
+}
+
+// RequestableAccessRule is a rule a user may raise a standing access request
+// against, expanded into the resources one approval would cover.
+type RequestableAccessRule struct {
+	// The name of the access request rule
+	Name string `json:"name" example:"prod-dbs"`
+	// The description of the access request rule
+	Description *string `json:"description" example:"Production databases"`
+	// The connections one approval on this rule grants access to
+	Resources []string `json:"resources" example:"pg-prod,mysql-prod"`
+	// Maximum access duration in seconds. Null means the 48 hour ceiling applies
+	AccessMaxDuration *int `json:"access_max_duration" example:"3600"`
+	// The groups that review requests raised against this rule
+	ReviewersGroups []string `json:"reviewers_groups" example:"sre,dba"`
+	// The grant the caller already holds on this rule, null when there is none
+	ActiveGrant *ActiveAccessGrant `json:"active_grant"`
+}
+
+// ActiveAccessGrant is an approved, unexpired window the caller holds.
+type ActiveAccessGrant struct {
+	// The review that granted the access
+	ReviewID string `json:"review_id" format:"uuid" example:"9F9745B4-C77B-4D52-84D3-E24F67E3623C"`
+	// The moment the access window closes
+	ExpiresAt time.Time `json:"expires_at" example:"2024-07-25T17:56:35.317601Z"`
+}
+
+// AccessRequestRequest asks for a time window over every resource a rule covers.
+type AccessRequestRequest struct {
+	// The name of the access request rule to request access against
+	RuleName string `json:"rule_name" binding:"required" example:"prod-dbs"`
+	// How long the access window should last, in seconds
+	DurationSec int `json:"duration_sec" binding:"required" example:"3600"`
+	// Why the access is needed. Shown to the reviewers
+	Justification string `json:"justification" example:"Investigating INC-4821"`
 }
 
 type AccessRequestRuleRequest struct {

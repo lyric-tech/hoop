@@ -553,5 +553,11 @@ func toOpenApiReview(r *models.Review) *openapi.Review {
 		MinApprovals:          r.MinApprovals,
 		ForceApprovalGroups:   r.ForceApprovalGroups,
 		RejectionReason:       r.RejectionReason,
+		ReviewOwner: &openapi.ReviewOwner{
+			ID:      r.OwnerID,
+			Name:    ptr.ToString(r.OwnerName),
+			Email:   r.OwnerEmail,
+			SlackID: ptr.ToString(r.OwnerSlackID),
+		},
 	}
 }

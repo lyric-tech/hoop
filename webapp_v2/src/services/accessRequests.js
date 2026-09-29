@@ -12,4 +12,13 @@ export const accessRequestsService = {
   update: (name, payload) =>
     api.put(`/access-requests/rules/${encodeURIComponent(name)}`, payload),
   remove: (name) => api.delete(`/access-requests/rules/${encodeURIComponent(name)}`),
+
+  // The rules the signed-in user may ask for a time window against, each
+  // already expanded into the resources one approval covers. Returns a bare
+  // array, not the paginated envelope the rules endpoints use.
+  listRequestable: () => api.get('/access-requests/requestable'),
+
+  // Raises a standing request: { rule_name, duration_sec, justification }.
+  // Answers 409 when the user already holds an unexpired grant on the rule.
+  requestAccess: (payload) => api.post('/access-requests', payload),
 }

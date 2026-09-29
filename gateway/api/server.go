@@ -686,6 +686,17 @@ func (api *Api) buildRoutes(r *apiroutes.Router) {
 		reviewHandler.ReviewByIdOrSid,
 	)
 
+	r.GET("/access-requests/requestable",
+		r.AuthMiddleware,
+		accessrequestsapi.ListRequestableAccessRules,
+	)
+	r.POST("/access-requests",
+		r.AuthMiddleware,
+		api.AuditMiddleware(),
+		api.TrackRequest(analytics.EventCreateAccessRequest),
+		accessrequestsapi.CreateAccessRequest,
+	)
+
 	r.GET("/access-requests/rules",
 		apiroutes.AdminAndAuditorAccessRole,
 		r.AuthMiddleware,

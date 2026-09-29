@@ -811,7 +811,9 @@ Non-obvious notes only:
   is **exclusive** (the gateway compares against midnight *starting* that day, so
   send tomorrow to include today). Never send `group_by`.
 - `reviews.js` — `/reviews` returns a bare array, accepts **no query params** and
-  is unbounded; fetch it once and filter client-side.
+  is unbounded; fetch it once and filter client-side. `update(id, payload)` is
+  the approve/reject/revoke call, and works for a standing access request even
+  though it has no session behind it.
 - `userGroups.js` — `list()` returns a bare string array, sorted, unioning the
   identity side (users, service accounts, API keys, AI agents) with the
   `access_control` plugin config. Empty organizations get `[]`; gateways older
@@ -821,6 +823,11 @@ Non-obvious notes only:
   user-supplied path segments, so every interpolation is `encodeURIComponent`d.
 - `accessRequests.js` — `list()` omits `page_size`, which the gateway reads as
   "no pagination"; the response is the `{ pages, data }` envelope regardless.
+  `listRequestable()` / `requestAccess()` are the user-facing pair behind
+  `pages/AccessRequests`: the first returns a **bare array** (not the envelope)
+  of the rules the signed-in user may request a window against, each already
+  expanded into the resources one approval covers; the second answers **409**
+  when the user still holds an unexpired grant on that rule.
 
 ---
 
