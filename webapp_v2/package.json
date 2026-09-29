@@ -9,6 +9,7 @@
     "dev:full": "run-p -l --race dev dev:cljs",
     "build": "vite build",
     "lint": "eslint .",
+    "test:unit": "node --test tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

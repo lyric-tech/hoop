@@ -116,6 +116,13 @@
        (or (not= subtype "postgres")
            postgres-proxy-enabled?)))
 
+(defn cluster-dashboard-connection?
+  "Kubernetes-flavored connections open the React cluster dashboard instead of
+   the web terminal. Mirrors NATIVE_CLIENT_KUBERNETES_SUBTYPES in
+   webapp_v2/src/utils/connectionPolicy.js."
+  [{:keys [subtype]}]
+  (contains? #{"kubernetes-token" "kubernetes" "kubernetes-eks"} subtype))
+
 (defn get-secret-prefix
   "Returns the prefix string for a given secret source or provider."
   [source-or-provider]

@@ -187,6 +187,33 @@ import RingProgress from '@/components/RingProgress'
 <RingProgress value={80} size={48} label={<Text fz="xs">4/5</Text>} />
 ```
 
+### `Progress`
+Linear utilization bar with threshold coloring: green below `warnAt` (50), yellow to `dangerAt` (80), red above. Pass `color` to opt out of thresholds. `value` is 0–100; `null` renders empty.
+```jsx
+import Progress from '@/components/Progress'
+
+<Progress value={cpuPct} />
+<Progress value={72} warnAt={60} dangerAt={90} />
+<Progress value={pct} color="indigo.5" />   // fixed color, no thresholds
+```
+
+### `StatCard`
+Compact stat tile: uppercase label, big value, optional secondary `detail` line and a leading lucide `icon`. Value accepts a ReactNode for composed values like `12 / 14`. Used by the Cluster Dashboard stat rows.
+```jsx
+import StatCard from '@/components/StatCard'
+import { Server } from 'lucide-react'
+
+<StatCard icon={Server} label="Nodes" value={`${ready} / ${total}`} detail="ready" />
+```
+
+### `SearchInput`
+`TextInput` preconfigured for filtering lists: search icon, `size="xs"`, no label, and an `onChange` that hands you the string directly. Replaces the ad-hoc `TextInput` + `Search` icon pattern.
+```jsx
+import SearchInput from '@/components/SearchInput'
+
+<SearchInput value={query} onChange={setQuery} placeholder="Search pods…" w={240} />
+```
+
 ### `BarChart`
 Bar chart, wrapping `@mantine/charts` (recharts). Carries app-wide defaults only — `gridAxis="none"`, `withLegend={false}`, `tickLine="none"`, and a `valueFormatter` that adds thousands separators. Everything chart-specific stays at the call site, because two charts on the same page can need opposite configurations.
 ```jsx

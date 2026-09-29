@@ -140,6 +140,17 @@ export function canAccessNativeClient(connection, options = {}) {
   return isNativeCapableSubtype(connection, options)
 }
 
+// Kubernetes-flavored connections get the Cluster Dashboard instead of the
+// terminal editor. Accepts a connection object or a bare subtype string so the
+// CLJS bridge (which only has the subtype at hand) can share the predicate.
+export function isKubernetesSubtype(connectionOrSubtype) {
+  const subtype =
+    typeof connectionOrSubtype === 'string'
+      ? connectionOrSubtype
+      : connectionOrSubtype?.subtype
+  return NATIVE_CLIENT_KUBERNETES_SUBTYPES.has(subtype)
+}
+
 // Subtypes that speak a wire protocol the browser terminal can't drive; they
 // are reachable through a native client or the CLI instead. Mirrors the
 // exclusion list in the CLJS can-open-web-terminal? predicate
