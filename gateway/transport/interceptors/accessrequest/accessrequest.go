@@ -3,7 +3,6 @@ package accessrequestinterceptor
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,30 +20,44 @@ import (
 	"github.com/hoophq/hoop/gateway/utils"
 )
 
-func getValidatedJitReview(pctx plugintypes.Context) (*plugintypes.ConnectResponse, error) {
-	jitr, err := models.GetApprovedReviewJit(pctx.OrgID, pctx.UserID, pctx.ConnectionID)
+// grantWindow returns how long an approved grant still covers the caller. It
+// reports false when the record carries no expiry (an inconsistent jit row) or
+// the window already closed, so the caller falls back to creating a review.
+func grantWindow(revokedAt *time.Time, now time.Time) (time.Duration, bool) {
+	if revokedAt == nil || revokedAt.IsZero() {
+		return 0, false
+	}
+	remaining := revokedAt.Sub(now)
+	return remaining, remaining > 0
+}
+
+// getValidatedGrant looks for an approved grant the user already holds under
+// this access request rule. A grant covers every connection the rule lists and
+// every verb, so within the window neither a session nor an ad-hoc command
+// raises a new approval.
+func getValidatedGrant(pctx plugintypes.Context, ruleName string) (*plugintypes.ConnectResponse, error) {
+	now := time.Now().UTC()
+	grant, err := models.GetApprovedGrantForRule(pctx.OrgID, pctx.UserID, ruleName, now)
 	if err != nil && err != models.ErrNotFound {
 		return nil, plugintypes.InternalErr("failed listing time based reviews", err)
 	}
 
-	if jitr != nil {
-		err = validateJit(jitr, time.Now().UTC())
-		switch err {
-		case errJitExpired: // it's expired, must not proceed without creating a jit record
-		case nil: // jit is valid
-			log.With("sid", pctx.SID, "id", jitr.ID, "user", jitr.OwnerEmail, "org", pctx.OrgID,
-				"revoke-at", jitr.RevokedAt.Format(time.RFC3339),
-				"duration", fmt.Sprintf("%vs", jitr.AccessDurationSec)).Infof("jit access granted")
-			newCtx, cancel := context.WithTimeout(pctx.Context, time.Duration(jitr.AccessDurationSec)*time.Second)
-			_ = cancel // cancel is not called here; the context expires via timeout or when the parent context is done
-			return &plugintypes.ConnectResponse{Context: newCtx, ClientPacket: nil}, nil
-		default:
-			return nil, err
+	if grant != nil {
+		remaining, ok := grantWindow(grant.RevokedAt, now)
+		if !ok {
+			return nil, plugintypes.InternalErr("found inconsistent jit record",
+				fmt.Errorf("revoked_at attribute is empty for %s", grant.ID))
 		}
+		log.With("sid", pctx.SID, "id", grant.ID, "user", grant.OwnerEmail, "org", pctx.OrgID,
+			"rule", ruleName, "revoke-at", grant.RevokedAt.Format(time.RFC3339),
+			"remaining", fmt.Sprintf("%vs", remaining.Seconds())).Infof("grant access granted")
+		newCtx, cancel := context.WithTimeout(pctx.Context, remaining)
+		_ = cancel // cancel is not called here; the context expires via timeout or when the parent context is done
+		return &plugintypes.ConnectResponse{Context: newCtx, ClientPacket: nil}, nil
 	}
 
-	log.With("sid", pctx.SID, "orgid", pctx.GetOrgID(), "user-id", pctx.UserID, "connection-id", pctx.ConnectionID).
-		Infof("jit review not found")
+	log.With("sid", pctx.SID, "orgid", pctx.GetOrgID(), "user-id", pctx.UserID,
+		"connection-id", pctx.ConnectionID, "rule", ruleName).Infof("no active grant found")
 
 	return nil, nil
 }
@@ -169,30 +182,11 @@ func OnReceive(pctx plugintypes.Context, pkt *pb.Packet) (*plugintypes.ConnectRe
 		return nil, nil
 	}
 
-	// 2. check if there's an existing jit review for this connection, if yes validate and return it
-	if pctx.ClientVerb == pb.ClientVerbConnect {
-		resp, err = getValidatedJitReview(pctx)
-		if err != nil {
-			return nil, err
-		}
-		if resp != nil {
-			setSpecReview(pkt)
-			return resp, nil
-		}
-	}
-
-	// 3. if no existing review, create a new review
-	// this is the minimum duration to not conflict with the access rule max duration attribute
-	// so it won't have cli issues when the user doesn't provide any jit duration
-	durationStr := []byte("15m")
-	if d, ok := pkt.Spec[pb.SpecJitTimeout]; ok {
-		durationStr = d
-	}
-
-	isJitReview := pctx.ClientVerb == pb.ClientVerbConnect
-	accessType := "command"
-	if isJitReview {
-		accessType = "jit"
+	// 2. resolve the rule that gates this resource
+	isConnectVerb := pctx.ClientVerb == pb.ClientVerbConnect
+	accessType := models.AccessTypeCommand
+	if isConnectVerb {
+		accessType = models.AccessTypeJit
 	}
 
 	orgID := uuid.MustParse(pctx.OrgID)
@@ -216,17 +210,45 @@ func OnReceive(pctx plugintypes.Context, pkt *pb.Packet) (*plugintypes.ConnectRe
 		}
 	}
 
-	// Access duration for JIT reviews
+	if len(accessRule.ApprovalRequiredGroups) == 0 && len(accessRule.SkipReviewGroups) > 0 &&
+		utils.SlicesHasIntersection(accessRule.SkipReviewGroups, pctx.UserGroups) {
+		log.With("sid", pctx.SID, "orgid", pctx.GetOrgID(), "user-id", pctx.UserID, "connection-id", pctx.ConnectionID,
+			"access-rule-id", accessRule.ID).Infof("user is part of access rule skip review groups, skipping review")
+		return nil, nil
+	}
+
+	// 3. an approved grant on this rule already covers every resource it lists,
+	// for any verb, until the window closes
+	resp, err = getValidatedGrant(pctx, accessRule.Name)
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil {
+		setSpecReview(pkt)
+		return resp, nil
+	}
+
+	// 4. no grant, create a review. A rule that gates sessions grants a time
+	// window on approval; a command-only rule keeps approving one statement at
+	// a time.
+	isJitReview := accessRule.AccessType != models.AccessTypeCommand
+
 	var accessDuration time.Duration
 	if isJitReview {
+		// this is the minimum duration to not conflict with the access rule max duration attribute
+		// so it won't have cli issues when the user doesn't provide any jit duration
+		durationStr := []byte("15m")
+		if d, ok := pkt.Spec[pb.SpecJitTimeout]; ok {
+			durationStr = d
+		}
+
 		accessDuration, err = time.ParseDuration(string(durationStr))
 		if err != nil {
 			return nil, plugintypes.InvalidArgument("invalid access time duration, got=%v", string(durationStr))
 		}
 
-		var accessMaxDuration = accessRule.AccessMaxDuration
-		if accessMaxDuration != nil {
-			maxDuration := time.Duration(*accessMaxDuration) * time.Second
+		if accessRule.AccessMaxDuration != nil {
+			maxDuration := time.Duration(*accessRule.AccessMaxDuration) * time.Second
 
 			if accessDuration > maxDuration {
 				return nil, plugintypes.InvalidArgument("jit access input exceeds connection max duration of %vs",
@@ -237,18 +259,12 @@ func OnReceive(pctx plugintypes.Context, pkt *pb.Packet) (*plugintypes.ConnectRe
 		}
 	}
 
-	if len(accessRule.ApprovalRequiredGroups) == 0 && len(accessRule.SkipReviewGroups) > 0 &&
-		utils.SlicesHasIntersection(accessRule.SkipReviewGroups, pctx.UserGroups) {
-		log.With("sid", pctx.SID, "orgid", pctx.GetOrgID(), "user-id", pctx.UserID, "connection-id", pctx.ConnectionID,
-			"access-rule-id", accessRule.ID).Infof("user is part of access rule skip review groups, skipping review")
-		return nil, nil
-	}
-
-	// these values are only used for ad-hoc executions
+	// the input is recorded for the session audit trail even when the review
+	// grants a window rather than approving this single statement
 	var sessionInput string
 	var inputEnvVars map[string]string
 	var inputClientArgs []string
-	if !isJitReview {
+	if !isConnectVerb {
 		sessionInput = string(pkt.Payload)
 		if encInputEnvVars, ok := pkt.Spec[pb.SpecClientExecEnvVar]; ok {
 			if err := pb.GobDecodeInto(encInputEnvVars, &inputEnvVars); err != nil {
@@ -279,21 +295,3 @@ func OnReceive(pctx plugintypes.Context, pkt *pb.Packet) (*plugintypes.ConnectRe
 // indicate to other plugins that this packet has the review enabled
 // it will allow applying special logic for these cases
 func setSpecReview(pkt *pb.Packet) { pkt.Spec[pb.SpecHasReviewKey] = []byte("true") }
-
-var errJitExpired = errors.New("jit expired")
-
-func validateJit(jit *models.ReviewJit, t time.Time) error {
-	if jit.RevokedAt == nil || jit.RevokedAt.IsZero() {
-		return plugintypes.InternalErr("found inconsistent jit record",
-			fmt.Errorf("revoked_at attribute is empty for %s", jit.ID))
-	}
-	revokedAt := jit.RevokedAt.Format(time.RFC3339Nano)
-	isJitExpired := jit.RevokedAt.Before(t)
-	log.With("id", jit.ID, "created-at", jit.CreatedAt.Format(time.RFC3339Nano), "expired", isJitExpired).
-		Infof("validating jit, now=%v, revoked-at=%v",
-			t.Format(time.RFC3339Nano), revokedAt)
-	if isJitExpired {
-		return errJitExpired
-	}
-	return nil
-}

@@ -397,3 +397,24 @@ func ReconcileStaleReviews(db *gorm.DB) (int64, error) {
 		ReviewStatusProcessing, ReviewStatusUnknown)
 	return res.RowsAffected, res.Error
 }
+
+// GetApprovedGrantForRule returns the latest unexpired jit grant the user holds
+// under the given access request rule. One grant covers every connection the
+// rule lists, for the remaining window, so no new review is created until it
+// expires or an admin revokes it.
+func GetApprovedGrantForRule(orgID, ownerUserID, ruleName string, now time.Time) (*ReviewJit, error) {
+	var jit ReviewJit
+	err := DB.Raw(`
+	SELECT id, org_id, session_id, type, access_duration_sec, owner_email, created_at, revoked_at
+	FROM private.reviews
+	WHERE org_id = ? AND type = 'jit' AND status = 'APPROVED' AND owner_id = ?
+	AND access_request_rule_name = ? AND revoked_at > ?
+	ORDER BY revoked_at DESC
+	LIMIT 1`, orgID, ownerUserID, ruleName, now).
+		First(&jit).
+		Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, ErrNotFound
+	}
+	return &jit, err
+}
