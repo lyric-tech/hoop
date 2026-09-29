@@ -12,4 +12,10 @@ export const reviewsService = {
    *   status ∈ PENDING | APPROVED | REJECTED | REVOKED | PROCESSING | EXECUTED | UNKNOWN
    */
   list: () => api.get('/reviews').then((res) => res.data),
+
+  /**
+   * Approve, reject or revoke a review.
+   * payload: { status, rejection_reason?, force_review? }
+   */
+  update: (id, payload) => api.put(`/reviews/${encodeURIComponent(id)}`, payload),
 }

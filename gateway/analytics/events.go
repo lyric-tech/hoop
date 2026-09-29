@@ -39,6 +39,9 @@ const (
 	EventUpdateReview = "hoop-update-review"
 	EventFetchReviews = "hoop-fetch-reviews"
 
+	// access requests
+	EventCreateAccessRequest = "hoop-create-access-request"
+
 	// agent
 	EventCreateAgent         = "hoop-create-agent"
 	EventCreateStandardAgent = "hoop-create-standard-agent"

@@ -29,7 +29,8 @@ export const MAIN_ITEMS = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, adminOnly: true },
   { label: 'Terminal', path: '/client', icon: SquareCode, adminOnly: false },
   { label: 'Runbooks', path: '/runbooks', icon: BookUp2, adminOnly: false, licenseFeature: 'runbooks' },
-  { label: 'Sessions', path: '/sessions', icon: GalleryVerticalEnd, adminOnly: false }
+  { label: 'Sessions', path: '/sessions', icon: GalleryVerticalEnd, adminOnly: false },
+  { label: 'Access Requests', path: '/access-requests', icon: KeyRound, adminOnly: false, licenseFeature: 'access-requests' }
   // No Search entry: the global header owns that affordance now (layout/Header/
   // HeaderSearch.jsx), and it opens the very same command palette.
 ]

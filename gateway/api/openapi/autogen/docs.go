@@ -56,6 +56,99 @@ const docTemplate = `{
                 }
             }
         },
+        "/access-requests": {
+            "post": {
+                "description": "Request a time window over every resource an access request rule covers. Creates a pending review the rule's reviewers approve once, instead of one approval per command",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access Requests"
+                ],
+                "summary": "Create Access Request",
+                "parameters": [
+                    {
+                        "description": "The request body resource",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/openapi.AccessRequestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.Review"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/access-requests/requestable": {
+            "get": {
+                "description": "List the access request rules the caller may request a time window against, each expanded into the resources one approval covers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access Requests"
+                ],
+                "summary": "List Requestable Access Rules",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/openapi.RequestableAccessRule"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/openapi.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/access-requests/rules": {
             "get": {
                 "description": "List all access request rules for the organization with pagination",
@@ -11563,6 +11656,30 @@ const docTemplate = `{
                 }
             }
         },
+        "openapi.AccessRequestRequest": {
+            "type": "object",
+            "required": [
+                "duration_sec",
+                "rule_name"
+            ],
+            "properties": {
+                "duration_sec": {
+                    "description": "How long the access window should last, in seconds",
+                    "type": "integer",
+                    "example": 3600
+                },
+                "justification": {
+                    "description": "Why the access is needed. Shown to the reviewers",
+                    "type": "string",
+                    "example": "Investigating INC-4821"
+                },
+                "rule_name": {
+                    "description": "The name of the access request rule to request access against",
+                    "type": "string",
+                    "example": "prod-dbs"
+                }
+            }
+        },
         "openapi.AccessRequestRule": {
             "type": "object",
             "properties": {
@@ -11801,6 +11918,22 @@ const docTemplate = `{
                     "example": [
                         "sre"
                     ]
+                }
+            }
+        },
+        "openapi.ActiveAccessGrant": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "description": "The moment the access window closes",
+                    "type": "string",
+                    "example": "2024-07-25T17:56:35.317601Z"
+                },
+                "review_id": {
+                    "description": "The review that granted the access",
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "9F9745B4-C77B-4D52-84D3-E24F67E3623C"
                 }
             }
         },
@@ -15688,6 +15821,56 @@ const docTemplate = `{
                 }
             }
         },
+        "openapi.RequestableAccessRule": {
+            "type": "object",
+            "properties": {
+                "access_max_duration": {
+                    "description": "Maximum access duration in seconds. Null means the 48 hour ceiling applies",
+                    "type": "integer",
+                    "example": 3600
+                },
+                "active_grant": {
+                    "description": "The grant the caller already holds on this rule, null when there is none",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/openapi.ActiveAccessGrant"
+                        }
+                    ]
+                },
+                "description": {
+                    "description": "The description of the access request rule",
+                    "type": "string",
+                    "example": "Production databases"
+                },
+                "name": {
+                    "description": "The name of the access request rule",
+                    "type": "string",
+                    "example": "prod-dbs"
+                },
+                "resources": {
+                    "description": "The connections one approval on this rule grants access to",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "pg-prod",
+                        "mysql-prod"
+                    ]
+                },
+                "reviewers_groups": {
+                    "description": "The groups that review requests raised against this rule",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "sre",
+                        "dba"
+                    ]
+                }
+            }
+        },
         "openapi.ResourcHealthCheckResponse": {
             "type": "object",
             "properties": {
@@ -16240,6 +16423,15 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/openapi.ReviewGroup"
                     },
+                    "readOnly": true
+                },
+                "review_owner": {
+                    "description": "The user that raised this review",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/openapi.ReviewOwner"
+                        }
+                    ],
                     "readOnly": true
                 },
                 "revoke_at": {
